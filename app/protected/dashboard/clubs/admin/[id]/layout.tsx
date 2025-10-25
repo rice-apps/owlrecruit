@@ -39,11 +39,16 @@ export default async function AdminClubLayout({
   return (
     <div className="flex-1 w-full flex flex-col gap-8">
       {/* Header with Organization Name */}
-      <div className="flex flex-col gap-2 items-start">
-        <h1 className="font-bold text-3xl">{org.name}</h1>
-        <p className="text-muted-foreground">
-          Admin Dashboard
-        </p>
+      <div className="flex items-start justify-between">
+        <div className="flex flex-col gap-2">
+          <h1 className="font-bold text-3xl">{org.name}</h1>
+          <p className="text-muted-foreground">
+            Admin Dashboard
+          </p>
+        </div>
+        <div className="text-xs text-muted-foreground">
+          ID: {orgId}
+        </div>
       </div>
       
       {/* Page Content */}
