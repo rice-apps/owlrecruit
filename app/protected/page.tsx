@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-
+import { Button } from "../../components/ui/button";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { InfoIcon } from "lucide-react";
 
@@ -20,11 +21,20 @@ export default async function ProtectedPage() {
           user!
         </div>
       </div>
-      <div className="flex flex-col gap-2 items-start">
-        <h2 className="font-bold text-2xl mb-4">Your user details</h2>
-        <pre className="text-xs font-mono p-3 rounded border max-h-32 overflow-auto">
+      <h2 className="font-bold text-2xl mb-4">Hey name! {/*function to grab name from supabase*/}</h2>
+      <div className="flex gap-2 items-start">
+        {/* <pre className="text-xs font-mono p-3 rounded border max-h-32 overflow-auto">
           {JSON.stringify(data.claims, null, 2)}
-        </pre>
+        </pre> */}
+        <Button asChild size="lg">
+          <Link href="/protected/apply">Apply</Link>
+        </Button>
+        <Button asChild size='lg'>
+          <Link href="/protected/applications">My Applications</Link>
+        </Button>
+        <Button asChild size='lg'>
+          <Link href="/protected/roles">Manage Roles</Link>
+        </Button>
       </div>
     </div>
   );

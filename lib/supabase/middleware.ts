@@ -45,6 +45,7 @@ export async function updateSession(request: NextRequest) {
     !user &&
     !request.nextUrl.pathname.startsWith("/login") &&
     !request.nextUrl.pathname.startsWith("/auth")
+    // set this to false if you want to work on protected pages without logging in
   ) {
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone();

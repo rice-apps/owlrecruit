@@ -44,3 +44,5 @@ next-env.d.ts
 # ide
 .idea
 .vscode
+supabase/.branches/_current_branch
+supabase/.temp/cli-latest
