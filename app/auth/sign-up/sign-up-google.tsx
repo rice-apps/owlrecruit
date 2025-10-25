@@ -1,13 +1,9 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "../../../lib/supabase/client";
 import Script from 'next/script'
 
-const supabase = createClient(
-    // TODO: add error handling if keys are missing
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
-);
+const supabase = createClient();
 declare global {
   interface Window {
     handleSignInWithGoogle: (response: { credential: string }) => Promise<void>;
@@ -16,15 +12,12 @@ declare global {
 
 export default function SignUpGoogleBtn() {
     const handleSignInWithGoogle = useCallback(async (response: { credential: string }) => {
-    try {
         const { data, error } = await supabase.auth.signInWithIdToken({
             // problem with data handling after sign in,
             // test w/ actual supabase instance or reinstall supabase image to account for new changes
             provider: 'google',
             token: response.credential,
-            });
-            if (error) console.error(error.message);
-        } catch (err) { console.error(err)}}, [])
+            });}, [])
     
     useEffect(() => {
         window.handleSignInWithGoogle = handleSignInWithGoogle;
