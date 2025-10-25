@@ -200,7 +200,7 @@ otp_expiry = 3600
 
 [auth.external.google]
 enabled = true
-client_id = "411999379081-n4h1dh8au1a7a861a13o00irbje4mjp6.apps.googleusercontent.com"
+client_id = "530339823745-p2p8i1r4e6ki8f1ra93aar28n5pil04f.apps.googleusercontent.com"
 secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET)"
 skip_nonce_check = false
 

@@ -27,7 +27,7 @@ export default function SignUpGoogleBtn() {
         <>
             <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
             <div id="g_id_onload"
-              data-client_id="411999379081-n4h1dh8au1a7a861a13o00irbje4mjp6.apps.googleusercontent.com"
+              data-client_id="530339823745-p2p8i1r4e6ki8f1ra93aar28n5pil04f.apps.googleusercontent.com"
               data-context="signup"
               data-ux_mode="popup"
               data-callback="handleSignInWithGoogle"
