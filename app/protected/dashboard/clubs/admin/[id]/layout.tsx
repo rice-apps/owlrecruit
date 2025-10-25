@@ -5,6 +5,8 @@
  * Fetches organization data based on the org ID from the URL params.
  */
 import { redirect } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 
 interface AdminClubLayoutProps {
@@ -38,6 +40,17 @@ export default async function AdminClubLayout({
 
   return (
     <div className="flex-1 w-full flex flex-col gap-8">
+      {/* Back Navigation */}
+      <div className="flex items-center gap-4">
+        <Link 
+          href="/protected/dashboard"
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
+        >
+          <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+          Back to Dashboard
+        </Link>
+      </div>
+
       {/* Header with Organization Name */}
       <div className="flex items-start justify-between">
         <div className="flex flex-col gap-2">
@@ -45,9 +58,6 @@ export default async function AdminClubLayout({
           <p className="text-muted-foreground">
             Admin Dashboard
           </p>
-        </div>
-        <div className="text-xs text-muted-foreground">
-          ID: {orgId}
         </div>
       </div>
       

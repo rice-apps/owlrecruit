@@ -9,6 +9,7 @@
 
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -83,12 +84,43 @@ const StatusCard = ({ children }: { children: ReactNode }) => (
 );
 
 export default function ClubStatusCard({ userId }: ClubStatusCardProps) {
+  const router = useRouter();
   const [clubData, setClubData] = useState<ClubData>({
     memberships: [],
     applications: []
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  /**
+   * Check if user has admin role for a specific organization
+   */
+  const isUserAdmin = (orgId: string): boolean => {
+    const membership = clubData.memberships.find(m => m.org_id === orgId);
+    if (!membership) return false;
+    
+    // Check if role name contains "admin" or similar admin indicators
+    const roleName = membership.role_name?.toLowerCase() || '';
+    return roleName.includes('admin') || roleName.includes('president') || roleName.includes('leader');
+  };
+
+  /**
+   * Handle click on membership container
+   */
+  const handleMembershipClick = (membership: ClubMembership) => {
+    if (isUserAdmin(membership.org_id)) {
+      router.push(`/protected/dashboard/clubs/admin/${membership.org_id}`);
+    } else {
+      router.push(`/protected/dashboard/clubs/${membership.org_id}`);
+    }
+  };
+
+  /**
+   * Handle click on application container
+   */
+  const handleApplicationClick = (application: ClubApplication) => {
+    router.push(`/protected/dashboard/clubs/${application.org_id}`);
+  };
 
   useEffect(() => {
     async function fetchClubData() {
@@ -237,7 +269,16 @@ export default function ClubStatusCard({ userId }: ClubStatusCardProps) {
               {clubData.memberships.map((membership) => (
                 <div
                   key={`${membership.org_id}-${membership.role_id}`}
-                  className="flex items-center justify-between p-3 border rounded-lg"
+                  className="flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-all duration-200 hover:bg-muted/50 hover:border-primary/50 hover:shadow-sm"
+                  onClick={() => handleMembershipClick(membership)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleMembershipClick(membership);
+                    }
+                  }}
                 >
                   <div className="flex-1">
                     <p className="font-medium">{membership.org_name || 'Unknown Club'}</p>
@@ -260,7 +301,16 @@ export default function ClubStatusCard({ userId }: ClubStatusCardProps) {
               {clubData.applications.map((application) => (
                 <div
                   key={`${application.org_id}-${application.created_at}`}
-                  className="flex items-center justify-between p-3 border rounded-lg"
+                  className="flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-all duration-200 hover:bg-muted/50 hover:border-primary/50 hover:shadow-sm"
+                  onClick={() => handleApplicationClick(application)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleApplicationClick(application);
+                    }
+                  }}
                 >
                   <div className="flex-1">
                     <p className="font-medium">{application.org_name || 'Unknown Club'}</p>
