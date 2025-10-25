@@ -111,6 +111,13 @@ export default function ClubStatusCard({ userId }: ClubStatusCardProps) {
             .neq('status', 'rejected')
         ]);
 
+        // Log the fetched data
+        console.log('Fetched club data:', { 
+          membershipsResult, 
+          applicationsResult,
+          userId 
+        });
+
         if (membershipsResult.error) {
           throw new Error(`Failed to fetch memberships: ${membershipsResult.error.message}`);
         }
