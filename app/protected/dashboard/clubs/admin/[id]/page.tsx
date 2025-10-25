@@ -29,7 +29,7 @@ interface AdminClubPageProps {
 }
 
 export default async function AdminClubPage({ params }: AdminClubPageProps) {
-  const orgId = params.id;
+  const { id: orgId } = await params;
   const supabase = await createClient();
 
   // Fetch applications with user data in one query
@@ -44,7 +44,7 @@ export default async function AdminClubPage({ params }: AdminClubPageProps) {
       notes,
       created_at,
       updated_at,
-      users!applicant_id (
+      users:applicant_id (
         id,
         name,
         net_id,
@@ -53,25 +53,17 @@ export default async function AdminClubPage({ params }: AdminClubPageProps) {
     `)
     .eq('org_id', orgId);
 
-  // Log the fetched data
-  console.log('Fetched applications data:', { 
-    applications,
-    error, 
-    orgId 
-  });
 
-  const columns = [
-    { id: "applied", title: "Applied", status: "applied" },
-    { id: "interviewing", title: "Interviewing", status: "interviewing" },
-    { id: "offer", title: "Offer", status: "offer" },
-    { id: "rejected", title: "Rejected", status: "rejected" },
-  ];
+
+  // Transform the data to match the Application interface
+  const transformedApplications: Application[] = (applications || []).map(app => ({
+    ...app,
+    users: Array.isArray(app.users) ? app.users[0] : app.users
+  }));
 
   return (
     <div className="space-y-6">
-      
-      {/* Kanban Board */}
-      <KanbanBoard applications={applications || []} />
+      <KanbanBoard applications={transformedApplications} />
     </div>
   );
 }

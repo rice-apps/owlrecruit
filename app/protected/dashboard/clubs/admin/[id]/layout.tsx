@@ -19,7 +19,7 @@ export default async function AdminClubLayout({
   params 
 }: AdminClubLayoutProps) {
   const supabase = await createClient();
-  const orgId = params.id;
+  const { id: orgId } = await params;
 
   // Verify authentication
   const { data, error } = await supabase.auth.getClaims();
