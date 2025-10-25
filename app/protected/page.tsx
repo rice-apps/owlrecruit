@@ -11,7 +11,7 @@ export default async function ProtectedPage() {
   if (error || !data?.claims) {
     redirect("/auth/login");
   }
-
+  const user = data.claims;
   return (
     <div className="flex-1 w-full flex flex-col gap-12">
       <div className="w-full">
@@ -21,11 +21,8 @@ export default async function ProtectedPage() {
           user!
         </div>
       </div>
-      <h2 className="font-bold text-2xl mb-4">Hey name! {/*function to grab name from supabase*/}</h2>
+      <h2 className="font-bold text-2xl mb-4">Hey {user.user_metadata.full_name}!</h2>
       <div className="flex gap-2 items-start">
-        {/* <pre className="text-xs font-mono p-3 rounded border max-h-32 overflow-auto">
-          {JSON.stringify(data.claims, null, 2)}
-        </pre> */}
         <Button asChild size="lg">
           <Link href="/protected/apply">Apply</Link>
         </Button>
