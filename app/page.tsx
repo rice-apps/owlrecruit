@@ -37,14 +37,18 @@ export default function Home() {
         {/* Contact Section*/}
         <div className="flex-1 flex flex-col gap-4 max-w-5xl p-5">
           <p className="text-3xl lg:text-4xl !leading-tight mx-auto max-w-xl text-center">
-            Contacts:
+            Contacts:<br></br>
+            Andrew Chu: Andrew Chu's Email<br></br>
+            Simar Rajpal: Simar Rajpal's Email
           </p>
         </div>
         
        {/* FAQ Section*/}
         <div className="flex-1 flex flex-col gap-20 max-w-5xl p-5">
           <p className="text-3xl lg:text-4xl !leading-tight mx-auto max-w-xl text-center">
-            FAQ
+            FAQ:<br></br>
+            Tricky Question: Clever Answer<br></br>
+            Cheeky Question: Cheeckier Answer<br></br>
           </p>
         </div>
 
