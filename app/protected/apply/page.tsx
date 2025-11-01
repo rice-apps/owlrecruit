@@ -1,42 +1,16 @@
-import Image from "next/image";
-import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from "../../../components/ui/card"
-import dog from '../../../images/dog.jpeg'
-import { Button } from "../../../components/ui/button"
-import Link from "next/link"
+import DogCard from "../../../components/dog-card";
 
 export default async function Apply() {
 return (
-    <div className="flex gap-12">
-        <Card className="w-full flex flex-col items-center text-center">
-            <CardHeader className="flex flex-col items-center space-y-4">
-    <Image src={dog} alt="dog" width={100} height={100} />
-    <CardTitle>Dog Club</CardTitle>
-    <CardDescription>
-      A club that really loves dogs and being a club!
-    </CardDescription>
-  </CardHeader>
-
-  <CardFooter className="flex justify-center">
-    <Button asChild>
-      <Link href="/protected/apply/dogClub">Apply!</Link>
-    </Button>
-  </CardFooter>
-        </Card>
-        <Card className="w-full flex flex-col items-center text-center">
-            <CardHeader className="flex flex-col items-center space-y-4">
-    <Image src={dog} alt="dog" width={100} height={100} />
-    <CardTitle>Dog Club</CardTitle>
-    <CardDescription>
-      A club that really loves dogs and being a club!
-    </CardDescription>
-  </CardHeader>
-
-  <CardFooter className="flex justify-center">
-    <Button asChild>
-      <Link href="/protected/apply/dogClub">Apply!</Link>
-    </Button>
-  </CardFooter>
-        </Card>
+  <>
+  <h1 className="text-3xl font-bold mb-6 text-foreground">Clubs:</h1>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <DogCard />
+      <DogCard />
+      <DogCard />
+      <DogCard />
+      <DogCard />
     </div>
+    </>
 );
 }
