@@ -9,7 +9,7 @@ export default function ApplicationUpload() {
     if (file) {
       try {
       const csvStr = await readCSVAsString(file);
-      uploadCSV(csvStr, '/api/upload/applications');
+      uploadCSV(csvStr, '/api/applications');
       } catch (error) {
         console.error("Couldn't read file: ", error);
       }
@@ -20,7 +20,7 @@ export default function ApplicationUpload() {
     if (file) {
       try {
       const csvStr = await readCSVAsString(file);
-      uploadCSV(csvStr, '/api/upload/interviews');
+      uploadCSV(csvStr, '/api/interviews');
       } catch (error) {
         console.error("Couldn't read file: ", error);
       }
