@@ -2,6 +2,33 @@ import { createClient } from '@/lib/supabase/server'
 import type { NextRequest } from 'next/server'
 import Papa from 'papaparse'
 
+/**
+ * Handle POST requests to /api/applications/route.ts.
+ *
+ * Expects a text/csv or text/plain content type. If the content type is
+ * not valid, a 400 status code is returned with an error message.
+ *
+ * Retrieves the CSV text from the request body and parses it into an
+ * array of objects using PapaParse. If there are any errors during
+ * parsing, a 400 status code is returned with an error message and
+ * details about the errors.
+ *
+ * If the parsed data is empty, a 400 status code is returned with an
+ * error message.
+ *
+ * Initializes a Supabase client and inserts the parsed data into the
+ * 'applications' table. If there is an error during insertion, a 500
+ * status code is returned with an error message.
+ *
+ * If the insertion is successful, a 200 status code is returned with the
+ * inserted data and the number of inserted rows.
+ * 
+ * tested using the following csv:
+ * org_id,applicant_id,status,notes,created_at,updated_at,position,form_responses
+629eade1-7ca1-4970-81cb-da24e08bbf3f,24b8130d-0f18-4ee8-8da8-4f0db5400afb,applied,very old,2025-10-18 20:42:58.720151+00,2025-10-18 20:42:58.720151+00,New Dev,
+
+ */
+
 export async function POST(request: NextRequest) {
   try {
     // Check if content type is CSV
