@@ -4,7 +4,7 @@ import {uploadCSV} from '../api/upload/upload-csv';
 import readCSVAsString from '../api/upload/upload-csv';
 
 export default function ApplicationUpload() {
-  const handleFileChange = async (e: any) => {
+  const handleFileUploadApplications = async (e: any) => {
     const file = e.target.files[0];
     if (file) {
       try {
@@ -15,11 +15,28 @@ export default function ApplicationUpload() {
       }
     }
   };
+  const handleFileUploadInterviews = async (e: any) => {
+    const file = e.target.files[0];
+    if (file) {
+      try {
+      const csvStr = await readCSVAsString(file);
+      uploadCSV(csvStr, '/api/upload/interviews');
+      } catch (error) {
+        console.error("Couldn't read file: ", error);
+      }
+    }
+  };
   return (
     <>
     <input 
       type="file" 
-      onChange={handleFileChange}
+      onChange={handleFileUploadApplications}
+      accept=".csv,.txt"
+    />
+    <h1>The lower one is for interviews</h1>
+    <input 
+      type="file" 
+      onChange={handleFileUploadInterviews}
       accept=".csv,.txt"
     />
     </>
