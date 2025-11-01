@@ -9,7 +9,7 @@ export default function ApplicationUpload() {
     if (file) {
       try {
       const csvStr = await readCSVAsString(file);
-      uploadCSV(csvStr);
+      uploadCSV(csvStr, '/api/upload/applications');
       } catch (error) {
         console.error("Couldn't read file: ", error);
       }

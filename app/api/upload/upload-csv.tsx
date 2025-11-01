@@ -1,6 +1,6 @@
-export const uploadCSV = async (csvStr: string) => {
+export const uploadCSV = async (csvStr: string, path: string) => {
     const reader = new FileReader();
-    const response = await fetch('/api/upload/applications', {
+    const response = await fetch(path, {
         method: 'POST',
         headers: {
             'Content-Type': 'text/plain',
