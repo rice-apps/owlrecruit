@@ -22,12 +22,13 @@ export async function POST(request: NextRequest) {
 
     // Init supabase client
     const supabase = await createClient();
-
+    console.log(parsedData);
     const {data, error} = await supabase.from('applications')
       .insert(parsedData)
       .select();
 
     if (error) {
+      console.error('Supabase error:', error.message, error.details, error.hint);
       return new Response(JSON.stringify({error}), {status: 500});
     }
 
