@@ -13,8 +13,6 @@ declare global {
 export default function SignUpGoogleBtn() {
     const handleSignInWithGoogle = useCallback(async (response: { credential: string }) => {
         const { data, error } = await supabase.auth.signInWithIdToken({
-            // problem with data handling after sign in,
-            // test w/ actual supabase instance or reinstall supabase image to account for new changes
             provider: 'google',
             token: response.credential,
             });}, [])
