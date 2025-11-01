@@ -1,6 +1,14 @@
 import { createClient } from '@/lib/supabase/server'
 import type { NextRequest } from 'next/server'
 
+/**
+ * Retrieves an application by its ID and the associated application review.
+ *
+ * @param {NextRequest} request - The Next.js request object.
+ * @param {Promise<{ applicationId: string }>} params - The URL parameters object.
+ * @returns {Promise<Response>} - The response object with the application data or error message.
+ */
+
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ applicationId: string }> }

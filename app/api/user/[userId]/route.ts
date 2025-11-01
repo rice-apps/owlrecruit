@@ -1,6 +1,14 @@
 import { createClient } from '@/lib/supabase/server'
 import type { NextRequest } from 'next/server'
 
+/**
+ * Retrieves a user's data by their ID.
+ *
+ * @param {NextRequest} request - The Next.js request object.
+ * @param {Promise<{ userId: string }>} params - The URL parameters object.
+ * @returns {Promise<Response>} - The response object with the user data or error message.
+ */
+
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ userId: string }> }
