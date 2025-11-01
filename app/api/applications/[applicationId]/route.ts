@@ -44,9 +44,16 @@ export async function GET(
         })
     }   
 
+    const {data: orgResponse, error: orgError} = await supabase
+        .from('orgs')
+        .select('*')
+        .eq('id', application.org_id)
+        .single()
+
     return new Response(JSON.stringify({
         "application": application,
-        "application review": applicationResponse
+        "application review": applicationResponse,
+        "organization": orgResponse
     }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
