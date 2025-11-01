@@ -103,6 +103,12 @@ export default function ApplicationCard({
           </p>
         </div>
       )}
+      {/* Rating of applicant (strong yes, yes, maybe...) */}
+      {application.reviewScore && (
+        <p className="text-xs text-muted-foreground">
+          <span className="font-medium">Rating:</span> {application.reviewScore}
+        </p>
+      )}
     </div>
   );
 }

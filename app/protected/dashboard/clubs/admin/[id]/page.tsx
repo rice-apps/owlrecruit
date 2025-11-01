@@ -22,6 +22,7 @@ interface Application {
     net_id: string;
     email: string;
   };
+  reviewScore?: number | null;
 }
 
 interface AdminClubPageProps {
@@ -49,6 +50,9 @@ export default async function AdminClubPage({ params }: AdminClubPageProps) {
         name,
         net_id,
         email
+      ), 
+      application_reviews (
+        score
       )
     `)
     .eq('org_id', orgId);
@@ -58,7 +62,8 @@ export default async function AdminClubPage({ params }: AdminClubPageProps) {
   // Transform the data to match the Application interface
   const transformedApplications: Application[] = (applications || []).map(app => ({
     ...app,
-    users: Array.isArray(app.users) ? app.users[0] : app.users
+    users: Array.isArray(app.users) ? app.users[0] : app.users,
+    reviewScore: Array.isArray(app.application_reviews) ? app.application_reviews[0]?.score : null
   }));
 
   return (
