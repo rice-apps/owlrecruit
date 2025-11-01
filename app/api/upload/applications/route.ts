@@ -1,23 +1,38 @@
 import { createClient } from '@/lib/supabase/server'
 import type { NextRequest } from 'next/server'
+import { parseCSV } from '@/lib/csv-parser'
 
-// THIS IS UNDER THE ASSUMPTION THAT INTERVIEWS WILL BE UPLOADED AS JSON
 export async function POST(request: NextRequest) {
-// get body from request, not sure if json or csv
-  const body = request.json();
-  // const body = request.text();
-  
-  
-  // init supabase client
-  const supabase = await createClient();
+  try {
+    // Check if content type is CSV
+    const contentType = request.headers.get('content-type');
+    if (!contentType || (!contentType.includes('text/csv') && !contentType.includes('text/plain'))) {
+      return new Response(JSON.stringify({error: 'Content-Type must be text/csv or text/plain'}), {status: 400});
+    }
 
-  const {data, error} = await supabase.from('applications') // insert into applications table
-  .insert(body) // insert parsed body
-  .select(); // return inserted data
+    // Get CSV text from request body
+    const csvText = await request.text();
 
-  if (error) {
-    return new Response(JSON.stringify({error}), {status: 500})
+    // Parse CSV into array of objects
+    const parsedData = parseCSV(csvText);
+
+    if (parsedData.length === 0) {
+      return new Response(JSON.stringify({error: 'No valid data rows found in CSV'}), {status: 400});
+    }
+
+    // Init supabase client
+    const supabase = await createClient();
+
+    const {data, error} = await supabase.from('applications')
+      .insert(parsedData)
+      .select();
+
+    if (error) {
+      return new Response(JSON.stringify({error}), {status: 500});
+    }
+
+    return new Response(JSON.stringify({data, inserted_count: data.length}), {status: 200});
+  } catch (err) {
+    return new Response(JSON.stringify({error: err instanceof Error ? err.message : 'Unknown error'}), {status: 400});
   }
-
-  return new Response(JSON.stringify({data, error}), {status: 200})
 }
