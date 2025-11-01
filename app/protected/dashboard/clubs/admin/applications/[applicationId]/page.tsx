@@ -154,25 +154,29 @@ export default function ApplicationPage({ params }: ApplicationPageProps) {
 
   return (
     <div className="p-6">
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-            Application Overview
-          </h2>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+          Application Overview
+        </h2>
+      </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="space-y-6">
+          {/* Applicant Info Component */}
+          {user && <ApplicantInfo user={user} />}
+          
+          {/* Application Responses Component */}
+          {applicationData && <ApplicationResponses application={applicationData["application"]} orgInfo={applicationData["organization"]} />}
         </div>
         
-        {/* Applicant Info Component */}
-        {user && <ApplicantInfo user={user} />}
-        
-        {/* Application Responses Component */}
-        {applicationData && <ApplicationResponses application={applicationData["application"]} orgInfo={applicationData["organization"]} />}
-        
-        {/* Interviews Section Component */}
-        <InterviewsSection interviews={interviews} />
-        
-        {/* Review Component */}
-        {applicationData && <Review review={applicationData["application review"]} />}
+        <div className="space-y-6">
+          {/* Interviews Section Component */}
+          <InterviewsSection interviews={interviews} />
+          
+          {/* Review Component */}
+          {applicationData && <Review review={applicationData["application review"]} />}
+        </div>
       </div>
     </div>
   );
