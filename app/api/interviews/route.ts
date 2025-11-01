@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import type { NextRequest } from 'next/server'
-import { parseCSV } from '@/lib/csv-parser'
+import Papa from 'papaparse'
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,8 +13,18 @@ export async function POST(request: NextRequest) {
     // Get CSV text from request body
     const csvText = await request.text();
 
-    // Parse CSV into array of objects
-    const parsedData = parseCSV(csvText);
+    // Parse CSV into array of objects using PapaParse
+    const result = Papa.parse(csvText, {
+      header: true,
+      skipEmptyLines: true,
+      transformHeader: (header) => header.trim(),
+    });
+
+    if (result.errors.length > 0) {
+      return new Response(JSON.stringify({error: 'CSV parsing error', details: result.errors}), {status: 400});
+    }
+
+    const parsedData = result.data;
 
     if (parsedData.length === 0) {
       return new Response(JSON.stringify({error: 'No valid data rows found in CSV'}), {status: 400});
