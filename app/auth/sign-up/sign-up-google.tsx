@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
 import Script from 'next/script'
-
+import { useRouter } from 'next/navigation';
 const supabase = createClient();
 declare global {
   interface Window {
@@ -11,11 +11,16 @@ declare global {
 }
 
 export default function SignUpGoogleBtn() {
+  const router = useRouter();
     const handleSignInWithGoogle = useCallback(async (response: { credential: string }) => {
-        const { data, error } = await supabase.auth.signInWithIdToken({
+      const { data, error } = await supabase.auth.signInWithIdToken({
             provider: 'google',
             token: response.credential,
-            });}, [])
+            });
+            if (data?.user) {
+              router.push('/protected');
+            }
+          }, [])
     
     useEffect(() => {
         window.handleSignInWithGoogle = handleSignInWithGoogle;
