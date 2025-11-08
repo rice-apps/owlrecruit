@@ -4,12 +4,23 @@ import {uploadCSV} from '../api/upload/upload-csv';
 import readCSVAsString from '../api/upload/upload-csv';
 
 export default function ApplicationUpload() {
-  const handleFileChange = async (e: any) => {
+  const handleFileChangeInterview = async (e: any) => {
     const file = e.target.files[0];
     if (file) {
       try {
       const csvStr = await readCSVAsString(file);
-      uploadCSV(csvStr);
+      uploadCSV(csvStr, "/api/upload/interviews");
+      } catch (error) {
+        console.error("Couldn't read file: ", error);
+      }
+    }
+  };
+  const handleFileChangeApplications = async (e: any) => {
+    const file = e.target.files[0];
+    if (file) {
+      try {
+      const csvStr = await readCSVAsString(file);
+      uploadCSV(csvStr, "/api/upload/interviews");
       } catch (error) {
         console.error("Couldn't read file: ", error);
       }
@@ -19,7 +30,13 @@ export default function ApplicationUpload() {
     <>
     <input 
       type="file" 
-      onChange={handleFileChange}
+      onChange={handleFileChangeInterview}
+      accept=".csv,.txt"
+    />
+    <h1>The one below is for application upload. The one above is for interview feedback.</h1>
+    <input 
+      type="file" 
+      onChange={handleFileChangeApplications}
       accept=".csv,.txt"
     />
     </>
