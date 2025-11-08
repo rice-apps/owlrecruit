@@ -25,6 +25,10 @@ export default function Review({ review }: ReviewsProps) {
   const [reviewer, setReviewer] = useState<User | null>(null);
 
   useEffect(() => {
+    if (!review || !review.reviewer_id) {
+      return;
+    }
+
     const fetchReviewer = async () => {
       try {
         const userResponse = await fetch(`/api/user/${review.reviewer_id}`);
@@ -40,9 +44,7 @@ export default function Review({ review }: ReviewsProps) {
       }
     };
 
-    if (review && review.reviewer_id) {
-      fetchReviewer();
-    }
+    fetchReviewer();
   }, [review]);
 
   return (

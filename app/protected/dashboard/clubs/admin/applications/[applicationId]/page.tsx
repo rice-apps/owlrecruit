@@ -5,6 +5,7 @@ import ApplicantInfo from './components/ApplicantInfo';
 import ApplicationResponses from './components/ApplicationResponses';
 import InterviewsSection from './components/InterviewsSection';
 import Review from './components/Review';
+import Resume from './components/Resume';
 
 interface ApplicationPageProps {
   params: Promise<{
@@ -37,6 +38,7 @@ interface Application {
   notes: string | null;
   created_at: string;
   updated_at: string;
+  resume_url?: string | null;
 }
 
 interface ApplicationReview {
@@ -101,9 +103,9 @@ export default function ApplicationPage({ params }: ApplicationPageProps) {
         const userDataArray: User[] = await userResponse.json();
 
         // DEBUG
-        // console.log("Fetched user data:", userDataArray);
-        // console.log("Fetched application data:", applicationData);
-        // console.log("Fetched interviews data:", interviewsData);
+        console.log("Fetched user data:", userDataArray);
+        console.log("Fetched application data:", applicationData);
+        console.log("Fetched interviews data:", interviewsData);
 
         // Extract the first user from the array
         const userData = userDataArray[0];
@@ -165,15 +167,22 @@ export default function ApplicationPage({ params }: ApplicationPageProps) {
         <div className="space-y-6">
           {/* Applicant Info Component */}
           {user && <ApplicantInfo user={user} />}
-          
+
           {/* Application Responses Component */}
           {applicationData && <ApplicationResponses application={applicationData["application"]} orgInfo={applicationData["organization"]} />}
         </div>
-        
+
         <div className="space-y-6">
+          {/* Resume Component */}
+          {/* USE THIS LINE WHEN THE DB HAS THE RESUME URL COLUMN IN THE APPLICATION TABLE */}
+          {/* {applicationData && <Resume resumeUrl={(applicationData["application"].resume_url) || null} />} */}
+          {/* HARDCODED RESUME URL IN THE MEANTIME */}
+          {applicationData && <Resume resumeUrl={'https://drive.google.com/file/d/1aIbBhANoJIwF2334zYdCqqV9EuuxxN5h/view'} />}
+
+
           {/* Interviews Section Component */}
           <InterviewsSection interviews={interviews} />
-          
+
           {/* Review Component */}
           {applicationData && <Review review={applicationData["application review"]} />}
         </div>
