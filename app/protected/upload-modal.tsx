@@ -7,6 +7,7 @@ import {Dialog,
   DialogTrigger,} from "@/components/ui/dialog";
 import { Button } from "../../components/ui/button";
 import {uploadCSV} from '../api/upload/upload-csv';
+import { Upload } from "lucide-react";
 
 export default function UploadDialog() {
     const handleFileChangeInterview = async (e: any) => {
@@ -31,8 +32,11 @@ export default function UploadDialog() {
       };
     return (
     <Dialog>
-		<DialogTrigger className="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2">
-                Upload - icon
+		<DialogTrigger asChild>
+		<Button size="lg">
+      <Upload />
+			Upload
+		</Button>
         </DialogTrigger>
 		<DialogContent>
 				<DialogTitle>Upload new data</DialogTitle>

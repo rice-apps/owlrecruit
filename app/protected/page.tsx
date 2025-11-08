@@ -22,8 +22,8 @@ export default async function ProtectedPage() {
         </div>
       </div>
       <h2 className="font-bold text-2xl mb-4">Hey {user.user_metadata.full_name}!</h2>
-      {/* only if user is an admin they should be able to see the fourth button for uploading csvs */}
-      <UploadDialog />
+      
+      {/* only if user is an admin they should be able to see the dialog for uploading csvs */}
       <div className="flex gap-2 items-start">
         <Button asChild size="lg">
           <Link href="/protected/apply">Apply</Link>
@@ -34,9 +34,7 @@ export default async function ProtectedPage() {
         <Button asChild size='lg'>
           <Link href="/protected/roles">Manage Roles</Link>
         </Button>
-        <Button asChild size='lg'>
-
-        </Button>
+        <UploadDialog />
       </div>
     </div>
   );
