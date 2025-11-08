@@ -3,7 +3,7 @@ import { Button } from "../../components/ui/button";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { InfoIcon } from "lucide-react";
-
+import UploadDialog from "./upload-modal";
 export default async function ProtectedPage() {
   const supabase = await createClient();
 
@@ -11,6 +11,8 @@ export default async function ProtectedPage() {
   if (error || !data?.claims) {
     redirect("/auth/login");
   }
+  
+  const isAdmin = true;
   const user = data.claims;
   return (
     <div className="flex-1 w-full flex flex-col gap-12">
@@ -32,6 +34,7 @@ export default async function ProtectedPage() {
         <Button asChild size='lg'>
           <Link href="/protected/roles">Manage Roles</Link>
         </Button>
+        {isAdmin && <UploadDialog />}
       </div>
     </div>
   );
