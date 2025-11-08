@@ -11,6 +11,8 @@ export default async function ProtectedPage() {
   if (error || !data?.claims) {
     redirect("/auth/login");
   }
+  
+  const isAdmin = true;
   const user = data.claims;
   return (
     <div className="flex-1 w-full flex flex-col gap-12">
@@ -22,8 +24,6 @@ export default async function ProtectedPage() {
         </div>
       </div>
       <h2 className="font-bold text-2xl mb-4">Hey {user.user_metadata.full_name}!</h2>
-      
-      {/* only if user is an admin they should be able to see the dialog for uploading csvs */}
       <div className="flex gap-2 items-start">
         <Button asChild size="lg">
           <Link href="/protected/apply">Apply</Link>
@@ -34,7 +34,7 @@ export default async function ProtectedPage() {
         <Button asChild size='lg'>
           <Link href="/protected/roles">Manage Roles</Link>
         </Button>
-        <UploadDialog />
+        {isAdmin && <UploadDialog />}
       </div>
     </div>
   );
