@@ -3,7 +3,7 @@ import { Button } from "../../components/ui/button";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { InfoIcon } from "lucide-react";
-
+import UploadDialog from "./upload-modal";
 export default async function ProtectedPage() {
   const supabase = await createClient();
 
@@ -22,6 +22,8 @@ export default async function ProtectedPage() {
         </div>
       </div>
       <h2 className="font-bold text-2xl mb-4">Hey {user.user_metadata.full_name}!</h2>
+      {/* only if user is an admin they should be able to see the fourth button for uploading csvs */}
+      <UploadDialog />
       <div className="flex gap-2 items-start">
         <Button asChild size="lg">
           <Link href="/protected/apply">Apply</Link>
@@ -31,6 +33,9 @@ export default async function ProtectedPage() {
         </Button>
         <Button asChild size='lg'>
           <Link href="/protected/roles">Manage Roles</Link>
+        </Button>
+        <Button asChild size='lg'>
+
         </Button>
       </div>
     </div>
