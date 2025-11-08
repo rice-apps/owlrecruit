@@ -15,7 +15,6 @@ export async function GET(
 ) {
     const { applicationId } = await params
     const supabase = await createClient()
-
     // Fetch application
     const { data: application, error: appError } = await supabase
         .from('applications')
@@ -35,7 +34,7 @@ export async function GET(
         .from('application_reviews')
         .select('*')
         .eq('application_id', applicationId)
-        .single()
+        .maybeSingle()
 
     if (responseError) {
         return new Response(JSON.stringify({ error: responseError.message }), {

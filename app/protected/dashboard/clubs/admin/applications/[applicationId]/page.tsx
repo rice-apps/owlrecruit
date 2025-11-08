@@ -59,7 +59,7 @@ interface OrgInfo {
 
 interface ApplicationData {
   "application": Application;
-  "application review": ApplicationReview;
+  "application review": ApplicationReview | null;
   "organization": OrgInfo;
 }
 

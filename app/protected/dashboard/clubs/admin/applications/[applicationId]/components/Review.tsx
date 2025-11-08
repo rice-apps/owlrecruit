@@ -18,7 +18,7 @@ interface User {
 }
 
 interface ReviewsProps {
-  review: ApplicationReview;
+  review: ApplicationReview | null;
 }
 
 export default function Review({ review }: ReviewsProps) {
@@ -40,10 +40,10 @@ export default function Review({ review }: ReviewsProps) {
       }
     };
 
-    if (review.reviewer_id) {
+    if (review && review.reviewer_id) {
       fetchReviewer();
     }
-  }, [review.reviewer_id]);
+  }, [review]);
 
   return (
     <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
@@ -52,7 +52,12 @@ export default function Review({ review }: ReviewsProps) {
           Review
         </h3>
       </div>
-      
+
+      {!review ? (
+        <div className="text-center py-8">
+          <p className="text-gray-500 dark:text-gray-400">No application reviews yet</p>
+        </div>
+      ) : (
       <div className="space-y-4">
         <div className="flex justify-between items-start">
           <div>
@@ -100,6 +105,7 @@ export default function Review({ review }: ReviewsProps) {
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }
