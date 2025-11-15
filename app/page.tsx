@@ -12,7 +12,6 @@ export default function Home() {
             <div className="flex gap-5 items-center font-semibold">
               <Link href={"/"}>OwlRecruit</Link>
             </div>
-            <AuthButton />
           </div>
         </nav>
         
@@ -37,6 +36,7 @@ export default function Home() {
           <ThemeSwitcher />
         </footer>
       </div>
+      
     </main>
   );
 }
