@@ -45,6 +45,15 @@ export default async function ProtectedPage() {
         <Button asChild size="lg">
           <Link href="/protected/dashboard">My Organizations</Link>
         </Button>
+        <Button asChild size="lg">
+          <Link href="/protected/reviewer">Review Applications</Link>
+        </Button>
+        <Button asChild size="lg">
+          <Link href="/protected/admin">Admin</Link>
+        </Button>
+        <Button asChild size="lg">
+          <Link href="/protected/roles">Manage Roles</Link>
+        </Button>
         {isAdmin && (
           <>
             <Button asChild size="lg" variant="secondary">
