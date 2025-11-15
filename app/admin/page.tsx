@@ -51,7 +51,5 @@ export default function ApplicationUpload() {
       onChange={handleFileChangeApplications}
       accept=".csv,.txt"
       style={{ display: 'none' }}
-    />
-    </>
   );
 }
