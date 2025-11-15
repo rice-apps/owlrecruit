@@ -12,7 +12,7 @@ export default function ReviewerPage() {
     <div className="flex-1 w-screen max-w-5xl flex flex-col gap-6">
       <Button 
         variant="outline" 
-        onClick={() => router.back()}
+        onClick={() => router.push('/protected')}
         className="w-fit"
       >
         <ArrowLeft className="w-4 h-4 mr-2" />
@@ -26,12 +26,9 @@ export default function ReviewerPage() {
         </p>
       </div>
 
-      <Card>
-        <CardContent className="pt-6 text-center py-12">
-          <Building className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium mb-2">Organizations Will Appear Here</h3>
-        </CardContent>
-      </Card>
+      <h2 className="text-xl text-muted-foreground">
+        This page shows all organizations that you are a reviewer for
+      </h2>
     </div>
   );
 }
