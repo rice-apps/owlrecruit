@@ -1,14 +1,15 @@
 "use client"
-import { Pencil } from "lucide-react";
 import { useState, useEffect } from "react";
+import { Pencil } from "lucide-react";
+import Link from "next/link";
 
 interface PositionCardProps {
   title: string;
   dueDate: string;
-  role: string;
+  roleName: string;
 }
 
-export default function PositionCard({ title, dueDate, role }: PositionCardProps) {
+export default function PositionCard({ title, dueDate, roleName }: PositionCardProps) {
   const [pencilSize, setPencilSize] = useState(24);
 
   useEffect(() => {
@@ -33,9 +34,9 @@ export default function PositionCard({ title, dueDate, role }: PositionCardProps
         <Pencil size={pencilSize} />
       </button>
       <div className="flex flex-col gap-2">
-        <button className="font-semibold text-2xl text-left">
+        <Link href={`positions/${roleName}`} className="font-semibold text-2xl text-left">
             <h3>{title}</h3>
-        </button>
+        </Link>
         <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
           <span className="font-bold">#</span>
           <span>DUE {dueDate}</span>

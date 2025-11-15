@@ -13,9 +13,9 @@ return (
 
         {/* Position Cards */}
         <div className="mt-6 flex gap-10">
-          <PositionCard title="Product Lead" dueDate="12/25/2025" role="positionName"/>
-          <PositionCard title="Tech Lead" dueDate="04/20/2026" role="positionName"/>
-          <PositionCard title="CEO" dueDate="06/09/2025" role="positionName"/>
+          <PositionCard title="Product Lead" dueDate="12/25/2025" roleName="positionName"/>
+          <PositionCard title="Tech Lead" dueDate="04/20/2026" roleName="positionName"/>
+          <PositionCard title="CEO" dueDate="06/09/2025" roleName="positionName"/>
         </div>
       </div>
     </div>

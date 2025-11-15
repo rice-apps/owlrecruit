@@ -8,12 +8,10 @@ import mockData from "../mock.json"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { LayoutList, LayoutGrid, Pencil } from "lucide-react"
-
 export default function PositionPage() {
   const [activeTab, setActiveTab] = useState<"overview" | "applications">("applications")
   const [viewMode, setViewMode] = useState<"list" | "card">("list")
   const [positionStatus] = useState<"open" | "closed">("open")
-
   return (
     <div className="flex min-h-screen flex-col">
       {/* Header */}
@@ -98,12 +96,11 @@ export default function PositionPage() {
                 </Button>
               </div>
             </div>
-
             {/* View Content */}
             {viewMode === "list" ? (
-              <ApplicationsListView columns={columns} data={mockData.applications} />
+          <ApplicationsListView columns={columns} data={mockData.applications} />
             ) : (
-              <ApplicationsCardView data={mockData.applications} />
+          <ApplicationsCardView columns={columns} data={mockData.applications} />
             )}
           </div>
         )}
