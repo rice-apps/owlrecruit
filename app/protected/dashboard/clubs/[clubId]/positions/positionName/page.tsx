@@ -2,22 +2,41 @@
 
 import { useState } from "react"
 import { ApplicationsListView } from "./applicationsListView"
+import { ApplicationsCardView } from "./applicationsCardView"
 import { columns } from "./columns"
 import mockData from "../mock.json"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { LayoutList, LayoutGrid, Pencil } from "lucide-react"
 
 export default function PositionPage() {
   const [activeTab, setActiveTab] = useState<"overview" | "applications">("applications")
+  const [viewMode, setViewMode] = useState<"list" | "card">("list")
+  const [positionStatus] = useState<"open" | "closed">("open")
 
   return (
     <div className="flex min-h-screen flex-col">
       {/* Header */}
       <div className="border-b">
-        <div className="flex h-16 items-center justify-between px-8">
-          <h1 className="text-2xl font-bold">Developer</h1>
-          <div className="flex items-center gap-2">
-            <Button variant="outline">Edit</Button>
-            <Button>Open</Button>
+        <div className="px-8 py-4">
+          <div className="flex items-start justify-between">
+            <div className="space-y-1">
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold">Developer</h1>
+                <Button variant="outline" size="sm">
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                I AM A DESCRIPTION!!!
+              </p>
+            </div>
+            <Badge
+              variant={positionStatus === "open" ? "success" : "destructive"}
+              className="px-4 py-2 text-base"
+            >
+              {positionStatus === "open" ? "Open" : "Closed"}
+            </Badge>
           </div>
         </div>
       </div>
@@ -56,7 +75,37 @@ export default function PositionPage() {
           </div>
         )}
         {activeTab === "applications" && (
-          <ApplicationsListView columns={columns} data={mockData.applications} />
+          <div className="space-y-4">
+            {/* View Toggle Header */}
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-semibold">Recent Applications</h2>
+              <div className="flex items-center gap-1 rounded-md border p-1">
+                <Button
+                  variant={viewMode === "list" ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("list")}
+                  className="h-8 px-3"
+                >
+                  <LayoutList className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === "card" ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("card")}
+                  className="h-8 px-3"
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            {/* View Content */}
+            {viewMode === "list" ? (
+              <ApplicationsListView columns={columns} data={mockData.applications} />
+            ) : (
+              <ApplicationsCardView data={mockData.applications} />
+            )}
+          </div>
         )}
       </div>
     </div>

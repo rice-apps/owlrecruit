@@ -73,13 +73,11 @@ export function ApplicationsListView<TData, TValue>({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">Recent Applications</h2>
-
-        {/* Status Filter */}
+      {/* Status Filter */}
+      <div className="flex items-center justify-end">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
+            <Button variant="outline">
               <Filter className="mr-2 h-4 w-4" />
               Status
               {selectedStatuses.length > 0 && (

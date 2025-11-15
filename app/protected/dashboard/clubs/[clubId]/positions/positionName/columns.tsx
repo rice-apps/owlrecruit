@@ -63,19 +63,29 @@ export const columns: ColumnDef<Application>[] = [
   },
   {
     accessorKey: "status",
-    header: "Status",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Status
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
     cell: ({ row }) => {
       const status = row.getValue("status") as string
 
       const getStatusVariant = (status: string) => {
         switch (status.toLowerCase()) {
           case "accepted":
-            return "default"
+            return "success"
           case "rejected":
             return "destructive"
           case "under review":
             return "secondary"
-          case "interview scheduled":
+          case "interviewing":
             return "outline"
           default:
             return "secondary"
@@ -87,6 +97,23 @@ export const columns: ColumnDef<Application>[] = [
           {status}
         </Badge>
       )
+    },
+    sortingFn: (rowA, rowB, columnId) => {
+      const statusOrder = {
+        "rejected": 0,
+        "pending": 1,
+        "under review": 2,
+        "interviewing": 3,
+        "accepted": 4,
+      }
+
+      const statusA = (rowA.getValue(columnId) as string).toLowerCase()
+      const statusB = (rowB.getValue(columnId) as string).toLowerCase()
+
+      const orderA = statusOrder[statusA as keyof typeof statusOrder] ?? 999
+      const orderB = statusOrder[statusB as keyof typeof statusOrder] ?? 999
+
+      return orderA - orderB
     },
     filterFn: (row, id, value) => {
       return value.includes(row.getValue(id))
