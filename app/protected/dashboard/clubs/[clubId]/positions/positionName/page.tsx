@@ -1,16 +1,16 @@
 "use client"
-
 import { useState } from "react"
 import { ApplicationsListView } from "./applicationsListView"
 import { ApplicationsCardView } from "./applicationsCardView"
 import { columns } from "./columns"
 import mockData from "../mock.json"
 import { Button } from "@/components/ui/button"
-import { ApplicationsCardView } from "./applicationsCardView" 
-
+import { Badge } from "@/components/ui/badge"
+import { LayoutList, LayoutGrid, Pencil } from "lucide-react"
 export default function PositionPage() {
-  const [activeTab, setActiveTab] = useState<"overview" | "applicationsList" | "applicationsCard">("applicationsCard")
-
+  const [activeTab, setActiveTab] = useState<"overview" | "applications">("applications")
+  const [viewMode, setViewMode] = useState<"list" | "card">("list")
+  const [positionStatus] = useState<"open" | "closed">("open")
   return (
     <div className="flex min-h-screen flex-col">
       {/* Header */}
@@ -37,7 +37,6 @@ export default function PositionPage() {
           </div>
         </div>
       </div>
-
       {/* Tabs */}
       <div className="border-b">
         <div className="flex px-8">
@@ -52,9 +51,9 @@ export default function PositionPage() {
             Overview
           </button>
           <button
-            onClick={() => setActiveTab("applicationsList")}
+            onClick={() => setActiveTab("applications")}
             className={`px-4 py-3 text-sm font-medium transition-colors ${
-              activeTab === "applicationsList" || activeTab === "applicationsCard"
+              activeTab === "applications"
                 ? "border-b-2 border-primary text-foreground"
                 : "text-muted-foreground hover:text-foreground"
             }`}
@@ -63,7 +62,6 @@ export default function PositionPage() {
           </button>
         </div>
       </div>
-
       {/* Content */}
       <div className="flex-1 px-8 py-6">
         {activeTab === "overview" && (
@@ -71,11 +69,37 @@ export default function PositionPage() {
             <p className="text-muted-foreground">Overview content coming soon</p>
           </div>
         )}
-        {activeTab === "applicationsList" && (
-          <ApplicationsListView columns={columns} data={mockData.applications} />
-        )}
-        {activeTab === "applicationsCard" && (
-          <ApplicationsCardView columns={columns} data={mockData.applications} />
+        {activeTab === "applications" && (
+          <div className="space-y-4">
+            {/* View Toggle Header */}
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-semibold">Recent Applications</h2>
+              <div className="flex items-center gap-1 rounded-md border p-1">
+                <Button
+                  variant={viewMode === "list" ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("list")}
+                  className="h-8 px-3"
+                >
+                  <LayoutList className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === "card" ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("card")}
+                  className="h-8 px-3"
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            {/* View Content */}
+            {viewMode === "list" ? (
+              <ApplicationsListView columns={columns} data={mockData.applications} />
+            ) : (
+              <ApplicationsCardView columns={columns} data={mockData.applications} />
+            )}
+          </div>
         )}
       </div>
     </div>
