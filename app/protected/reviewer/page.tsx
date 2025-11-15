@@ -27,7 +27,7 @@ export default function ReviewerPage() {
       </div>
 
       <h2 className="text-xl text-muted-foreground">
-        This page shows all organizations that you are a reviewer for
+        This page shows all organizations that you are a reviewer for. Implementation is not complete yet.
       </h2>
     </div>
   );
