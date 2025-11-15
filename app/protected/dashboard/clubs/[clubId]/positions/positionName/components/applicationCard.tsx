@@ -16,7 +16,7 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
         return "destructive"
       case "under review":
         return "secondary"
-      case "interview scheduled":
+      case "interviewing":
         return "outline"
       default:
         return "secondary"
