@@ -66,8 +66,7 @@ export function ApplicationsCardView<TData, TValue>({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">Recent Applications</h2>
+<div className="flex items-center justify-between">
 
         {/* Status Filter */}
         <DropdownMenu>
@@ -116,9 +115,20 @@ export function ApplicationsCardView<TData, TValue>({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-
-      <div className="rounded-md border">
-        
+      {/* Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {table.getRowModel().rows?.length ? (
+          table.getRowModel().rows.map((row) => (
+            <ApplicationCard
+              key={row.id}
+              application={row.original as Application}
+            />
+          ))
+        ) : (
+          <div className="col-span-full rounded-md border bg-card p-8 text-center">
+            <p className="text-muted-foreground">No applications found.</p>
+          </div>
+        )}
       </div>
 
       {/* Pagination */}

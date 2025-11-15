@@ -1,4 +1,5 @@
 "use client"
+
 import { useState } from "react"
 import { ApplicationsListView } from "./applicationsListView"
 import { ApplicationsCardView } from "./applicationsCardView"
@@ -37,6 +38,7 @@ export default function PositionPage() {
           </div>
         </div>
       </div>
+
       {/* Tabs */}
       <div className="border-b">
         <div className="flex px-8">
@@ -62,6 +64,7 @@ export default function PositionPage() {
           </button>
         </div>
       </div>
+
       {/* Content */}
       <div className="flex-1 px-8 py-6">
         {activeTab === "overview" && (
@@ -95,9 +98,9 @@ export default function PositionPage() {
             </div>
             {/* View Content */}
             {viewMode === "list" ? (
-              <ApplicationsListView columns={columns} data={mockData.applications} />
+          <ApplicationsListView columns={columns} data={mockData.applications} />
             ) : (
-              <ApplicationsCardView columns={columns} data={mockData.applications} />
+          <ApplicationsCardView columns={columns} data={mockData.applications} />
             )}
           </div>
         )}

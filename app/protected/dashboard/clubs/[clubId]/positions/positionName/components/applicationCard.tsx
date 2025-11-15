@@ -11,7 +11,7 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
   const getStatusVariant = (status: string) => {
     switch (status.toLowerCase()) {
       case "accepted":
-        return "default"
+        return "success"
       case "rejected":
         return "destructive"
       case "under review":
