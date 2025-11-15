@@ -30,6 +30,12 @@ export default async function ProtectedPage() {
           <Link href="/protected/applications">My Applications</Link>
         </Button>
         <Button asChild size='lg'>
+          <Link href="/protected/reviewer">Review Applications</Link>
+        </Button>
+        <Button asChild size='lg'>
+          <Link href="/protected/admin">Admin</Link>
+        </Button>
+        <Button asChild size='lg'>
           <Link href="/protected/roles">Manage Roles</Link>
         </Button>
       </div>
