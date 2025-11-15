@@ -9,7 +9,7 @@ export function Hero() {
           OwlRecruit
         </h2>
         <p className="text-xl lg:text-2xl font-semibold mb-4 text-left">
-          The smarter way to connect students with clubs:
+          The smarter way to connect students with clubs
         </p>
         <p className="text-lg mb-8 text-left max-w-4xl">
           OwlRecruit brings club recruiting into the modern age. Browse open applications, 
