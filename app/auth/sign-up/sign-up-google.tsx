@@ -39,9 +39,9 @@ export default function SignUpGoogleBtn() {
 
             <div className="g_id_signin"
                 data-type="standard"
-                data-shape="pill"
-                data-theme="filled_blue"
-                data-text="signin_with"
+                data-shape="rectangular"
+                data-theme="filled_white"
+                data-text="continue_with"
                 data-size="large"
                 data-logo_alignment="left">
             </div>
