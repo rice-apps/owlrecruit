@@ -1,6 +1,7 @@
 'use client'
 
 import {uploadCSV} from '../api/upload/upload-csv';
+import { Button } from "../../components/ui/button";
 
 export default function ApplicationUpload() {
   const handleFileChangeInterview = async (e: any) => {
@@ -23,19 +24,32 @@ export default function ApplicationUpload() {
       }
     }
   };
+  
   return (
     <>
+    <h2 className="font-bold text-2xl mb-4">Hey admin!</h2>
+    <Button asChild size="lg">
+      <label htmlFor="interviews-upload" style={{ cursor: 'pointer'}}>
+        Upload Interview Feedback
+      </label>
+    </Button>
     <input 
-      type="file" 
+      type="file"
+      id="interviews-upload"
       onChange={handleFileChangeInterview}
       accept=".csv,.txt"
+      style={{ display: 'none' }}
     />
-    <h1>The one below is for application upload. The one above is for interview feedback.</h1>
+    <Button asChild size="lg">
+      <label htmlFor="applications-upload" style={{ cursor: 'pointer'}}>
+        Upload Applications
+      </label>
+    </Button>
     <input 
-      type="file" 
+      type="file"
+      id="applications-upload"
       onChange={handleFileChangeApplications}
       accept=".csv,.txt"
-    />
-    </>
+      style={{ display: 'none' }}
   );
 }
