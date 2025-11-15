@@ -1,21 +1,24 @@
 /**
  * Opening Overview Page
- *
- * Displays kanban board for a specific opening and CSV upload functionality.
- * Route: /protected/reviewer/[orgId]/opening/[openingId]
+ * 
+ * Displays the kanban board for a specific opening in an organization.
  */
 
 import { createClient } from "@/lib/supabase/server";
-import { KanbanBoard } from "@/app/protected/dashboard/clubs/components";
-import UploadDialog from "./upload-modal";
+import KanbanBoard from "./components/KanbanBoard";
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 
 interface Application {
   id: string;
   org_id: string;
+  opening_id: string;
   applicant_id: string;
-  position: string;
+  position: string; // This will be derived from opening title
   status: string;
-  notes: string;
+  notes: string; // This will be derived from form_responses
+  form_responses?: any;
+  url?: string;
   created_at: string;
   updated_at: string;
   users: {
@@ -27,46 +30,32 @@ interface Application {
   reviewScore?: number | null;
 }
 
-interface Opening {
-  id: string;
-  org_id: string;
-  title: string;
-  description: string | null;
-}
-
-interface OpeningPageProps {
+interface OpeningOverviewPageProps {
   params: { orgId: string; openingId: string };
 }
 
-export default async function OpeningPage({ params }: OpeningPageProps) {
+export default async function OpeningOverviewPage({ params }: OpeningOverviewPageProps) {
   const { orgId, openingId } = await params;
   const supabase = await createClient();
 
-  // Fetch opening details
-  const { data: opening, error: openingError } = await supabase
-    .from("openings")
-    .select("id, org_id, title, description")
-    .eq("id", openingId)
-    .eq("org_id", orgId)
+  // Fetch the organization name
+  const { data: orgData } = await supabase
+    .from('orgs')
+    .select('name')
+    .eq('id', orgId)
     .single();
 
-  if (openingError || !opening) {
-    return (
-      <div className="space-y-6">
-        <h1 className="font-bold text-3xl">Opening Not Found</h1>
-        <p className="text-muted-foreground">
-          The opening you are looking for does not exist or you do not have
-          access to it.
-        </p>
-      </div>
-    );
-  }
+  // Fetch the opening details
+  const { data: openingData } = await supabase
+    .from('openings')
+    .select('title, description')
+    .eq('opening_id', openingId)
+    .single();
 
-  // Fetch applications for this specific opening
+  // Fetch applications with user data for this specific opening
   const { data: applications, error } = await supabase
-    .from("applications")
-    .select(
-      `
+    .from('applications')
+    .select(`
       id,
       org_id,
       opening_id,
@@ -75,55 +64,71 @@ export default async function OpeningPage({ params }: OpeningPageProps) {
       form_responses,
       created_at,
       updated_at,
+      url,
       users:applicant_id (
         id,
         name,
         net_id,
         email
-      ),
+      ), 
       application_reviews (
         score
       )
-    `,
-    )
-    .eq("opening_id", openingId);
+    `)
+    .eq('opening_id', openingId);
 
   if (error) {
-    console.error("Error fetching applications:", error);
+    console.error('Error fetching applications:', error);
   }
 
-  console.log("Fetched applications:", applications);
-
   // Transform the data to match the Application interface
-  const transformedApplications: Application[] = (applications || []).map(
-    (app) => ({
-      ...app,
-      position: "",
-      notes: "",
-      users: Array.isArray(app.users) ? app.users[0] : app.users,
-      reviewScore: Array.isArray(app.application_reviews)
-        ? app.application_reviews[0]?.score
-        : null,
-    }),
-  );
+  const transformedApplications: Application[] = (applications || []).map(app => ({
+    ...app,
+    users: Array.isArray(app.users) ? app.users[0] : app.users,
+    reviewScore: Array.isArray(app.application_reviews) ? app.application_reviews[0]?.score : null,
+    // Map form_responses to notes for backward compatibility with the kanban board
+    notes: app.form_responses ? JSON.stringify(app.form_responses) : '',
+    // Add position from opening title for display
+    position: openingData?.title || 'Unknown Position'
+  }));
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-bold text-3xl">{opening.title}</h1>
-          {opening.description && (
-            <p className="text-muted-foreground mt-2">{opening.description}</p>
-          )}
-        </div>
-        <UploadDialog openingId={openingId} />
+    <div className="flex-1 w-full flex flex-col gap-6">
+      <Link 
+        href={`/protected/reviewer/${orgId}`}
+        className="flex items-center gap-2 w-fit text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back
+      </Link>
+      
+      <h1 className="text-3xl font-bold">
+        {orgData?.name || 'Organization'}
+      </h1>
+      
+      {openingData?.description && (
+        <p className="text-lg text-muted-foreground">
+          {openingData.description}
+        </p>
+      )}
+      
+      <div className="space-y-6">
+        {transformedApplications.length > 0 ? (
+          <KanbanBoard applications={transformedApplications} />
+        ) : (
+          <div className="text-center py-12">
+            <h3 className="text-lg font-medium text-muted-foreground mb-2">
+              No Applications Found
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              There are no applications for this opening yet.
+            </p>
+          </div>
+        )}
       </div>
-
-      {/* Kanban Board */}
-      <KanbanBoard applications={transformedApplications} />
     </div>
   );
 }
 
-export type { Application, Opening };
+// Export the interface for use in other components
+export type { Application };
