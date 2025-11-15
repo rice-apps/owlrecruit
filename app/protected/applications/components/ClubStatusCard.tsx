@@ -98,7 +98,7 @@ export default function ClubStatusCard({ userId }: ClubStatusCardProps) {
    * Handle click on application container - routes to club page
    */
   const handleApplicationClick = (application: ClubApplication) => {
-    router.push(`/protected/dashboard/clubs/${application.org_id}`);
+    router.push(`/protected/applications/clubs/${application.org_id}`);
   };
 
   useEffect(() => {

@@ -37,7 +37,7 @@ export default async function ProtectedPage() {
       </h2>
       <div className="flex gap-2 items-start">
         <Button asChild size="lg">
-          <Link href="/protected/apply">Apply</Link>
+          <Link href="/protected/discover">Discover</Link>
         </Button>
         <Button asChild size="lg">
           <Link href="/protected/applications">My Applications</Link>
