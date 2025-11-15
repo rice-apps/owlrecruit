@@ -1,8 +1,8 @@
 /**
  * ClubStatusCard Component
  *
- * Displays a user's club memberships and application statuses in a card format.
- * Fetches data from Supabase including memberships, applications, organizations, and roles.
+ * Displays a user's admin organizations and application statuses in a card format.
+ * Fetches organizations where user is an admin (from admin table) and their applications.
  * Provides loading states, error handling, and empty state management.
  */
 "use client";
@@ -15,20 +15,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 // Type definitions for club-related data structures
-interface ClubMembership {
+interface AdminOrg {
   org_id: string;
-  role_id: number;
-  joined_at: string;
   org_name?: string;
-  role_name?: string;
 }
 
 interface ClubApplication {
   org_id: string;
   status: string;
   created_at: string;
-  position: string;
+  opening_id?: string;
   org_name?: string;
+  opening_title?: string;
 }
 
 interface ClubStatusCardProps {
@@ -36,7 +34,7 @@ interface ClubStatusCardProps {
 }
 
 interface ClubData {
-  memberships: ClubMembership[];
+  adminOrgs: AdminOrg[];
   applications: ClubApplication[];
 }
 
@@ -83,41 +81,21 @@ const StatusCard = ({ children }: { children: ReactNode }) => (
 export default function ClubStatusCard({ userId }: ClubStatusCardProps) {
   const router = useRouter();
   const [clubData, setClubData] = useState<ClubData>({
-    memberships: [],
+    adminOrgs: [],
     applications: [],
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   /**
-   * Check if user has admin role for a specific organization
+   * Handle click on admin org container - routes to management page
    */
-  const isUserAdmin = (orgId: string): boolean => {
-    const membership = clubData.memberships.find((m) => m.org_id === orgId);
-    if (!membership) return false;
-
-    // Check if role name contains "admin" or similar admin indicators
-    const roleName = membership.role_name?.toLowerCase() || "";
-    return (
-      roleName.includes("admin") ||
-      roleName.includes("president") ||
-      roleName.includes("leader")
-    );
+  const handleAdminOrgClick = (adminOrg: AdminOrg) => {
+    router.push(`/protected/dashboard/manage/${adminOrg.org_id}`);
   };
 
   /**
-   * Handle click on membership container
-   */
-  const handleMembershipClick = (membership: ClubMembership) => {
-    if (isUserAdmin(membership.org_id)) {
-      router.push(`/protected/dashboard/clubs/admin/${membership.org_id}`);
-    } else {
-      router.push(`/protected/dashboard/clubs/${membership.org_id}`);
-    }
-  };
-
-  /**
-   * Handle click on application container
+   * Handle click on application container - routes to club page
    */
   const handleApplicationClick = (application: ClubApplication) => {
     router.push(`/protected/dashboard/clubs/${application.org_id}`);
@@ -131,29 +109,37 @@ export default function ClubStatusCard({ userId }: ClubStatusCardProps) {
 
         const supabase = createClient();
 
-        // Fetch memberships and applications in parallel for better performance
-        const [membershipsResult, applicationsResult] = await Promise.all([
+        // Fetch organizations where user is an admin, and their applications
+        // Running both queries in parallel for better performance
+        const [adminOrgsResult, applicationsResult] = await Promise.all([
           supabase
-            .from("memberships")
-            .select("org_id, role_id, joined_at")
-            .eq("user_id", userId),
+            .from('admin')
+            .select('org_id')
+            .eq('id', userId),
           supabase
-            .from("applications")
-            .select("org_id, status, created_at, position")
-            .eq("applicant_id", userId)
-            .neq("status", "rejected"),
+            .from('applications')
+            .select(`
+              org_id,
+              status,
+              created_at,
+              opening_id,
+              openings:opening_id (
+                title
+              )
+            `)
+            .eq('applicant_id', userId)
         ]);
 
         // Log the fetched data
         console.log("Fetched club data:", {
-          membershipsResult,
+          adminOrgsResult,
           applicationsResult,
           userId,
         });
 
-        if (membershipsResult.error) {
+        if (adminOrgsResult.error) {
           throw new Error(
-            `Failed to fetch memberships: ${membershipsResult.error.message}`,
+            `Failed to fetch admin orgs: ${adminOrgsResult.error.message}`,
           );
         }
         if (applicationsResult.error) {
@@ -162,67 +148,50 @@ export default function ClubStatusCard({ userId }: ClubStatusCardProps) {
           );
         }
 
-        const { data: memberships } = membershipsResult;
+        const { data: adminOrgs } = adminOrgsResult;
         const { data: applications } = applicationsResult;
 
-        // Extract unique IDs to minimize database queries
+        // Extract unique org IDs to minimize database queries
         const orgIds = new Set([
-          ...(memberships?.map((m) => m.org_id) || []),
-          ...(applications?.map((a) => a.org_id) || []),
+          ...(adminOrgs?.map(a => a.org_id) || []),
+          ...(applications?.map(a => a.org_id) || [])
         ]);
-        const roleIds = new Set(memberships?.map((m) => m.role_id) || []);
 
-        // Fetch organization and role details in parallel, with safety checks for empty sets
-        const [orgsResult, rolesResult] = await Promise.all([
-          orgIds.size > 0
-            ? supabase
-                .from("orgs")
-                .select("id, name")
-                .in("id", Array.from(orgIds))
-            : { data: [], error: null },
-          roleIds.size > 0
-            ? supabase
-                .from("roles")
-                .select("id, name")
-                .in("id", Array.from(roleIds))
-            : { data: [], error: null },
-        ]);
+        // Fetch organization details
+        const orgsResult = orgIds.size > 0 ? await supabase
+          .from('orgs')
+          .select('id, name')
+          .in('id', Array.from(orgIds)) : { data: [], error: null };
 
         if (orgsResult.error) {
           throw new Error(
             `Failed to fetch organizations: ${orgsResult.error.message}`,
           );
         }
-        if (rolesResult.error) {
-          throw new Error(
-            `Failed to fetch roles: ${rolesResult.error.message}`,
-          );
-        }
 
-        // Create lookup maps for efficient name resolution
-        const orgMap = new Map(
-          orgsResult.data?.map((org) => [org.id, org.name]) || [],
-        );
-        const roleMap = new Map(
-          rolesResult.data?.map((role) => [Number(role.id), role.name]) || [],
-        );
+        // Create lookup map for efficient name resolution
+        const orgMap = new Map(orgsResult.data?.map(org => [org.id, org.name]) || []);
 
         // Transform raw data to include human-readable names
-        const transformedMemberships =
-          memberships?.map((membership) => ({
-            ...membership,
-            org_name: orgMap.get(membership.org_id) || "Unknown Club",
-            role_name: roleMap.get(membership.role_id) || "Unknown Role",
-          })) || [];
+        const transformedAdminOrgs = adminOrgs?.map(adminOrg => ({
+          ...adminOrg,
+          org_name: orgMap.get(adminOrg.org_id) || 'Unknown Club',
+        })) || [];
 
-        const transformedApplications =
-          applications?.map((application) => ({
+        const transformedApplications = applications?.map(application => {
+          const opening = Array.isArray(application.openings)
+            ? application.openings[0]
+            : application.openings;
+
+          return {
             ...application,
-            org_name: orgMap.get(application.org_id) || "Unknown Club",
-          })) || [];
+            org_name: orgMap.get(application.org_id) || 'Unknown Club',
+            opening_title: opening?.title,
+          };
+        }) || [];
 
         setClubData({
-          memberships: transformedMemberships,
+          adminOrgs: transformedAdminOrgs,
           applications: transformedApplications,
         });
       } catch (err) {
@@ -266,7 +235,7 @@ export default function ClubStatusCard({ userId }: ClubStatusCardProps) {
   }
 
   const hasNoData =
-    clubData.memberships.length === 0 && clubData.applications.length === 0;
+    clubData.adminOrgs.length === 0 && clubData.applications.length === 0;
 
   // Render empty state when user has no club data
   if (hasNoData) {
@@ -274,45 +243,42 @@ export default function ClubStatusCard({ userId }: ClubStatusCardProps) {
       <StatusCard>
         <div className="text-center py-8">
           <p className="text-muted-foreground">
-            No club memberships or applications found.
+            No admin organizations or applications found.
           </p>
         </div>
       </StatusCard>
     );
   }
 
-  // Render main content with memberships and applications
+  // Render main content with admin organizations and applications
   return (
     <StatusCard>
       <div className="space-y-6">
-        {/* Active Memberships Section */}
-        {clubData.memberships.length > 0 && (
+        {/* Admin Organizations Section */}
+        {clubData.adminOrgs.length > 0 && (
           <div>
-            <h3 className="font-semibold text-lg mb-3">Memberships</h3>
+            <h3 className="font-semibold text-lg mb-3">Admin Organizations</h3>
             <div className="space-y-3">
-              {clubData.memberships.map((membership) => (
+              {clubData.adminOrgs.map((adminOrg) => (
                 <div
-                  key={`${membership.org_id}-${membership.role_id}`}
+                  key={adminOrg.org_id}
                   className="flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-all duration-200 hover:bg-muted/50 hover:border-primary/50 hover:shadow-sm"
-                  onClick={() => handleMembershipClick(membership)}
+                  onClick={() => handleAdminOrgClick(adminOrg)}
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
-                      handleMembershipClick(membership);
+                      handleAdminOrgClick(adminOrg);
                     }
                   }}
                 >
                   <div className="flex-1">
                     <p className="font-medium">
-                      {membership.org_name || "Unknown Club"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Joined: {formatDate(membership.joined_at)}
+                      {adminOrg.org_name || "Unknown Club"}
                     </p>
                   </div>
-                  <Badge variant="default">{membership.role_name}</Badge>
+                  <Badge variant="default">Admin</Badge>
                 </div>
               ))}
             </div>
@@ -339,12 +305,12 @@ export default function ClubStatusCard({ userId }: ClubStatusCardProps) {
                   }}
                 >
                   <div className="flex-1">
-                    <p className="font-medium">
-                      {application.org_name || "Unknown Club"}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Position: {application.position || "Not specified"}
-                    </p>
+                    <p className="font-medium">{application.org_name || 'Unknown Club'}</p>
+                    {application.opening_title && (
+                      <p className="text-sm text-muted-foreground">
+                        Position: {application.opening_title}
+                      </p>
+                    )}
                     <p className="text-xs text-muted-foreground">
                       Applied: {formatDate(application.created_at)}
                     </p>
