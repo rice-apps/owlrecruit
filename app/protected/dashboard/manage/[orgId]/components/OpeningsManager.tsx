@@ -10,7 +10,6 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Loader2, Briefcase } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CreateOpeningDialog } from "./CreateOpeningDialog";
@@ -30,9 +29,6 @@ interface Opening {
   org_id: string;
   title: string;
   description?: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
 }
 
 interface OpeningsManagerProps {
@@ -100,25 +96,6 @@ export function OpeningsManager({ orgId, openings }: OpeningsManagerProps) {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'open':
-        return 'default';
-      case 'closed':
-        return 'secondary';
-      default:
-        return 'outline';
-    }
-  };
-
   return (
     <>
       <Card>
@@ -154,20 +131,12 @@ export function OpeningsManager({ orgId, openings }: OpeningsManagerProps) {
                   className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
                 >
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold">{opening.title}</h3>
-                      <Badge variant={getStatusBadgeVariant(opening.status)}>
-                        {opening.status}
-                      </Badge>
-                    </div>
+                    <h3 className="font-semibold mb-1">{opening.title}</h3>
                     {opening.description && (
                       <p className="text-sm text-muted-foreground line-clamp-2">
                         {opening.description}
                       </p>
                     )}
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Created: {formatDate(opening.created_at)}
-                    </p>
                   </div>
                   <Button
                     variant="ghost"

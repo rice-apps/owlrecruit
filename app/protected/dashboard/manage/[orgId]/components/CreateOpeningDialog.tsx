@@ -22,13 +22,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 interface CreateOpeningDialogProps {
   orgId: string;
@@ -47,7 +40,6 @@ export function CreateOpeningDialog({
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    status: 'open',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -62,7 +54,6 @@ export function CreateOpeningDialog({
           org_id: orgId,
           title: formData.title,
           description: formData.description,
-          status: formData.status,
         });
 
       if (error) throw error;
@@ -73,7 +64,7 @@ export function CreateOpeningDialog({
       });
 
       // Reset form and close dialog
-      setFormData({ title: '', description: '', status: 'open' });
+      setFormData({ title: '', description: '' });
       onOpenChange(false);
       router.refresh();
     } catch (error) {
@@ -122,23 +113,6 @@ export function CreateOpeningDialog({
                 placeholder="Describe the role and responsibilities"
                 rows={4}
               />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, status: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="open">Open</SelectItem>
-                  <SelectItem value="closed">Closed</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </div>
           <DialogFooter>
