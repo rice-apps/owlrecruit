@@ -91,7 +91,7 @@ export default function ClubStatusCard({ userId }: ClubStatusCardProps) {
    * Handle click on admin org container - routes to management page
    */
   const handleAdminOrgClick = (adminOrg: AdminOrg) => {
-    router.push(`/protected/dashboard/manage/${adminOrg.org_id}`);
+    router.push(`/admin/orgs/${adminOrg.org_id}`);
   };
 
   /**

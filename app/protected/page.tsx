@@ -35,9 +35,16 @@ export default async function ProtectedPage() {
           <Link href="/protected/applications">My Applications</Link>
         </Button>
         <Button asChild size="lg">
-          <Link href="/protected/roles">Manage Roles</Link>
+          <Link href="/protected/dashboard">My Organizations</Link>
         </Button>
-        {isAdmin && <UploadDialog />}
+        {isAdmin && (
+          <>
+            <Button asChild size='lg' variant="secondary">
+              <Link href="/admin">Admin Dashboard</Link>
+            </Button>
+            <UploadDialog />
+          </>
+        )}
       </div>
     </div>
   );

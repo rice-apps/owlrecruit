@@ -19,11 +19,11 @@ import { TeamManager } from "./components/TeamManager";
 import { QuickActions } from "./components/QuickActions";
 
 interface OrgManagePageProps {
-  params: { orgId: string };
+  params: { id: string };
 }
 
 export default async function OrgManagePage({ params }: OrgManagePageProps) {
-  const { orgId } = await params;
+  const { id: orgId } = await params;
   const supabase = await createClient();
 
   // Verify user is authenticated
@@ -107,7 +107,7 @@ export default async function OrgManagePage({ params }: OrgManagePageProps) {
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
           >
             <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-            Back to Dashboard
+            Back to My Organizations
           </Link>
         </div>
 
