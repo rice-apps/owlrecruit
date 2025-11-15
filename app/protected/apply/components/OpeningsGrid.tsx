@@ -8,8 +8,9 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Briefcase, Building2 } from "lucide-react";
+import { Briefcase, Building2, Calendar } from "lucide-react";
 import { OpeningDetailsDialog } from "./OpeningDetailsDialog";
+import { parseOpeningDescription, formatDeadlineForDisplay } from "@/lib/opening-utils";
 
 interface Opening {
   id: string;
@@ -57,26 +58,36 @@ export function OpeningsGrid({ openings }: OpeningsGridProps) {
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {openings.map((opening) => (
-          <Card key={opening.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <CardTitle className="text-xl mb-2">{opening.title}</CardTitle>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Building2 className="h-4 w-4" />
-                <span>{opening.orgs?.name || 'Unknown Organization'}</span>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Button
-                className="w-full"
-                variant="outline"
-                onClick={() => handleOpenDetails(opening)}
-              >
-                View Details & Apply
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
+        {openings.map((opening) => {
+          const { deadline } = parseOpeningDescription(opening.description);
+          
+          return (
+            <Card key={opening.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <CardTitle className="text-xl mb-2">{opening.title}</CardTitle>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Building2 className="h-4 w-4" />
+                  <span>{opening.orgs?.name || 'Unknown Organization'}</span>
+                </div>
+                {deadline && (
+                  <div className="flex items-center gap-2 text-sm text-primary mt-2">
+                    <Calendar className="h-4 w-4" />
+                    <span>Apply by: {formatDeadlineForDisplay(deadline)}</span>
+                  </div>
+                )}
+              </CardHeader>
+              <CardContent>
+                <Button
+                  className="w-full"
+                  variant="outline"
+                  onClick={() => handleOpenDetails(opening)}
+                >
+                  View Details & Apply
+                </Button>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {/* Opening Details Dialog */}
