@@ -18,10 +18,10 @@ export function SignUpForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
+      <Card className="border border-transparent">
         <CardHeader>
-          <CardTitle className="text-2xl">Sign up</CardTitle>
-          <CardDescription></CardDescription>
+          <CardTitle className="text-2xl">Welcome to OwlRecruit</CardTitle>
+          <CardDescription className="text"> Please sign in through your Rice Google account to access your account! </CardDescription>
         </CardHeader>
         <CardContent>
           <SignUpGoogleBtn />
