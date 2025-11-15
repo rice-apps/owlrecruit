@@ -93,7 +93,7 @@ export async function addMemberAction(
     }
 
     // Revalidate the page to show updated data
-    revalidatePath(`/protected/dashboard/manage/${orgId}`);
+    revalidatePath(`/admin/orgs/${orgId}`);
 
     return { success: true };
   } catch (error) {
@@ -156,7 +156,7 @@ export async function removeMemberAction(
     }
 
     // Revalidate the page to show updated data
-    revalidatePath(`/protected/dashboard/manage/${orgId}`);
+    revalidatePath(`/admin/orgs/${orgId}`);
 
     return { success: true };
   } catch (error) {
