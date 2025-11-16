@@ -1,41 +1,57 @@
-import { createClient } from '@/lib/supabase/server'
-import type { NextRequest } from 'next/server'
-import Papa from 'papaparse'
-
 /**
- * Handles POST requests to /api/interviews/route.ts.
+ * API Route: /api/interviews
  *
- * Expects a text/csv or text/plain content type. If the content type is
- * not valid, a 400 status code is returned with an error message.
+ * Handles CSV uploads for interview feedback data.
  *
- * Retrieves the CSV text from the request body and parses it into an
- * array of objects using PapaParse. If there are any errors during
- * parsing, a 400 status code is returned with an error message and
- * details about the errors.
- *
- * If the parsed data is empty, a 400 status code is returned with an
- * error message.
- *
- * Initializes a Supabase client and inserts the parsed data into the
- * 'interviews' table. If there is an error during insertion, a 500
- * status code is returned with an error message.
- *
- * If the insertion is successful, a 200 status code is returned with the
- * inserted data and the number of inserted rows.
- *
- **/
+ * QUICK START GUIDE:
+ * - To add/remove CSV columns: They're automatically handled as feedback
+ * - To change database fields: Edit buildInterviewRecord in csv-upload-utils.ts
+ * - To modify validation: Edit validation functions in csv-upload-utils.ts
+ */
+
+import { createClient } from '@/lib/supabase/server';
+import type { NextRequest } from 'next/server';
+import Papa from 'papaparse';
+import { ERROR_MESSAGES } from '@/lib/csv-upload-config';
+import {
+  processCSVRows,
+  buildInterviewRecord,
+  lookupOpening,
+  formatSuccessResponse,
+  formatErrorResponse,
+  type CSVRow,
+} from '@/lib/csv-upload-utils';
+
 export async function POST(request: NextRequest) {
   try {
-    // Check if content type is CSV
+    // ==========================================================================
+    // STEP 1: Validate Request
+    // ==========================================================================
+
+    // Check content type
     const contentType = request.headers.get('content-type');
     if (!contentType || (!contentType.includes('text/csv') && !contentType.includes('text/plain'))) {
-      return new Response(JSON.stringify({error: 'Content-Type must be text/csv or text/plain'}), {status: 400});
+      return new Response(
+        JSON.stringify(formatErrorResponse(ERROR_MESSAGES.INVALID_CONTENT_TYPE)),
+        { status: 400 }
+      );
     }
 
-    // Get CSV text from request body
+    // Get opening_id from header
+    const openingId = request.headers.get('X-Opening-Id');
+    if (!openingId) {
+      return new Response(
+        JSON.stringify(formatErrorResponse(ERROR_MESSAGES.MISSING_OPENING_ID)),
+        { status: 400 }
+      );
+    }
+
+    // ==========================================================================
+    // STEP 2: Parse CSV
+    // ==========================================================================
+
     const csvText = await request.text();
 
-    // Parse CSV into array of objects using PapaParse
     const result = Papa.parse(csvText, {
       header: true,
       skipEmptyLines: true,
@@ -43,28 +59,102 @@ export async function POST(request: NextRequest) {
     });
 
     if (result.errors.length > 0) {
-      return new Response(JSON.stringify({error: 'CSV parsing error', details: result.errors}), {status: 400});
+      const formattedErrors = result.errors.map(err => ({
+        row: err.row,
+        type: err.type,
+        code: err.code,
+        message: err.message,
+      }));
+      return new Response(
+        JSON.stringify(formatErrorResponse('CSV parsing error', formattedErrors)),
+        { status: 400 }
+      );
     }
 
-    const parsedData = result.data;
+    const parsedData = result.data as CSVRow[];
 
     if (parsedData.length === 0) {
-      return new Response(JSON.stringify({error: 'No valid data rows found in CSV'}), {status: 400});
+      return new Response(
+        JSON.stringify(formatErrorResponse(ERROR_MESSAGES.NO_VALID_DATA)),
+        { status: 400 }
+      );
     }
 
-    // Init supabase client
+    // ==========================================================================
+    // STEP 3: Validate Opening and Get Org ID
+    // ==========================================================================
+
     const supabase = await createClient();
 
-    const {data, error} = await supabase.from('interviews')
-      .insert(parsedData)
+    const opening = await lookupOpening(supabase, openingId);
+    if (!opening) {
+      return new Response(
+        JSON.stringify(formatErrorResponse(ERROR_MESSAGES.OPENING_NOT_FOUND)),
+        { status: 404 }
+      );
+    }
+
+    const orgId = opening.org_id;
+
+    // ==========================================================================
+    // STEP 4: Process CSV Rows
+    //
+    // This function handles:
+    // - Validating each row
+    // - Looking up users by netid
+    // - Building database records
+    // - Collecting errors for invalid rows
+    //
+    // TO CUSTOMIZE: Edit processCSVRows in csv-upload-utils.ts
+    // ==========================================================================
+
+    const { records: interviewRecords, errors } = await processCSVRows(
+      supabase,
+      parsedData,
+      orgId,
+      openingId,
+      buildInterviewRecord
+    );
+
+    // Check if all rows failed
+    if (interviewRecords.length === 0) {
+      return new Response(
+        JSON.stringify(formatErrorResponse(ERROR_MESSAGES.NO_VALID_RECORDS, errors)),
+        { status: 400 }
+      );
+    }
+
+    // ==========================================================================
+    // STEP 5: Insert into Database
+    // ==========================================================================
+
+    const { data, error } = await supabase
+      .from('interviews')
+      .insert(interviewRecords)
       .select();
 
     if (error) {
-      return new Response(JSON.stringify({error}), {status: 500});
+      return new Response(
+        JSON.stringify(formatErrorResponse(error.message)),
+        { status: 500 }
+      );
     }
 
-    return new Response(JSON.stringify({data, inserted_count: data.length}), {status: 200});
+    // ==========================================================================
+    // STEP 6: Return Success Response
+    // ==========================================================================
+
+    return new Response(
+      JSON.stringify(formatSuccessResponse(data, errors.length, errors)),
+      { status: 200 }
+    );
+
   } catch (err) {
-    return new Response(JSON.stringify({error: err instanceof Error ? err.message : 'Unknown error'}), {status: 400});
+    return new Response(
+      JSON.stringify(formatErrorResponse(
+        err instanceof Error ? err.message : 'Unknown error'
+      )),
+      { status: 500 }
+    );
   }
 }
