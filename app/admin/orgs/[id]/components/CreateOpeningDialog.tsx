@@ -22,7 +22,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { formatOpeningDescription } from "@/lib/opening-utils";
 
 interface CreateOpeningDialogProps {
   orgId: string;
@@ -41,7 +40,6 @@ export function CreateOpeningDialog({
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    deadline: '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -50,19 +48,13 @@ export function CreateOpeningDialog({
 
     try {
       const supabase = createClient();
-      
-      // Format description with embedded deadline
-      const formattedDescription = formatOpeningDescription(
-        formData.description,
-        formData.deadline
-      );
-      
+
       const { error } = await supabase
         .from('openings')
         .insert({
           org_id: orgId,
           title: formData.title,
-          description: formattedDescription,
+          description: formData.description,
         });
 
       if (error) throw error;
@@ -73,7 +65,7 @@ export function CreateOpeningDialog({
       });
 
       // Reset form and close dialog
-      setFormData({ title: '', description: '', deadline: '' });
+      setFormData({ title: '', description: '' });
       onOpenChange(false);
       router.refresh();
     } catch (error) {
@@ -121,17 +113,6 @@ export function CreateOpeningDialog({
                 }
                 placeholder="Describe the role and responsibilities"
                 rows={4}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="deadline">Application Deadline</Label>
-              <Input
-                id="deadline"
-                type="date"
-                value={formData.deadline}
-                onChange={(e) =>
-                  setFormData({ ...formData, deadline: e.target.value })
-                }
                 required
               />
             </div>

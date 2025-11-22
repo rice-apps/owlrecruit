@@ -27,7 +27,7 @@ export default async function ApplyPage() {
       org_id,
       title,
       description,
-      orgs:org_id (
+      orgs!org_id (
         id,
         name,
         description
