@@ -10,10 +10,9 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Loader2, Briefcase, Calendar, Eye } from "lucide-react";
+import { Plus, Trash2, Loader2, Briefcase, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CreateOpeningDialog } from "./CreateOpeningDialog";
-import { parseOpeningDescription, formatDeadlineForDisplay } from "@/lib/opening-utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -135,43 +134,31 @@ export function OpeningsManager({ orgId, openings }: OpeningsManagerProps) {
             </div>
           ) : (
             <div className="space-y-3">
-              {openings.map((opening) => {
-                const { description, deadline } = parseOpeningDescription(opening.description);
-                
-                return (
-                  <div
-                    key={opening.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold">{opening.title}</h3>
-                        {deadline && (
-                          <div className="flex items-center gap-1 text-xs text-primary">
-                            <Calendar className="h-3 w-3" />
-                            <span>{formatDeadlineForDisplay(deadline)}</span>
-                          </div>
-                        )}
-                      </div>
-                      {description && (
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {description}
-                        </p>
-                      )}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedOpening(opening);
-                        setDeleteDialogOpen(true);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+              {openings.map((opening) => (
+                <div
+                  key={opening.id}
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex-1">
+                    <h3 className="font-semibold mb-1">{opening.title}</h3>
+                    {opening.description && (
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {opening.description}
+                      </p>
+                    )}
                   </div>
-                );
-              })}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedOpening(opening);
+                      setDeleteDialogOpen(true);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              ))}
             </div>
           )}
         </CardContent>

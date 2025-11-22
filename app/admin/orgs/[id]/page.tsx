@@ -16,7 +16,6 @@ import { ArrowLeft } from "lucide-react";
 import { OrganizationHeader } from "./components/OrganizationHeader";
 import { OpeningsManager } from "./components/OpeningsManager";
 import { TeamManager } from "./components/TeamManager";
-import { QuickActions } from "./components/QuickActions";
 
 interface OrgManagePageProps {
   params: { id: string };
@@ -123,9 +122,6 @@ export default async function OrgManagePage({ params }: OrgManagePageProps) {
             totalTeamMembers
           }}
         />
-
-        {/* Quick Actions */}
-        <QuickActions orgId={orgId} />
 
         {/* Openings Manager */}
         <OpeningsManager

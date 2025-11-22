@@ -14,8 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Building2, Briefcase, Calendar } from "lucide-react";
-import { parseOpeningDescription, formatDeadlineForDisplay } from "@/lib/opening-utils";
+import { Building2, Briefcase } from "lucide-react";
 
 interface Opening {
   id: string;
@@ -26,7 +25,7 @@ interface Opening {
     id: string;
     name: string;
     description?: string;
-  } | null;
+  }[] | null;
 }
 
 interface OpeningDetailsDialogProps {
@@ -40,9 +39,6 @@ export function OpeningDetailsDialog({
   open,
   onOpenChange,
 }: OpeningDetailsDialogProps) {
-  // Parse description to extract deadline
-  const { description, deadline } = parseOpeningDescription(opening.description);
-  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
@@ -54,31 +50,23 @@ export function OpeningDetailsDialog({
             <div className="flex-1">
               <DialogTitle className="text-2xl">{opening.title}</DialogTitle>
               <DialogDescription className="sr-only">
-                Job opening details for {opening.title} at {opening.orgs?.name || 'Unknown Organization'}
+                Job opening details for {opening.title} at {opening.orgs?.[0]?.name || 'Unknown Organization'}
               </DialogDescription>
               <div className="flex items-center gap-2 mt-2 text-muted-foreground">
                 <Building2 className="h-4 w-4" />
-                <span>{opening.orgs?.name || 'Unknown Organization'}</span>
+                <span>{opening.orgs?.[0]?.name || 'Unknown Organization'}</span>
               </div>
-              {deadline && (
-                <div className="flex items-center gap-2 mt-2 text-sm">
-                  <Calendar className="h-4 w-4 text-primary" />
-                  <span className="font-medium text-primary">
-                    Apply by: {formatDeadlineForDisplay(deadline)}
-                  </span>
-                </div>
-              )}
             </div>
           </div>
         </DialogHeader>
 
         <div className="space-y-4">
           {/* Organization Description - only shown if org has a description */}
-          {opening.orgs?.description && (
+          {opening.orgs?.[0]?.description && (
             <div>
               <h3 className="font-semibold mb-2">About the Organization</h3>
               <p className="text-sm text-muted-foreground">
-                {opening.orgs.description}
+                {opening.orgs?.[0]?.description}
               </p>
             </div>
           )}
@@ -86,9 +74,9 @@ export function OpeningDetailsDialog({
           {/* Position Description - whitespace-pre-wrap preserves line breaks */}
           <div>
             <h3 className="font-semibold mb-2">Position Description</h3>
-            {description ? (
+            {opening.description ? (
               <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                {description}
+                {opening.description}
               </p>
             ) : (
               <p className="text-sm text-muted-foreground italic">

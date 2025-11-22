@@ -21,7 +21,7 @@ export default function ApplicationUpload() {
     const file = e.target.files[0];
     if (file) {
       try {
-        await uploadCSV(file, "/api/interviews");
+        await uploadCSV(file, "/api/applications");
       } catch (error) {
         console.error("Couldn't read file: ", error);
       }
