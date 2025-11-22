@@ -243,6 +243,8 @@ export async function lookupOpening(
  * @param openingId - Opening ID
  * @param buildRecordFn - Function to build database record
  * @param defaultStatus - Default status for new records (optional)
+ * @param tableName - Optional table name to check for duplicates (e.g. 'applications')
+ * @param adminClient - Optional admin client for creating auth users
  * @returns Object with valid records and errors
  */
 export async function processCSVRows<T>(
@@ -257,10 +259,25 @@ export async function processCSVRows<T>(
     data: Record<string, any>,
     status?: string
   ) => T,
-  defaultStatus?: string
+  defaultStatus?: string,
+  tableName?: string,
+  adminClient?: SupabaseClient
 ): Promise<{ records: T[]; errors: ProcessingError[] }> {
   const records: T[] = [];
   const errors: ProcessingError[] = [];
+  
+  // Optimization: Pre-fetch existing applicant IDs for this opening if duplicate check is enabled
+  const existingApplicantIds = new Set<string>();
+  if (tableName) {
+    const { data: existingApps } = await supabase
+      .from(tableName)
+      .select('applicant_id')
+      .eq('opening_id', openingId);
+      
+    if (existingApps) {
+      existingApps.forEach((app: any) => existingApplicantIds.add(app.applicant_id));
+    }
+  }
 
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
@@ -281,13 +298,79 @@ export async function processCSVRows<T>(
       continue;
     }
 
-    // Look up user
-    const user = await lookupUserByNetId(supabase, row[CSV_RESERVED_COLUMNS.NETID]);
+    // Look up or create user
+    let user = await lookupUserByNetId(supabase, row[CSV_RESERVED_COLUMNS.NETID]);
+    
+    // If user not found, create a placeholder user
     if (!user) {
+      // Check if admin client is available
+      if (!adminClient) {
+        errors.push({
+          row: rowNumber,
+          netid: row[CSV_RESERVED_COLUMNS.NETID],
+          error: `User not found and admin access is required to create new users.`,
+        });
+        if (!VALIDATION_CONFIG.skipInvalidRows) break;
+        continue;
+      }
+
+      const email = `${row[CSV_RESERVED_COLUMNS.NETID]}@rice.edu`;
+      // Use a dash as placeholder for name since it's required or preferred not to be null
+      const name = '-';
+
+      // 1. Create user in auth.users using admin client
+      const { data: authUser, error: authError } = await adminClient.auth.admin.createUser({
+        email: email,
+        email_confirm: true, // Auto-confirm placeholder users
+        user_metadata: {
+          net_id: row[CSV_RESERVED_COLUMNS.NETID],
+          name: name,
+        }
+      });
+
+      if (authError || !authUser.user) {
+        errors.push({
+          row: rowNumber,
+          netid: row[CSV_RESERVED_COLUMNS.NETID],
+          error: `Failed to create auth user: ${authError?.message || 'Unknown error'}`,
+        });
+        if (!VALIDATION_CONFIG.skipInvalidRows) break;
+        continue;
+      }
+
+      // 2. Create or update user record in public.users
+      // We use upsert here because a database trigger might have already created
+      // the user record when the auth user was created.
+      const { data: newUser, error: createError } = await supabase
+        .from('users')
+        .upsert({ 
+          id: authUser.user.id, // CRITICAL: Use the Auth User ID
+          net_id: row[CSV_RESERVED_COLUMNS.NETID],
+          name: name, // This is now explicitly '-'
+          email: email,
+        })
+        .select('id, net_id')
+        .single();
+
+      if (createError || !newUser) {
+        errors.push({
+          row: rowNumber,
+          netid: row[CSV_RESERVED_COLUMNS.NETID],
+          error: `Failed to create public user: ${createError?.message || 'Unknown error'}`,
+        });
+        if (!VALIDATION_CONFIG.skipInvalidRows) break;
+        continue;
+      }
+      
+      user = newUser;
+    }
+
+    // Check for duplicate application
+    if (existingApplicantIds.has(user.id)) {
       errors.push({
         row: rowNumber,
         netid: row[CSV_RESERVED_COLUMNS.NETID],
-        error: ERROR_MESSAGES.USER_NOT_FOUND,
+        error: ERROR_MESSAGES.DUPLICATE_APPLICATION,
       });
       if (!VALIDATION_CONFIG.skipInvalidRows) break;
       continue;
