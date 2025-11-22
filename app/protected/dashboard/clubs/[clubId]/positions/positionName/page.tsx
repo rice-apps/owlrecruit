@@ -33,7 +33,7 @@ export default function PositionPage() {
               variant={positionStatus === "open" ? "success" : "destructive"}
               className="px-4 py-2 text-base"
             >
-              {positionStatus === "open" ? "Open" : "Closed"}
+              {positionStatus === "open" ? "Accepting Applications" : "Not Accepting Applications"}
             </Badge>
           </div>
         </div>
