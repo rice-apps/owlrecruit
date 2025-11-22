@@ -3,6 +3,7 @@ import { Button } from "./ui/button";
 
 export function Hero() {
   return (
+    
     <section className="w-full">
       <div className="flex">
         <div className="max-w-5xl mx-auto p-10 py-20">
