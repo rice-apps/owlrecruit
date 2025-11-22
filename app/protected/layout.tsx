@@ -1,3 +1,4 @@
+import { AuthButton } from "@/components/auth-button";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import Link from "next/link";
 
@@ -15,6 +16,7 @@ export default function ProtectedLayout({
               <Link href={"/protected"}>OwlRecruit</Link>
             </div>
           </div>
+          <AuthButton/>
         </nav>
         <div className="flex-1 flex flex-col gap-20 max-w-5xl p-5">
           {children}
