@@ -1,17 +1,6 @@
 "use client"
 
 import * as React from "react"
-import {
-  ColumnDef,
-  ColumnFiltersState,
-  SortingState,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table"
-
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -23,51 +12,66 @@ import { Filter } from "lucide-react"
 import { ApplicationCard } from "./components/applicationCard"
 import { Application } from "./columns"
 
-interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[]
-  data: TData[]
+interface ApplicationsCardViewProps {
+  data: Application[]
 }
 
-export function ApplicationsCardView<TData, TValue>({
-  columns,
-  data,
-}: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
+const ITEMS_PER_PAGE = 12
 
-  const table = useReactTable({
-    data,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
-    onColumnFiltersChange: setColumnFilters,
-    getFilteredRowModel: getFilteredRowModel(),
-    state: {
-      sorting,
-      columnFilters,
-    },
-  })
+export function ApplicationsCardView({ data }: ApplicationsCardViewProps) {
+  const [selectedStatuses, setSelectedStatuses] = React.useState<string[]>([])
+  const [currentPage, setCurrentPage] = React.useState(0)
 
   // Get unique status values for filter
-  const statusColumn = table.getColumn("status")
   const uniqueStatuses = React.useMemo(() => {
     const statuses = new Set<string>()
-    data.forEach((row: any) => {
-      if (row.status) {
-        statuses.add(row.status)
+    data.forEach((application) => {
+      if (application.status) {
+        statuses.add(application.status)
       }
     })
     return Array.from(statuses)
   }, [data])
 
-  const selectedStatuses = (statusColumn?.getFilterValue() as string[]) ?? []
+  // Filter applications by selected statuses
+  const filteredApplications = React.useMemo(() => {
+    if (selectedStatuses.length === 0) {
+      return data
+    }
+    return data.filter((application) =>
+      selectedStatuses.includes(application.status)
+    )
+  }, [data, selectedStatuses])
+
+  const paginatedApplications = React.useMemo(() => {
+    const start = currentPage * ITEMS_PER_PAGE
+    const end = start + ITEMS_PER_PAGE
+    return filteredApplications.slice(start, end)
+  }, [filteredApplications, currentPage])
+
+  const totalPages = Math.ceil(filteredApplications.length / ITEMS_PER_PAGE)
+  const canPreviousPage = currentPage > 0
+  const canNextPage = currentPage < totalPages - 1
+
+  React.useEffect(() => {
+    setCurrentPage(0)
+  }, [selectedStatuses])
+
+  const toggleStatus = (status: string, checked: boolean) => {
+    setSelectedStatuses((prev) =>
+      checked
+        ? [...prev, status]
+        : prev.filter((s) => s !== status)
+    )
+  }
+
+  const clearFilters = () => {
+    setSelectedStatuses([])
+  }
 
   return (
     <div className="space-y-4">
-<div className="flex items-center justify-between">
-
+      <div className="flex items-center justify-between">
         {/* Status Filter */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -88,14 +92,7 @@ export function ApplicationsCardView<TData, TValue>({
                 <DropdownMenuCheckboxItem
                   key={status}
                   checked={isSelected}
-                  onCheckedChange={(checked) => {
-                    const newValue = checked
-                      ? [...selectedStatuses, status]
-                      : selectedStatuses.filter((s) => s !== status)
-                    statusColumn?.setFilterValue(
-                      newValue.length ? newValue : undefined
-                    )
-                  }}
+                  onCheckedChange={(checked) => toggleStatus(status, checked)}
                 >
                   {status}
                 </DropdownMenuCheckboxItem>
@@ -105,7 +102,7 @@ export function ApplicationsCardView<TData, TValue>({
               <>
                 <DropdownMenuCheckboxItem
                   checked={false}
-                  onCheckedChange={() => statusColumn?.setFilterValue(undefined)}
+                  onCheckedChange={clearFilters}
                   className="justify-center text-center font-medium"
                 >
                   Clear filters
@@ -115,13 +112,14 @@ export function ApplicationsCardView<TData, TValue>({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {table.getRowModel().rows?.length ? (
-          table.getRowModel().rows.map((row) => (
+        {paginatedApplications.length > 0 ? (
+          paginatedApplications.map((application) => (
             <ApplicationCard
-              key={row.id}
-              application={row.original as Application}
+              key={application.id}
+              application={application}
             />
           ))
         ) : (
@@ -136,16 +134,16 @@ export function ApplicationsCardView<TData, TValue>({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
+          onClick={() => setCurrentPage((prev) => prev - 1)}
+          disabled={!canPreviousPage}
         >
           Previous
         </Button>
         <Button
           variant="outline"
           size="sm"
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
+          onClick={() => setCurrentPage((prev) => prev + 1)}
+          disabled={!canNextPage}
         >
           Next
         </Button>
