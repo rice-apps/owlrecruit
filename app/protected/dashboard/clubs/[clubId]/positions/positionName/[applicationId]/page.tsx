@@ -16,7 +16,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { Star, ChevronDown, ExternalLink, Mail, User, Users, FileText } from "lucide-react"
+import { Star, ChevronDown, ExternalLink, Mail, User, Users, FileText, MessageSquare } from "lucide-react"
 
 // Mock data - replace with actual data fetching
 const mockApplicationData = {
@@ -34,6 +34,14 @@ const mockApplicationData = {
       question: "Why do you want to join RiceApps?",
       answer:
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+      comments: [
+        {
+          id: "c1",
+          author: "John Doe",
+          text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+          timestamp: "2024-01-15T10:30:00Z",
+        },
+      ],
     },
     {
       id: "2",
@@ -41,6 +49,14 @@ const mockApplicationData = {
       question: "What experience do you have building apps?",
       answer:
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+      comments: [
+        {
+          id: "c2",
+          author: "Jane Smith",
+          text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+          timestamp: "2024-01-15T11:45:00Z",
+        },
+      ],
     },
   ],
   reviewers: ["John Doe", "Jane Smith"],
@@ -68,7 +84,6 @@ const statusOptions = [
 
 export default function ApplicationFeedbackPage() {
   const [activeTab, setActiveTab] = useState<"submission" | "files" | "feedback">("submission")
-  const [comments, setComments] = useState("")
   const [status, setStatus] = useState(mockApplicationData.status)
   const [rating, setRating] = useState(0)
   const [hoveredRating, setHoveredRating] = useState(0)
@@ -77,6 +92,8 @@ export default function ApplicationFeedbackPage() {
   const [selectedReviewers, setSelectedReviewers] = useState<string[]>(
     mockApplicationData.reviewers
   )
+  const [questionComments, setQuestionComments] = useState<Record<string, string>>({})
+  const [expandedQuestions, setExpandedQuestions] = useState<Record<string, boolean>>({})
 
   const averageRating =
     mockApplicationData.ratings.reduce((acc, r) => acc + r.rating, 0) /
@@ -161,15 +178,75 @@ export default function ApplicationFeedbackPage() {
           {activeTab === "submission" && (
             <div className="space-y-6">
               {mockApplicationData.questions.map((q) => (
-                <div key={q.id} className="space-y-2">
-                  <h3 className="font-semibold">
-                    Question {q.number}
-                  </h3>
-                  <p className="font-medium">{q.question}</p>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {q.answer}
-                  </p>
-                </div>
+                <Card key={q.id}>
+                  <CardHeader>
+                    <CardTitle className="text-lg">
+                      Question {q.number}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex gap-6">
+                      {/* Question and Answer - Left 2/3 */}
+                      <div className="flex-[2] space-y-3">
+                        <p className="font-medium text-base">{q.question}</p>
+                        <p className="text-muted-foreground leading-relaxed">
+                          {q.answer}
+                        </p>
+                      </div>
+
+                      {/* Comment Section - Right 1/3 */}
+                      <div className="flex-1 border-l pl-6">
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-2">
+                            <MessageSquare className="h-4 w-4" />
+                            <Label className="text-sm font-semibold">Reviewer Comments</Label>
+                          </div>
+
+                          {/* Existing Comments */}
+                          {q.comments && q.comments.length > 0 && (
+                            <div className="space-y-3">
+                              {q.comments.map((comment) => (
+                                <div key={comment.id} className="rounded-lg bg-muted p-3 space-y-1">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-sm font-semibold">{comment.author}</span>
+                                    <span className="text-xs text-muted-foreground">
+                                      {new Date(comment.timestamp).toLocaleDateString()}
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-muted-foreground leading-relaxed">
+                                    {comment.text}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Add New Comment */}
+                          <div className="space-y-2">
+                            <Textarea
+                              placeholder="Add your feedback for this question..."
+                              value={questionComments[q.id] || ""}
+                              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                                setQuestionComments(prev => ({
+                                  ...prev,
+                                  [q.id]: e.target.value
+                                }))
+                              }
+                              className="min-h-[100px]"
+                            />
+                            <Button
+                              className="w-full"
+                              size="sm"
+                              disabled={!questionComments[q.id]?.trim()}
+                            >
+                              Add Comment
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           )}
@@ -220,35 +297,6 @@ export default function ApplicationFeedbackPage() {
           )}
           {activeTab === "feedback" && (
             <div className="space-y-6">
-              {/* Applicant Information Card */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <User className="h-5 w-5" />
-                    Applicant Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div>
-                    <Label className="text-muted-foreground">Name</Label>
-                    <p className="font-medium">{mockApplicationData.applicant.name}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Position</Label>
-                    <p className="font-medium">{mockApplicationData.position}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Email</Label>
-                    <a
-                      href={`mailto:${mockApplicationData.applicant.email}`}
-                      className="flex items-center gap-2 font-medium text-primary hover:underline"
-                    >
-                      <Mail className="h-4 w-4" />
-                      {mockApplicationData.applicant.email}
-                    </a>
-                  </div>
-                </CardContent>
-              </Card>
 {/* Admin: Assign Reviewers */}
               {mockApplicationData.isAdmin && (
                 <Card>
@@ -404,21 +452,6 @@ export default function ApplicationFeedbackPage() {
           )}
         </div>
 
-        {/* Comments Sidebar */}
-        <div className="w-80 border-l bg-background px-6 py-6">
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Comments</h3>
-            <Textarea
-              placeholder="Add a comment..."
-              value={comments}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setComments(e.target.value)}
-              className="min-h-[120px] resize-none"
-            />
-            <Button className="w-full" disabled={!comments.trim()}>
-              Post Comment
-            </Button>
-          </div>
-        </div>
       </div>
     </div>
   )
