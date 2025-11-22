@@ -44,39 +44,26 @@ export default function QuestionsComponent() {
         <div>
           <p className="text-sm text-muted-foreground">Question {questionIndex + 1}</p>
           <h3 className="text-2xl font-bold">{questionKey}</h3>
-        </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setQuestionIndex((p) => Math.max(0, p - 1))}
-            disabled={questionIndex <= 0}
-            className="px-3 py-1 rounded border disabled:opacity-50"
-            aria-label="Previous question"
-          >
-            ‹
-          </button>
-
-          <select
-            value={questionIndex}
-            onChange={(e) => setQuestionIndex(Number(e.target.value))}
-            className="px-2 py-1 border rounded"
-            aria-label="Select question"
-          >
-            {questionKeys.map((k, idx) => (
-              <option key={k} value={idx}>
-                {idx + 1}. {k.slice(0, 40)}
-              </option>
-            ))}
-          </select>
-
-          <button
-            onClick={() => setQuestionIndex((p) => Math.min(questionKeys.length - 1, p + 1))}
-            disabled={questionIndex >= questionKeys.length - 1}
-            className="px-3 py-1 rounded border disabled:opacity-50"
-            aria-label="Next question"
-          >
-            ›
-          </button>
+          {/* <- question select -> */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setQuestionIndex((p) => Math.max(0, p - 1))}
+              disabled={questionIndex <= 0}
+              className="px-3 py-1 rounded border disabled:opacity-50"
+              aria-label="Previous question"
+            >
+              ‹
+            </button>
+            <button
+              onClick={() => setQuestionIndex((p) => Math.min(questionKeys.length - 1, p + 1))}
+              disabled={questionIndex >= questionKeys.length - 1}
+              className="px-3 py-1 rounded border disabled:opacity-50"
+              aria-label="Next question"
+            >
+              ›
+            </button>
+          </div>
         </div>
       </div>
 
