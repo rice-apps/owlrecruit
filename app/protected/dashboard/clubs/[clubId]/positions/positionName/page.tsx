@@ -8,8 +8,9 @@ import mockData from "../mock.json"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { LayoutList, LayoutGrid, Pencil } from "lucide-react"
+import QuestionsComponent from "../components/questionsComponent"
 export default function PositionPage() {
-  const [activeTab, setActiveTab] = useState<"overview" | "applications">("applications")
+  const [activeTab, setActiveTab] = useState<"overview" | "applications" | "questions">("applications")
   const [viewMode, setViewMode] = useState<"list" | "card">("list")
   const [positionStatus] = useState<"open" | "closed">("open")
   return (
@@ -53,6 +54,16 @@ export default function PositionPage() {
             Overview
           </button>
           <button
+            onClick={() => setActiveTab("questions")}
+            className={`px-4 py-3 text-sm font-medium transition-colors ${
+              activeTab === "questions"
+                ? "border-b-2 border-primary text-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Questions
+          </button>
+          <button
             onClick={() => setActiveTab("applications")}
             className={`px-4 py-3 text-sm font-medium transition-colors ${
               activeTab === "applications"
@@ -71,6 +82,9 @@ export default function PositionPage() {
           <div className="rounded-lg border bg-card p-8 text-center">
             <p className="text-muted-foreground">Overview content coming soon</p>
           </div>
+        )}
+        {activeTab === "questions" && (
+          <QuestionsComponent />
         )}
         {activeTab === "applications" && (
           <div className="space-y-4">
