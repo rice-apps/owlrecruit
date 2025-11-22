@@ -11,6 +11,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import type { NextRequest } from 'next/server';
 import Papa from 'papaparse';
 import {
@@ -89,6 +90,17 @@ export async function POST(request: NextRequest) {
     // ==========================================================================
 
     const supabase = await createClient();
+    
+    // Verify user is authenticated
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify(formatErrorResponse('Unauthorized')),
+        { status: 401 }
+      );
+    }
+
+    const adminClient = createAdminClient();
 
     const opening = await lookupOpening(supabase, openingId);
     if (!opening) {
@@ -118,7 +130,9 @@ export async function POST(request: NextRequest) {
       orgId,
       openingId,
       buildApplicationRecord,
-      DEFAULT_UPLOAD_STATUS
+      DEFAULT_UPLOAD_STATUS,
+      'applications', // Check for duplicates in applications table
+      adminClient // Check for users that don't exist
     );
 
     // Check if all rows failed

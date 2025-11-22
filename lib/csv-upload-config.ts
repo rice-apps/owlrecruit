@@ -185,6 +185,7 @@ export const ERROR_MESSAGES = {
   MISSING_OPENING_ID: 'X-Opening-Id header is required',
   NO_VALID_DATA: 'No valid data rows found in CSV',
   NO_VALID_RECORDS: 'No valid records to insert',
+  DUPLICATE_APPLICATION: 'Application already exists for this user',
 } as const;
 
 // =============================================================================

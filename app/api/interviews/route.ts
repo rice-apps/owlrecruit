@@ -10,6 +10,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import type { NextRequest } from 'next/server';
 import Papa from 'papaparse';
 import { ERROR_MESSAGES } from '@/lib/csv-upload-config';
@@ -86,6 +87,17 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient();
 
+    // Verify user is authenticated
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify(formatErrorResponse('Unauthorized')),
+        { status: 401 }
+      );
+    }
+
+    const adminClient = createAdminClient();
+
     const opening = await lookupOpening(supabase, openingId);
     if (!opening) {
       return new Response(
@@ -113,7 +125,10 @@ export async function POST(request: NextRequest) {
       parsedData,
       orgId,
       openingId,
-      buildInterviewRecord
+      buildInterviewRecord,
+      undefined, // No default status
+      undefined,  // No duplicate check for interviews (or 'interviews' if desired)
+      adminClient // Check for users that don't exist
     );
 
     // Check if all rows failed
