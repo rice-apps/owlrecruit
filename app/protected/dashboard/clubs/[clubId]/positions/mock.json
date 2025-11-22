@@ -1,0 +1,46 @@
+{
+    "applications": [
+      {
+        "id": "app-001",
+        "name": "Name A",
+        "email": "xxxx@rice.edu",
+        "rating": 4.5,
+        "status": "Under Review"
+      },
+      {
+        "id": "app-002",
+        "name": "Name B",
+        "email": "yyyy@rice.edu",
+        "rating": 3.8,
+        "status": "Accepted"
+      },
+      {
+        "id": "app-003",
+        "name": "Name C",
+        "email": "zzzz@rice.edu",
+        "rating": 4.2,
+        "status": "Pending"
+      },
+      {
+        "id": "app-004",
+        "name": "Emily Chen",
+        "email": "echen@rice.edu",
+        "rating": 3.5,
+        "status": "Rejected"
+      },
+      {
+        "id": "app-005",
+        "name": "Michael Jordan",
+        "email": "mjohnson@rice.edu",
+        "rating": 4.0,
+        "status": "Interviewing"
+      },
+      {
+        "id": "app-006",
+        "name": "Sarah Williams",
+        "email": "swilliams@rice.edu",
+        "rating": 4.7,
+        "status": "Under Review"
+      }
+    ]
+  }
