@@ -46,7 +46,7 @@ export default function KanbanBoard({ applications }: KanbanBoardProps) {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
-  // Prevent hydration issues by only enabling DnD on client
+  // Prevent server-client mismatch issues by only enabling DnD on client
   useEffect(() => {
     setIsClient(true);
   }, []);
