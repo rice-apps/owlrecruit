@@ -211,7 +211,10 @@ export default function KanbanBoard({ applications }: KanbanBoardProps) {
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <div className={`grid grid-cols-${KANBAN_GRID_COLS} gap-4`}>
+          <div 
+            className="grid gap-4"
+            style={{ gridTemplateColumns: `repeat(${KANBAN_GRID_COLS}, minmax(0, 1fr))` }}
+          >
             {columns.map((column) => (
               <KanbanColumn
                 key={column.id}
@@ -237,7 +240,10 @@ export default function KanbanBoard({ applications }: KanbanBoardProps) {
           </DragOverlay>
         </DndContext>
       ) : (
-        <div className={`grid grid-cols-${KANBAN_GRID_COLS} gap-4`}>
+        <div 
+          className="grid gap-4"
+          style={{ gridTemplateColumns: `repeat(${KANBAN_GRID_COLS}, minmax(0, 1fr))` }}
+        >
           {columns.map((column) => (
             <KanbanColumn
               key={column.id}
