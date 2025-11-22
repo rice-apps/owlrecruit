@@ -17,6 +17,14 @@ export default function SignUpGoogleBtn() {
             provider: 'google',
             token: response.credential,
             });
+
+            if (error) {
+            // This will catch the trigger's error
+            alert('Only Rice University email addresses are allowed');
+            console.error('Sign in error:', error);
+            return;
+          }
+
             if (data?.user) {
               router.push('/protected');
             }
@@ -34,7 +42,9 @@ export default function SignUpGoogleBtn() {
               data-context="signup"
               data-ux_mode="popup"
               data-callback="handleSignInWithGoogle"
-              data-auto_prompt="false">
+              data-auto_prompt="false"
+              data-hosted_domain="rice.edu">
+              
             </div>
 
             <div className="g_id_signin"
