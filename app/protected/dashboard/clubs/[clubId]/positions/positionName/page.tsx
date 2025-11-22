@@ -60,7 +60,7 @@ export default function PositionPage() {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            Applications
+            Applicants
           </button>
         </div>
       </div>
@@ -100,7 +100,7 @@ export default function PositionPage() {
             {viewMode === "list" ? (
           <ApplicationsListView columns={columns} data={mockData.applications} />
             ) : (
-          <ApplicationsCardView columns={columns} data={mockData.applications} />
+          <ApplicationsCardView data={mockData.applications} />
             )}
           </div>
         )}
