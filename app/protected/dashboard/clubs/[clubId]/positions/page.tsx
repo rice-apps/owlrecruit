@@ -1,24 +1,38 @@
-"use client"
+"use client";
 import PositionCard from "./components/positionCard";
 
 export default function OpenPositions() {
-return (
+  return (
     <>
-    <div className="w-full px-36">
-      <div className="p-6">
-        {/* Open Positions Header */}
-        <div>
-          <h1 className="text-left font-bold text-3xl mb-4">Open Positions</h1>
-        </div>
+      <div className="w-full px-36">
+        <div className="p-6">
+          {/* Open Positions Header */}
+          <div>
+            <h1 className="text-left font-bold text-3xl mb-4">
+              Open Positions
+            </h1>
+          </div>
 
-        {/* Position Cards */}
-        <div className="mt-6 flex gap-10">
-          <PositionCard title="Product Lead" dueDate="12/25/2025" roleName="positionName"/>
-          <PositionCard title="Tech Lead" dueDate="04/20/2026" roleName="positionName"/>
-          <PositionCard title="CEO" dueDate="06/09/2025" roleName="positionName"/>
+          {/* Position Cards */}
+          <div className="mt-6 flex gap-10">
+            <PositionCard
+              title="Product Lead"
+              dueDate="12/25/2025"
+              roleName="positionName"
+            />
+            <PositionCard
+              title="Tech Lead"
+              dueDate="04/20/2026"
+              roleName="positionName"
+            />
+            <PositionCard
+              title="CEO"
+              dueDate="06/09/2025"
+              roleName="positionName"
+            />
+          </div>
         </div>
       </div>
-    </div>
     </>
-);
+  );
 }

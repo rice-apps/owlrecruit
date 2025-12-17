@@ -8,7 +8,8 @@ const defaultUrl = "http://localhost:3000";
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
   title: "OwlRecruit",
-  description: "A centralized recruitment platform for organizations at Rice University.",
+  description:
+    "A centralized recruitment platform for organizations at Rice University.",
 };
 
 const geistSans = Geist({

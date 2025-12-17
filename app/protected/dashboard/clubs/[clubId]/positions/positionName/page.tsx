@@ -1,18 +1,20 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { ApplicationsListView } from "./applicationsListView"
-import { ApplicationsCardView } from "./applicationsCardView"
-import { columns } from "./columns"
-import mockData from "../mock.json"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { LayoutList, LayoutGrid, Pencil } from "lucide-react"
-import QuestionsComponent from "../components/questionsComponent"
+import { useState } from "react";
+import { ApplicationsListView } from "./applicationsListView";
+import { ApplicationsCardView } from "./applicationsCardView";
+import { columns } from "./columns";
+import mockData from "../mock.json";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { LayoutList, LayoutGrid, Pencil } from "lucide-react";
+import QuestionsComponent from "../components/questionsComponent";
 export default function PositionPage() {
-  const [activeTab, setActiveTab] = useState<"overview" | "applications" | "questions">("applications")
-  const [viewMode, setViewMode] = useState<"list" | "card">("list")
-  const [positionStatus] = useState<"open" | "closed">("open")
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "applications" | "questions"
+  >("applications");
+  const [viewMode, setViewMode] = useState<"list" | "card">("list");
+  const [positionStatus] = useState<"open" | "closed">("open");
   return (
     <div className="flex min-h-screen flex-col">
       {/* Header */}
@@ -34,7 +36,9 @@ export default function PositionPage() {
               variant={positionStatus === "open" ? "success" : "destructive"}
               className="px-4 py-2 text-base"
             >
-              {positionStatus === "open" ? "Accepting Applications" : "Not Accepting Applications"}
+              {positionStatus === "open"
+                ? "Accepting Applications"
+                : "Not Accepting Applications"}
             </Badge>
           </div>
         </div>
@@ -80,12 +84,12 @@ export default function PositionPage() {
       <div className="flex-1 px-8 py-6">
         {activeTab === "overview" && (
           <div className="rounded-lg border bg-card p-8 text-center">
-            <p className="text-muted-foreground">Overview content coming soon</p>
+            <p className="text-muted-foreground">
+              Overview content coming soon
+            </p>
           </div>
         )}
-        {activeTab === "questions" && (
-          <QuestionsComponent />
-        )}
+        {activeTab === "questions" && <QuestionsComponent />}
         {activeTab === "applications" && (
           <div className="space-y-4">
             {/* View Toggle Header */}
@@ -112,13 +116,16 @@ export default function PositionPage() {
             </div>
             {/* View Content */}
             {viewMode === "list" ? (
-          <ApplicationsListView columns={columns} data={mockData.applications} />
+              <ApplicationsListView
+                columns={columns}
+                data={mockData.applications}
+              />
             ) : (
-          <ApplicationsCardView data={mockData.applications} />
+              <ApplicationsCardView data={mockData.applications} />
             )}
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }

@@ -11,14 +11,9 @@ const labelVariants = cva(
 
 const Label = React.forwardRef<
   HTMLLabelElement,
-  React.ComponentPropsWithoutRef<"label"> &
-    VariantProps<typeof labelVariants>
+  React.ComponentPropsWithoutRef<"label"> & VariantProps<typeof labelVariants>
 >(({ className, ...props }, ref) => (
-  <label
-    ref={ref}
-    className={cn(labelVariants(), className)}
-    {...props}
-  />
+  <label ref={ref} className={cn(labelVariants(), className)} {...props} />
 ));
 Label.displayName = "Label";
 

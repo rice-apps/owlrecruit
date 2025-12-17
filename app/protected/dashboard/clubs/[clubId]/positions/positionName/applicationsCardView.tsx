@@ -1,73 +1,71 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Button } from "@/components/ui/button"
+import * as React from "react";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Filter } from "lucide-react"
-import { ApplicationCard } from "./components/applicationCard"
-import { Application } from "./columns"
+} from "@/components/ui/dropdown-menu";
+import { Filter } from "lucide-react";
+import { ApplicationCard } from "./components/applicationCard";
+import { Application } from "./columns";
 
 interface ApplicationsCardViewProps {
-  data: Application[]
+  data: Application[];
 }
 
-const ITEMS_PER_PAGE = 12
+const ITEMS_PER_PAGE = 12;
 
 export function ApplicationsCardView({ data }: ApplicationsCardViewProps) {
-  const [selectedStatuses, setSelectedStatuses] = React.useState<string[]>([])
-  const [currentPage, setCurrentPage] = React.useState(0)
+  const [selectedStatuses, setSelectedStatuses] = React.useState<string[]>([]);
+  const [currentPage, setCurrentPage] = React.useState(0);
 
   // Get unique status values for filter
   const uniqueStatuses = React.useMemo(() => {
-    const statuses = new Set<string>()
+    const statuses = new Set<string>();
     data.forEach((application) => {
       if (application.status) {
-        statuses.add(application.status)
+        statuses.add(application.status);
       }
-    })
-    return Array.from(statuses)
-  }, [data])
+    });
+    return Array.from(statuses);
+  }, [data]);
 
   // Filter applications by selected statuses
   const filteredApplications = React.useMemo(() => {
     if (selectedStatuses.length === 0) {
-      return data
+      return data;
     }
     return data.filter((application) =>
-      selectedStatuses.includes(application.status)
-    )
-  }, [data, selectedStatuses])
+      selectedStatuses.includes(application.status),
+    );
+  }, [data, selectedStatuses]);
 
   const paginatedApplications = React.useMemo(() => {
-    const start = currentPage * ITEMS_PER_PAGE
-    const end = start + ITEMS_PER_PAGE
-    return filteredApplications.slice(start, end)
-  }, [filteredApplications, currentPage])
+    const start = currentPage * ITEMS_PER_PAGE;
+    const end = start + ITEMS_PER_PAGE;
+    return filteredApplications.slice(start, end);
+  }, [filteredApplications, currentPage]);
 
-  const totalPages = Math.ceil(filteredApplications.length / ITEMS_PER_PAGE)
-  const canPreviousPage = currentPage > 0
-  const canNextPage = currentPage < totalPages - 1
+  const totalPages = Math.ceil(filteredApplications.length / ITEMS_PER_PAGE);
+  const canPreviousPage = currentPage > 0;
+  const canNextPage = currentPage < totalPages - 1;
 
   React.useEffect(() => {
-    setCurrentPage(0)
-  }, [selectedStatuses])
+    setCurrentPage(0);
+  }, [selectedStatuses]);
 
   const toggleStatus = (status: string, checked: boolean) => {
     setSelectedStatuses((prev) =>
-      checked
-        ? [...prev, status]
-        : prev.filter((s) => s !== status)
-    )
-  }
+      checked ? [...prev, status] : prev.filter((s) => s !== status),
+    );
+  };
 
   const clearFilters = () => {
-    setSelectedStatuses([])
-  }
+    setSelectedStatuses([]);
+  };
 
   return (
     <div className="space-y-4">
@@ -87,7 +85,7 @@ export function ApplicationsCardView({ data }: ApplicationsCardViewProps) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             {uniqueStatuses.map((status) => {
-              const isSelected = selectedStatuses.includes(status)
+              const isSelected = selectedStatuses.includes(status);
               return (
                 <DropdownMenuCheckboxItem
                   key={status}
@@ -96,7 +94,7 @@ export function ApplicationsCardView({ data }: ApplicationsCardViewProps) {
                 >
                   {status}
                 </DropdownMenuCheckboxItem>
-              )
+              );
             })}
             {selectedStatuses.length > 0 && (
               <>
@@ -117,10 +115,7 @@ export function ApplicationsCardView({ data }: ApplicationsCardViewProps) {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {paginatedApplications.length > 0 ? (
           paginatedApplications.map((application) => (
-            <ApplicationCard
-              key={application.id}
-              application={application}
-            />
+            <ApplicationCard key={application.id} application={application} />
           ))
         ) : (
           <div className="col-span-full rounded-md border bg-card p-8 text-center">
@@ -149,5 +144,5 @@ export function ApplicationsCardView({ data }: ApplicationsCardViewProps) {
         </Button>
       </div>
     </div>
-  )
+  );
 }

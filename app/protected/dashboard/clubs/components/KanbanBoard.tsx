@@ -1,13 +1,13 @@
 /**
  * KanbanBoard Component
- * 
+ *
  * Client component wrapper for the Kanban board that handles interactions.
  * This allows the main page to remain a server component while having interactive elements.
  * Includes drag-and-drop functionality with edit mode and save changes.
  */
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -19,23 +19,25 @@ import {
   useSensor,
   useSensors,
   closestCenter,
-} from '@dnd-kit/core';
-import { Button } from '@/components/ui/button';
-import { Save, X, Edit } from 'lucide-react';
-import { KanbanColumn } from './index';
-import ApplicationCard from './ApplicationCard';
+} from "@dnd-kit/core";
+import { Button } from "@/components/ui/button";
+import { Save, X, Edit } from "lucide-react";
+import { KanbanColumn } from "./index";
+import ApplicationCard from "./ApplicationCard";
 import type { Application } from "../admin/[id]/page";
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from "@/lib/supabase/client";
 
 interface KanbanBoardProps {
   applications: Application[];
 }
 
 export default function KanbanBoard({ applications }: KanbanBoardProps) {
-  const [localApplications, setLocalApplications] = useState<Application[]>(applications);
+  const [localApplications, setLocalApplications] =
+    useState<Application[]>(applications);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [activeApplication, setActiveApplication] = useState<Application | null>(null);
+  const [activeApplication, setActiveApplication] =
+    useState<Application | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
@@ -60,7 +62,7 @@ export default function KanbanBoard({ applications }: KanbanBoardProps) {
       activationConstraint: {
         distance: 5,
       },
-    })
+    }),
   );
 
   const columns = [
@@ -71,14 +73,14 @@ export default function KanbanBoard({ applications }: KanbanBoardProps) {
   ];
 
   const getApplicationsByStatus = (status: string): Application[] => {
-    return localApplications.filter(app => app.status === status);
+    return localApplications.filter((app) => app.status === status);
   };
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
-    const application = localApplications.find(app => app.id === active.id);
+    const application = localApplications.find((app) => app.id === active.id);
     setActiveApplication(application || null);
-    
+
     // Enter edit mode when drag starts
     if (!isEditMode) {
       setIsEditMode(true);
@@ -95,16 +97,18 @@ export default function KanbanBoard({ applications }: KanbanBoardProps) {
     const newStatus = over.id as string;
 
     // Find the application being moved
-    const application = localApplications.find(app => app.id === applicationId);
+    const application = localApplications.find(
+      (app) => app.id === applicationId,
+    );
     if (!application || application.status === newStatus) return;
 
     // Update local state
-    setLocalApplications(prev => 
-      prev.map(app => 
-        app.id === applicationId 
+    setLocalApplications((prev) =>
+      prev.map((app) =>
+        app.id === applicationId
           ? { ...app, status: newStatus, updated_at: new Date().toISOString() }
-          : app
-      )
+          : app,
+      ),
     );
 
     setHasUnsavedChanges(true);
@@ -114,22 +118,24 @@ export default function KanbanBoard({ applications }: KanbanBoardProps) {
     setIsSaving(true);
     try {
       const supabase = createClient();
-      
+
       // Get applications that have changed from original
-      const changedApplications = localApplications.filter(localApp => {
-        const originalApp = applications.find(origApp => origApp.id === localApp.id);
+      const changedApplications = localApplications.filter((localApp) => {
+        const originalApp = applications.find(
+          (origApp) => origApp.id === localApp.id,
+        );
         return originalApp && originalApp.status !== localApp.status;
       });
 
       // Update each changed application
       for (const app of changedApplications) {
         const { error } = await supabase
-          .from('applications')
-          .update({ 
+          .from("applications")
+          .update({
             status: app.status,
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
           })
-          .eq('id', app.id);
+          .eq("id", app.id);
 
         if (error) {
           throw error;
@@ -139,12 +145,11 @@ export default function KanbanBoard({ applications }: KanbanBoardProps) {
       // Exit edit mode and reset unsaved changes
       setIsEditMode(false);
       setHasUnsavedChanges(false);
-      
+
       // Refresh the page to get updated data
       window.location.reload();
-      
     } catch (error) {
-      console.error('Error saving changes:', error);
+      console.error("Error saving changes:", error);
     } finally {
       setIsSaving(false);
     }
@@ -196,7 +201,7 @@ export default function KanbanBoard({ applications }: KanbanBoardProps) {
               disabled={!hasUnsavedChanges || isSaving}
             >
               <Save className="h-4 w-4 mr-1" />
-              {isSaving ? 'Saving...' : 'Save Changes'}
+              {isSaving ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </div>
@@ -223,7 +228,7 @@ export default function KanbanBoard({ applications }: KanbanBoardProps) {
               />
             ))}
           </div>
-          
+
           <DragOverlay>
             {activeApplication ? (
               <div className="rotate-3 opacity-90">

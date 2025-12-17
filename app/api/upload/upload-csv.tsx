@@ -1,9 +1,9 @@
 export const uploadCSV = async (csv: File, path: string) => {
   await fetch(path, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'text/csv',
+      "Content-Type": "text/csv",
     },
-    body: csv
-  })
-}
+    body: csv,
+  });
+};

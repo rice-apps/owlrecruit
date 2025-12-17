@@ -1,6 +1,6 @@
 /**
  * Admin Club Layout
- * 
+ *
  * Layout for admin club pages that displays the organization name in the header.
  * Fetches organization data based on the org ID from the URL params.
  */
@@ -14,9 +14,9 @@ interface AdminClubLayoutProps {
   params: { id: string };
 }
 
-export default async function AdminClubLayout({ 
-  children, 
-  params 
+export default async function AdminClubLayout({
+  children,
+  params,
 }: AdminClubLayoutProps) {
   const supabase = await createClient();
   const { id: orgId } = await params;
@@ -29,9 +29,9 @@ export default async function AdminClubLayout({
 
   // Fetch organization data
   const { data: org, error: orgError } = await supabase
-    .from('orgs')
-    .select('name')
-    .eq('id', orgId)
+    .from("orgs")
+    .select("name")
+    .eq("id", orgId)
     .single();
 
   if (orgError || !org) {
@@ -42,7 +42,7 @@ export default async function AdminClubLayout({
     <div className="flex-1 w-full flex flex-col gap-8">
       {/* Back Navigation */}
       <div className="flex items-center gap-4">
-        <Link 
+        <Link
           href="/protected/dashboard"
           className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
         >
@@ -55,12 +55,10 @@ export default async function AdminClubLayout({
       <div className="flex items-start justify-between">
         <div className="flex flex-col gap-2">
           <h1 className="font-bold text-3xl">{org.name}</h1>
-          <p className="text-muted-foreground">
-            Admin Dashboard
-          </p>
+          <p className="text-muted-foreground">Admin Dashboard</p>
         </div>
       </div>
-      
+
       {/* Page Content */}
       {children}
     </div>

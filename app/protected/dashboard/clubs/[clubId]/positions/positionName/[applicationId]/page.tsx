@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Label } from "@/components/ui/label"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,8 +15,17 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu"
-import { Star, ChevronDown, ExternalLink, Mail, User, Users, FileText, MessageSquare } from "lucide-react"
+} from "@/components/ui/dropdown-menu";
+import {
+  Star,
+  ChevronDown,
+  ExternalLink,
+  Mail,
+  User,
+  Users,
+  FileText,
+  MessageSquare,
+} from "lucide-react";
 
 // Mock data - replace with actual data fetching
 const mockApplicationData = {
@@ -26,7 +35,8 @@ const mockApplicationData = {
   },
   position: "Developer",
   status: "Under Review",
-  resumeLink: "https://docs.google.com/document/d/1T5Ps5CBTiCVaF3qZPPfC6LjWOZb3NwwnbzcFGORwe58/edit?tab=t.0",
+  resumeLink:
+    "https://docs.google.com/document/d/1T5Ps5CBTiCVaF3qZPPfC6LjWOZb3NwwnbzcFGORwe58/edit?tab=t.0",
   questions: [
     {
       id: "1",
@@ -65,14 +75,14 @@ const mockApplicationData = {
     { reviewer: "Jane Smith", rating: 4.0 },
   ],
   isAdmin: true, // Replace with actual admin check
-}
+};
 
 const availableReviewers = [
   { id: "1", name: "John Doe" },
   { id: "2", name: "Jane Smith" },
   { id: "3", name: "Bob Johnson" },
   { id: "4", name: "Alice Williams" },
-]
+];
 
 const statusOptions = [
   "Pending",
@@ -80,47 +90,53 @@ const statusOptions = [
   "Interviewing",
   "Accepted",
   "Rejected",
-]
+];
 
 export default function ApplicationFeedbackPage() {
-  const [activeTab, setActiveTab] = useState<"submission" | "files" | "feedback">("submission")
-  const [status, setStatus] = useState(mockApplicationData.status)
-  const [rating, setRating] = useState(0)
-  const [hoveredRating, setHoveredRating] = useState(0)
-  const [writtenFeedback, setWrittenFeedback] = useState("")
-  const [interviewNotes, setInterviewNotes] = useState("")
+  const [activeTab, setActiveTab] = useState<
+    "submission" | "files" | "feedback"
+  >("submission");
+  const [status, setStatus] = useState(mockApplicationData.status);
+  const [rating, setRating] = useState(0);
+  const [hoveredRating, setHoveredRating] = useState(0);
+  const [writtenFeedback, setWrittenFeedback] = useState("");
+  const [interviewNotes, setInterviewNotes] = useState("");
   const [selectedReviewers, setSelectedReviewers] = useState<string[]>(
-    mockApplicationData.reviewers
-  )
-  const [questionComments, setQuestionComments] = useState<Record<string, string>>({})
-  const [expandedQuestions, setExpandedQuestions] = useState<Record<string, boolean>>({})
+    mockApplicationData.reviewers,
+  );
+  const [questionComments, setQuestionComments] = useState<
+    Record<string, string>
+  >({});
+  const [expandedQuestions, setExpandedQuestions] = useState<
+    Record<string, boolean>
+  >({});
 
   const averageRating =
     mockApplicationData.ratings.reduce((acc, r) => acc + r.rating, 0) /
-    mockApplicationData.ratings.length
+    mockApplicationData.ratings.length;
 
   const getStatusVariant = (status: string) => {
     switch (status.toLowerCase()) {
       case "accepted":
-        return "success"
+        return "success";
       case "rejected":
-        return "destructive"
+        return "destructive";
       case "under review":
-        return "secondary"
+        return "secondary";
       case "interviewing":
-        return "outline"
+        return "outline";
       default:
-        return "secondary"
+        return "secondary";
     }
-  }
+  };
 
   const toggleReviewer = (reviewerName: string) => {
     setSelectedReviewers((prev) =>
       prev.includes(reviewerName)
         ? prev.filter((r) => r !== reviewerName)
-        : [...prev, reviewerName]
-    )
-  }
+        : [...prev, reviewerName],
+    );
+  };
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -128,9 +144,15 @@ export default function ApplicationFeedbackPage() {
       <div className="border-b bg-background">
         <div className="px-8 py-6">
           <div className="space-y-2">
-            <h1 className="text-3xl font-bold">RiceApps - {mockApplicationData.position}</h1>
-            <h2 className="text-2xl font-semibold">{mockApplicationData.applicant.name}</h2>
-            <p className="text-sm text-muted-foreground">{mockApplicationData.applicant.email}</p>
+            <h1 className="text-3xl font-bold">
+              RiceApps - {mockApplicationData.position}
+            </h1>
+            <h2 className="text-2xl font-semibold">
+              {mockApplicationData.applicant.name}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {mockApplicationData.applicant.email}
+            </p>
           </div>
         </div>
       </div>
@@ -199,18 +221,27 @@ export default function ApplicationFeedbackPage() {
                         <div className="space-y-4">
                           <div className="flex items-center gap-2">
                             <MessageSquare className="h-4 w-4" />
-                            <Label className="text-sm font-semibold">Reviewer Comments</Label>
+                            <Label className="text-sm font-semibold">
+                              Reviewer Comments
+                            </Label>
                           </div>
 
                           {/* Existing Comments */}
                           {q.comments && q.comments.length > 0 && (
                             <div className="space-y-3">
                               {q.comments.map((comment) => (
-                                <div key={comment.id} className="rounded-lg bg-muted p-3 space-y-1">
+                                <div
+                                  key={comment.id}
+                                  className="rounded-lg bg-muted p-3 space-y-1"
+                                >
                                   <div className="flex items-center justify-between">
-                                    <span className="text-sm font-semibold">{comment.author}</span>
+                                    <span className="text-sm font-semibold">
+                                      {comment.author}
+                                    </span>
                                     <span className="text-xs text-muted-foreground">
-                                      {new Date(comment.timestamp).toLocaleDateString()}
+                                      {new Date(
+                                        comment.timestamp,
+                                      ).toLocaleDateString()}
                                     </span>
                                   </div>
                                   <p className="text-sm text-muted-foreground leading-relaxed">
@@ -226,10 +257,12 @@ export default function ApplicationFeedbackPage() {
                             <Textarea
                               placeholder="Add your feedback for this question..."
                               value={questionComments[q.id] || ""}
-                              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                                setQuestionComments(prev => ({
+                              onChange={(
+                                e: React.ChangeEvent<HTMLTextAreaElement>,
+                              ) =>
+                                setQuestionComments((prev) => ({
                                   ...prev,
-                                  [q.id]: e.target.value
+                                  [q.id]: e.target.value,
                                 }))
                               }
                               className="min-h-[100px]"
@@ -260,11 +293,7 @@ export default function ApplicationFeedbackPage() {
                         <FileText className="h-5 w-5" />
                         Resume
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        asChild
-                      >
+                      <Button variant="outline" size="sm" asChild>
                         <a
                           href={mockApplicationData.resumeLink}
                           target="_blank"
@@ -280,7 +309,10 @@ export default function ApplicationFeedbackPage() {
                   <CardContent>
                     <div className="w-full h-[800px] border rounded-md overflow-hidden">
                       <iframe
-                        src={mockApplicationData.resumeLink.replace('/edit', '/preview')}
+                        src={mockApplicationData.resumeLink.replace(
+                          "/edit",
+                          "/preview",
+                        )}
                         className="w-full h-full"
                         title="Resume"
                       />
@@ -297,7 +329,7 @@ export default function ApplicationFeedbackPage() {
           )}
           {activeTab === "feedback" && (
             <div className="space-y-6">
-{/* Admin: Assign Reviewers */}
+              {/* Admin: Assign Reviewers */}
               {mockApplicationData.isAdmin && (
                 <Card>
                   <CardHeader>
@@ -308,10 +340,16 @@ export default function ApplicationFeedbackPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      <Label>Selected Reviewers ({selectedReviewers.length})</Label>
+                      <Label>
+                        Selected Reviewers ({selectedReviewers.length})
+                      </Label>
                       <div className="flex flex-wrap gap-2">
                         {selectedReviewers.map((reviewer) => (
-                          <Badge key={reviewer} variant="secondary" className="px-3 py-1">
+                          <Badge
+                            key={reviewer}
+                            variant="secondary"
+                            className="px-3 py-1"
+                          >
                             {reviewer}
                           </Badge>
                         ))}
@@ -324,7 +362,9 @@ export default function ApplicationFeedbackPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="start" className="w-56">
-                          <DropdownMenuLabel>Available Reviewers</DropdownMenuLabel>
+                          <DropdownMenuLabel>
+                            Available Reviewers
+                          </DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           {availableReviewers.map((reviewer) => (
                             <DropdownMenuItem
@@ -367,7 +407,10 @@ export default function ApplicationFeedbackPage() {
                       <DropdownMenuContent align="start">
                         <DropdownMenuLabel>Change Status</DropdownMenuLabel>
                         <DropdownMenuSeparator />
-                        <DropdownMenuRadioGroup value={status} onValueChange={setStatus}>
+                        <DropdownMenuRadioGroup
+                          value={status}
+                          onValueChange={setStatus}
+                        >
                           {statusOptions.map((option) => (
                             <DropdownMenuRadioItem key={option} value={option}>
                               {option}
@@ -387,8 +430,12 @@ export default function ApplicationFeedbackPage() {
                     <span>Rating</span>
                     <div className="flex items-center gap-2">
                       <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                      <span className="text-2xl font-bold">{averageRating.toFixed(1)}</span>
-                      <span className="text-sm text-muted-foreground">/ 5.0</span>
+                      <span className="text-2xl font-bold">
+                        {averageRating.toFixed(1)}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        / 5.0
+                      </span>
                     </div>
                   </CardTitle>
                 </CardHeader>
@@ -420,11 +467,16 @@ export default function ApplicationFeedbackPage() {
                     <Label className="text-muted-foreground">All Ratings</Label>
                     <div className="mt-2 space-y-2">
                       {mockApplicationData.ratings.map((r, idx) => (
-                        <div key={idx} className="flex items-center justify-between">
+                        <div
+                          key={idx}
+                          className="flex items-center justify-between"
+                        >
                           <span className="text-sm">{r.reviewer}</span>
                           <div className="flex items-center gap-1">
                             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                            <span className="font-medium">{r.rating.toFixed(1)}</span>
+                            <span className="font-medium">
+                              {r.rating.toFixed(1)}
+                            </span>
                           </div>
                         </div>
                       ))}
@@ -441,18 +493,18 @@ export default function ApplicationFeedbackPage() {
                   <Textarea
                     placeholder="Add notes from interviews, including technical questions, cultural fit observations, etc..."
                     value={interviewNotes}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInterviewNotes(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                      setInterviewNotes(e.target.value)
+                    }
                     className="min-h-[150px]"
                   />
                   <Button className="mt-3">Save Notes</Button>
                 </CardContent>
               </Card>
-
             </div>
           )}
         </div>
-
       </div>
     </div>
-  )
+  );
 }

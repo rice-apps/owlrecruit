@@ -1,6 +1,6 @@
 /**
  * Admin Club Dashboard Page
- * 
+ *
  * Main admin dashboard for managing a specific club/organization.
  */
 
@@ -35,8 +35,9 @@ export default async function AdminClubPage({ params }: AdminClubPageProps) {
 
   // Fetch applications with user data in one query
   const { data: applications, error } = await supabase
-    .from('applications')
-    .select(`
+    .from("applications")
+    .select(
+      `
       id,
       org_id,
       applicant_id,
@@ -54,17 +55,20 @@ export default async function AdminClubPage({ params }: AdminClubPageProps) {
       application_reviews (
         score
       )
-    `)
-    .eq('org_id', orgId);
-
-
+    `,
+    )
+    .eq("org_id", orgId);
 
   // Transform the data to match the Application interface
-  const transformedApplications: Application[] = (applications || []).map(app => ({
-    ...app,
-    users: Array.isArray(app.users) ? app.users[0] : app.users,
-    reviewScore: Array.isArray(app.application_reviews) ? app.application_reviews[0]?.score : null
-  }));
+  const transformedApplications: Application[] = (applications || []).map(
+    (app) => ({
+      ...app,
+      users: Array.isArray(app.users) ? app.users[0] : app.users,
+      reviewScore: Array.isArray(app.application_reviews)
+        ? app.application_reviews[0]?.score
+        : null,
+    }),
+  );
 
   return (
     <div className="space-y-6">
