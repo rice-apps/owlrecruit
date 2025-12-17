@@ -1,26 +1,26 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Application } from "../columns"
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Application } from "../columns";
 
 interface ApplicationCardProps {
-  application: Application
+  application: Application;
 }
 
 export function ApplicationCard({ application }: ApplicationCardProps) {
   const getStatusVariant = (status: string) => {
     switch (status.toLowerCase()) {
       case "accepted":
-        return "success"
+        return "success";
       case "rejected":
-        return "destructive"
+        return "destructive";
       case "under review":
-        return "secondary"
+        return "secondary";
       case "interviewing":
-        return "outline"
+        return "outline";
       default:
-        return "secondary"
+        return "secondary";
     }
-  }
+  };
 
   return (
     <Card className="hover:shadow-lg transition-shadow cursor-pointer">
@@ -35,5 +35,5 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
         </div>
       </CardHeader>
     </Card>
-  )
+  );
 }

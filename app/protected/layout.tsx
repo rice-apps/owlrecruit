@@ -16,11 +16,9 @@ export default function ProtectedLayout({
               <Link href={"/protected"}>OwlRecruit</Link>
             </div>
           </div>
-          <AuthButton/>
+          <AuthButton />
         </nav>
-        <div className="flex-1 flex flex-col gap-20 p-5 w-full">
-          {children}
-        </div>
+        <div className="flex-1 flex flex-col gap-20 p-5 w-full">{children}</div>
 
         <footer className="w-full flex items-center justify-center border-t mx-auto text-center text-xs gap-8 py-16">
           <p>

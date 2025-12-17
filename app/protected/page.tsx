@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
-import { Button } from "../../components/ui/button";
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { InfoIcon } from "lucide-react";
 import UploadDialog from "./upload-modal";
+
 export default async function ProtectedPage() {
   const supabase = await createClient();
 
@@ -11,7 +12,7 @@ export default async function ProtectedPage() {
   if (error || !data?.claims) {
     redirect("/auth/login");
   }
-  
+
   const isAdmin = true;
   const user = data.claims;
   return (
@@ -23,15 +24,17 @@ export default async function ProtectedPage() {
           user!
         </div>
       </div>
-      <h2 className="font-bold text-2xl mb-4">Hey {user.user_metadata.full_name}!</h2>
+      <h2 className="font-bold text-2xl mb-4">
+        Hey {user.user_metadata.full_name}!
+      </h2>
       <div className="flex gap-2 items-start">
         <Button asChild size="lg">
           <Link href="/protected/apply">Apply</Link>
         </Button>
-        <Button asChild size='lg'>
+        <Button asChild size="lg">
           <Link href="/protected/applications">My Applications</Link>
         </Button>
-        <Button asChild size='lg'>
+        <Button asChild size="lg">
           <Link href="/protected/roles">Manage Roles</Link>
         </Button>
         {isAdmin && <UploadDialog />}

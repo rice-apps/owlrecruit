@@ -13,16 +13,15 @@ export default function Home() {
             </div>
           </div>
         </nav>
-        
+
         {/* Hero Section - full width */}
         <Hero />
 
         {/* Centered content section */}
-        <div className="flex-1 w-full flex flex-col gap-20 items-center">
-        </div>
+        <div className="flex-1 w-full flex flex-col gap-20 items-center"></div>
         <footer className="w-full flex items-center justify-center border-t mx-auto text-center text-xs gap-8 py-16">
           <p>
-            Built by {" "}
+            Built by{" "}
             <a
               href="https://riceapps.org/"
               target="_blank"
@@ -35,7 +34,6 @@ export default function Home() {
           <ThemeSwitcher />
         </footer>
       </div>
-      
     </main>
   );
 }

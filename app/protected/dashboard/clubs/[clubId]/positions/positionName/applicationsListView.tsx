@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -11,7 +11,7 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-} from "@tanstack/react-table"
+} from "@tanstack/react-table";
 
 import {
   Table,
@@ -20,27 +20,29 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Filter } from "lucide-react"
+} from "@/components/ui/dropdown-menu";
+import { Filter } from "lucide-react";
 
 interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[]
-  data: TData[]
+  columns: ColumnDef<TData, TValue>[];
+  data: TData[];
 }
 
 export function ApplicationsListView<TData, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    [],
+  );
 
   const table = useReactTable({
     data,
@@ -55,21 +57,21 @@ export function ApplicationsListView<TData, TValue>({
       sorting,
       columnFilters,
     },
-  })
+  });
 
   // Get unique status values for filter
-  const statusColumn = table.getColumn("status")
+  const statusColumn = table.getColumn("status");
   const uniqueStatuses = React.useMemo(() => {
-    const statuses = new Set<string>()
+    const statuses = new Set<string>();
     data.forEach((row: any) => {
       if (row.status) {
-        statuses.add(row.status)
+        statuses.add(row.status);
       }
-    })
-    return Array.from(statuses)
-  }, [data])
+    });
+    return Array.from(statuses);
+  }, [data]);
 
-  const selectedStatuses = (statusColumn?.getFilterValue() as string[]) ?? []
+  const selectedStatuses = (statusColumn?.getFilterValue() as string[]) ?? [];
 
   return (
     <div className="space-y-4">
@@ -89,7 +91,7 @@ export function ApplicationsListView<TData, TValue>({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             {uniqueStatuses.map((status) => {
-              const isSelected = selectedStatuses.includes(status)
+              const isSelected = selectedStatuses.includes(status);
               return (
                 <DropdownMenuCheckboxItem
                   key={status}
@@ -97,21 +99,23 @@ export function ApplicationsListView<TData, TValue>({
                   onCheckedChange={(checked) => {
                     const newValue = checked
                       ? [...selectedStatuses, status]
-                      : selectedStatuses.filter((s) => s !== status)
+                      : selectedStatuses.filter((s) => s !== status);
                     statusColumn?.setFilterValue(
-                      newValue.length ? newValue : undefined
-                    )
+                      newValue.length ? newValue : undefined,
+                    );
                   }}
                 >
                   {status}
                 </DropdownMenuCheckboxItem>
-              )
+              );
             })}
             {selectedStatuses.length > 0 && (
               <>
                 <DropdownMenuCheckboxItem
                   checked={false}
-                  onCheckedChange={() => statusColumn?.setFilterValue(undefined)}
+                  onCheckedChange={() =>
+                    statusColumn?.setFilterValue(undefined)
+                  }
                   className="justify-center text-center font-medium"
                 >
                   Clear filters
@@ -134,10 +138,10 @@ export function ApplicationsListView<TData, TValue>({
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
-                            header.getContext()
+                            header.getContext(),
                           )}
                     </TableHead>
-                  )
+                  );
                 })}
               </TableRow>
             ))}
@@ -153,7 +157,7 @@ export function ApplicationsListView<TData, TValue>({
                     <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}
@@ -193,5 +197,5 @@ export function ApplicationsListView<TData, TValue>({
         </Button>
       </div>
     </div>
-  )
+  );
 }

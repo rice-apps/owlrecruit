@@ -1,6 +1,6 @@
 /**
  * Dashboard Main Page
- * 
+ *
  * Main dashboard view that displays user's club status, recent activity, and quick actions.
  * Includes authentication verification and user-specific content rendering.
  */
@@ -26,15 +26,16 @@ export default async function DashboardPage() {
       <div className="flex flex-col gap-2 items-start">
         <h1 className="font-bold text-3xl mb-4">Dashboard</h1>
         <p className="text-muted-foreground">
-          Welcome to your OwlRecruit dashboard. Manage your applications and recruitment activities here.
+          Welcome to your OwlRecruit dashboard. Manage your applications and
+          recruitment activities here.
         </p>
       </div>
-      
+
       {/* Main Dashboard Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* User's Club Status Card */}
         <ClubStatusCard userId={userId} />
-        
+
         {/* Quick Actions and Activity Panel */}
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">Quick Actions</h2>
@@ -50,7 +51,8 @@ export default async function DashboardPage() {
             <div className="p-4 border rounded-lg">
               <h3 className="font-medium mb-2">Notifications</h3>
               <p className="text-sm text-muted-foreground">
-                Stay updated with your application status and club announcements.
+                Stay updated with your application status and club
+                announcements.
               </p>
             </div>
           </div>
