@@ -1,8 +1,9 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
-import { createClient } from "../../../lib/supabase/client";
+import { useCallback, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
 import Script from "next/script";
 import { useRouter } from "next/navigation";
+
 const supabase = createClient();
 declare global {
   interface Window {

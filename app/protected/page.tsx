@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
-import { Button } from "../../components/ui/button";
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { InfoIcon } from "lucide-react";
 import UploadDialog from "./upload-modal";
+
 export default async function ProtectedPage() {
   const supabase = await createClient();
 

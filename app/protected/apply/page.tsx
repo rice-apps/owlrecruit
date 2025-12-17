@@ -1,4 +1,4 @@
-import DogCard from "../../../components/dog-card";
+import DogCard from "@/components/dog-card";
 
 export default async function Apply() {
   return (

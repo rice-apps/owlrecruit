@@ -6,9 +6,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "../../components/ui/button";
+import { Button } from "@/components/ui/button";
 import { uploadCSV } from "../api/upload/upload-csv";
-import { Upload, CheckCircle, Check } from "lucide-react";
+import { CheckCircle, Upload } from "lucide-react";
 import { useState } from "react";
 
 export default function UploadDialog() {

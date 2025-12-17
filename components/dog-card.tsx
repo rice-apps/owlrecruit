@@ -1,11 +1,11 @@
 import Image from "next/image";
 import {
   Card,
-  CardHeader,
-  CardTitle,
   CardDescription,
   CardFooter,
-} from "../components/ui/card";
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import dog from "../images/dog.jpeg";
 import { Button } from "./ui/button";
 import Link from "next/link";

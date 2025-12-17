@@ -1,5 +1,4 @@
 import SignUpGoogleBtn from "@/app/auth/sign-up/sign-up-google";
-import { Button } from "./ui/button";
 
 export function Hero() {
   return (
