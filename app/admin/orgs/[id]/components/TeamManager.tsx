@@ -17,8 +17,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, UserX, Loader2, Shield, UserCheck } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Loader2, Plus, Shield, UserCheck, UserX } from "lucide-react";
 import { AddAdminDialog } from "./AddAdminDialog";
 import { AddReviewerDialog } from "./AddReviewerDialog";
 import {
@@ -60,7 +59,6 @@ interface TeamManagerProps {
 
 export function TeamManager({ orgId, admins, reviewers }: TeamManagerProps) {
   const router = useRouter();
-  const { toast } = useToast();
   const [addAdminDialogOpen, setAddAdminDialogOpen] = useState(false);
   const [addReviewerDialogOpen, setAddReviewerDialogOpen] = useState(false);
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
@@ -107,23 +105,21 @@ export function TeamManager({ orgId, admins, reviewers }: TeamManagerProps) {
         if (error) throw error;
       }
 
-      toast({
-        title: "Success",
-        description: `${selectedItem.type === "admin" ? "Admin" : "Reviewer"} removed successfully`,
+      console.log("role removed successfully", {
+        role: selectedItem.type,
+        id: selectedItem.id,
+        org_id: selectedItem.id,
       });
 
       setRemoveDialogOpen(false);
       setSelectedItem(null);
       router.refresh();
     } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : `Failed to remove ${selectedItem.type}`;
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
+      console.error("failed to remove role", {
+        error: error,
+        role: selectedItem.type,
+        id: selectedItem.id,
+        org_id: selectedItem.id,
       });
     } finally {
       setRemoving(false);

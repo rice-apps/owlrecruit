@@ -16,8 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Loader2, Briefcase, Eye } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Briefcase, Eye, Loader2, Plus, Trash2 } from "lucide-react";
 import { CreateOpeningDialog } from "./CreateOpeningDialog";
 import {
   AlertDialog,
@@ -44,7 +43,6 @@ interface OpeningsManagerProps {
 
 export function OpeningsManager({ orgId, openings }: OpeningsManagerProps) {
   const router = useRouter();
-  const { toast } = useToast();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedOpening, setSelectedOpening] = useState<Opening | null>(null);
@@ -65,10 +63,9 @@ export function OpeningsManager({ orgId, openings }: OpeningsManagerProps) {
         .eq("position", selectedOpening.title);
 
       if (count && count > 0) {
-        toast({
-          title: "Cannot Delete",
-          description: `This opening has ${count} application(s). Please handle them first.`,
-          variant: "destructive",
+        console.error("cannot delete opening with open applications", {
+          openingId: selectedOpening.id,
+          applicationCount: count,
         });
         setDeleteDialogOpen(false);
         setDeleting(false);
@@ -82,21 +79,16 @@ export function OpeningsManager({ orgId, openings }: OpeningsManagerProps) {
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Opening deleted successfully",
+      console.log("opening deleted successfully", {
+        openingId: selectedOpening.id,
+        title: selectedOpening.title,
       });
 
       setDeleteDialogOpen(false);
       setSelectedOpening(null);
       router.refresh();
     } catch (error) {
-      console.error("Error deleting opening:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete opening",
-        variant: "destructive",
-      });
+      console.error("error deleting opening:", error);
     } finally {
       setDeleting(false);
     }

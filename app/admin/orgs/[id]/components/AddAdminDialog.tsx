@@ -20,7 +20,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 
 interface AddAdminDialogProps {
   orgId: string;
@@ -34,7 +33,6 @@ export function AddAdminDialog({
   onOpenChange,
 }: AddAdminDialogProps) {
   const router = useRouter();
-  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
 
@@ -53,11 +51,7 @@ export function AddAdminDialog({
         .single();
 
       if (userError || !userData) {
-        toast({
-          title: "User Not Found",
-          description: "No user found with that email address",
-          variant: "destructive",
-        });
+        console.error("user not found", { email });
         setLoading(false);
         return;
       }
@@ -72,11 +66,7 @@ export function AddAdminDialog({
         .maybeSingle();
 
       if (existingAdmin) {
-        toast({
-          title: "Already an Admin",
-          description: "This user is already an admin of the organization",
-          variant: "destructive",
-        });
+        console.warn("user is already an Admin", { email, orgId });
         setLoading(false);
         return;
       }
@@ -116,23 +106,17 @@ export function AddAdminDialog({
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Admin added successfully",
+      console.log("admin added successfully", {
+        email,
+        orgId,
+        userId: userData.id,
       });
 
       setEmail("");
       onOpenChange(false);
       router.refresh();
     } catch (error) {
-      console.error("Error adding admin:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to add admin";
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      console.error("error adding admin:", error);
     } finally {
       setLoading(false);
     }

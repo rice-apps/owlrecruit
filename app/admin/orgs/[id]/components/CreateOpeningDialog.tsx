@@ -21,7 +21,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 
 interface CreateOpeningDialogProps {
   orgId: string;
@@ -35,7 +34,6 @@ export function CreateOpeningDialog({
   onOpenChange,
 }: CreateOpeningDialogProps) {
   const router = useRouter();
-  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
@@ -57,9 +55,10 @@ export function CreateOpeningDialog({
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Opening created successfully",
+      console.log("opening created successfully", {
+        org_id: orgId,
+        title: formData.title,
+        description: formData.description,
       });
 
       // Reset form and close dialog
@@ -68,11 +67,6 @@ export function CreateOpeningDialog({
       router.refresh();
     } catch (error) {
       console.error("Error creating opening:", error);
-      toast({
-        title: "Error",
-        description: "Failed to create opening",
-        variant: "destructive",
-      });
     } finally {
       setLoading(false);
     }

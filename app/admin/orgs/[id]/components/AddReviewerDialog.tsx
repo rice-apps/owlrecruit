@@ -21,7 +21,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 
 interface AddReviewerDialogProps {
   orgId: string;
@@ -35,7 +34,6 @@ export function AddReviewerDialog({
   onOpenChange,
 }: AddReviewerDialogProps) {
   const router = useRouter();
-  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
 
@@ -55,11 +53,7 @@ export function AddReviewerDialog({
         .single();
 
       if (userError || !userData) {
-        toast({
-          title: "User Not Found",
-          description: "No user found with that email address",
-          variant: "destructive",
-        });
+        console.error("user not found", { email });
         setLoading(false);
         return;
       }
@@ -74,10 +68,10 @@ export function AddReviewerDialog({
         .maybeSingle();
 
       if (existingReviewer) {
-        toast({
-          title: "Already a Reviewer",
-          description: "This user is already a reviewer for this organization",
-          variant: "destructive",
+        console.error("already a reviewer", {
+          email,
+          id: userData.id,
+          org_id: orgId,
         });
         setLoading(false);
         return;
@@ -94,9 +88,10 @@ export function AddReviewerDialog({
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Reviewer added successfully",
+      console.log("reviewer added", {
+        id: userData.id,
+        org_id: orgId,
+        name: userData.name,
       });
 
       setEmail("");
@@ -104,13 +99,6 @@ export function AddReviewerDialog({
       router.refresh();
     } catch (error) {
       console.error("Error adding reviewer:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to add reviewer";
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
     } finally {
       setLoading(false);
     }
