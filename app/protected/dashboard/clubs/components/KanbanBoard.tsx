@@ -4,6 +4,10 @@
  * Client component wrapper for the Kanban board that handles interactions.
  * This allows the main page to remain a server component while having interactive elements.
  * Includes drag-and-drop functionality with edit mode and save changes.
+ *
+ * HOW TO CUSTOMIZE:
+ * - To change columns: Edit KANBAN_COLUMNS in lib/csv-upload-config.ts
+ * - To change grid layout: Edit KANBAN_GRID_COLS in lib/csv-upload-config.ts
  */
 "use client";
 
@@ -26,6 +30,7 @@ import { KanbanColumn } from "./index";
 import ApplicationCard from "./ApplicationCard";
 import type { Application } from "../admin/[id]/page";
 import { createClient } from "@/lib/supabase/client";
+import { KANBAN_COLUMNS, KANBAN_GRID_COLS } from "@/lib/csv-upload-config";
 
 interface KanbanBoardProps {
   applications: Application[];
@@ -41,7 +46,7 @@ export default function KanbanBoard({ applications }: KanbanBoardProps) {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
-  // Prevent hydration issues by only enabling DnD on client
+  // Prevent server-client mismatch issues by only enabling DnD on client
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -65,12 +70,8 @@ export default function KanbanBoard({ applications }: KanbanBoardProps) {
     }),
   );
 
-  const columns = [
-    { id: "applied", title: "Applied", status: "applied" },
-    { id: "interviewing", title: "Interviewing", status: "interviewing" },
-    { id: "offer", title: "Offer", status: "offer" },
-    { id: "rejected", title: "Rejected", status: "rejected" },
-  ];
+  // Kanban columns are now configured in lib/csv-upload-config.ts
+  const columns = KANBAN_COLUMNS;
 
   const getApplicationsByStatus = (status: string): Application[] => {
     return localApplications.filter((app) => app.status === status);
@@ -215,7 +216,12 @@ export default function KanbanBoard({ applications }: KanbanBoardProps) {
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <div className="grid grid-cols-4 gap-6">
+          <div
+            className="grid gap-4"
+            style={{
+              gridTemplateColumns: `repeat(${KANBAN_GRID_COLS}, minmax(0, 1fr))`,
+            }}
+          >
             {columns.map((column) => (
               <KanbanColumn
                 key={column.id}
@@ -241,7 +247,12 @@ export default function KanbanBoard({ applications }: KanbanBoardProps) {
           </DragOverlay>
         </DndContext>
       ) : (
-        <div className="grid grid-cols-4 gap-6">
+        <div
+          className="grid gap-4"
+          style={{
+            gridTemplateColumns: `repeat(${KANBAN_GRID_COLS}, minmax(0, 1fr))`,
+          }}
+        >
           {columns.map((column) => (
             <KanbanColumn
               key={column.id}
