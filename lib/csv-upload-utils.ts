@@ -5,13 +5,13 @@
  * These functions are used by both /api/applications and /api/interviews.
  */
 
-import { SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseClient } from "@supabase/supabase-js";
 import {
   CSV_RESERVED_COLUMNS,
   REQUIRED_CSV_COLUMNS,
   ERROR_MESSAGES,
   VALIDATION_CONFIG,
-} from './csv-upload-config';
+} from "./csv-upload-config";
 
 // =============================================================================
 // TYPE DEFINITIONS
@@ -59,7 +59,7 @@ export function validateRequiredFields(row: CSVRow): string | null {
  * Validates that netid is present and non-empty.
  */
 export function validateNetId(netid: any): boolean {
-  return !!netid && typeof netid === 'string' && netid.trim().length > 0;
+  return !!netid && typeof netid === "string" && netid.trim().length > 0;
 }
 
 // =============================================================================
@@ -110,14 +110,14 @@ export function buildApplicationRecord(
   openingId: string,
   userId: string,
   formResponses: Record<string, any>,
-  status?: string
+  status?: string,
 ): Record<string, any> {
   return {
     org_id: orgId,
     opening_id: openingId,
     applicant_id: userId,
     form_responses: formResponses,
-    status: status || 'Applied', // Default if not provided
+    status: status || "Applied", // Default if not provided
     // Add more fields here as needed
     // Example:
     // position: formResponses['Position'] || '',
@@ -143,7 +143,7 @@ export function buildInterviewRecord(
   openingId: string,
   userId: string,
   feedback: Record<string, any>,
-  _status?: string // Underscore prefix indicates intentionally unused (for signature compatibility)
+  _status?: string, // Underscore prefix indicates intentionally unused (for signature compatibility)
 ): Record<string, any> {
   return {
     org_id: orgId,
@@ -176,12 +176,12 @@ export function buildInterviewRecord(
  */
 export async function lookupUserByNetId(
   supabase: SupabaseClient,
-  netid: string
+  netid: string,
 ): Promise<UserLookupResult | null> {
   const { data: user, error } = await supabase
-    .from('users')
-    .select('id, net_id')
-    .eq('net_id', netid)
+    .from("users")
+    .select("id, net_id")
+    .eq("net_id", netid)
     .single();
 
   if (error || !user) {
@@ -204,12 +204,12 @@ export async function lookupUserByNetId(
  */
 export async function lookupOpening(
   supabase: SupabaseClient,
-  openingId: string
+  openingId: string,
 ): Promise<OpeningLookupResult | null> {
   const { data: opening, error } = await supabase
-    .from('openings')
-    .select('org_id')
-    .eq('id', openingId)
+    .from("openings")
+    .select("org_id")
+    .eq("id", openingId)
     .single();
 
   if (error || !opening) {
@@ -257,25 +257,27 @@ export async function processCSVRows<T>(
     openingId: string,
     userId: string,
     data: Record<string, any>,
-    status?: string
+    status?: string,
   ) => T,
   defaultStatus?: string,
   tableName?: string,
-  adminClient?: SupabaseClient
+  adminClient?: SupabaseClient,
 ): Promise<{ records: T[]; errors: ProcessingError[] }> {
   const records: T[] = [];
   const errors: ProcessingError[] = [];
-  
+
   // Optimization: Pre-fetch existing applicant IDs for this opening if duplicate check is enabled
   const existingApplicantIds = new Set<string>();
   if (tableName) {
     const { data: existingApps } = await supabase
       .from(tableName)
-      .select('applicant_id')
-      .eq('opening_id', openingId);
-      
+      .select("applicant_id")
+      .eq("opening_id", openingId);
+
     if (existingApps) {
-      existingApps.forEach((app: any) => existingApplicantIds.add(app.applicant_id));
+      existingApps.forEach((app: any) =>
+        existingApplicantIds.add(app.applicant_id),
+      );
     }
   }
 
@@ -299,8 +301,11 @@ export async function processCSVRows<T>(
     }
 
     // Look up or create user
-    let user = await lookupUserByNetId(supabase, row[CSV_RESERVED_COLUMNS.NETID]);
-    
+    let user = await lookupUserByNetId(
+      supabase,
+      row[CSV_RESERVED_COLUMNS.NETID],
+    );
+
     // If user not found, create a placeholder user
     if (!user) {
       // Check if admin client is available
@@ -316,23 +321,24 @@ export async function processCSVRows<T>(
 
       const email = `${row[CSV_RESERVED_COLUMNS.NETID]}@rice.edu`;
       // Use a dash as placeholder for name since it's required or preferred not to be null
-      const name = '-';
+      const name = "-";
 
       // 1. Create user in auth.users using admin client
-      const { data: authUser, error: authError } = await adminClient.auth.admin.createUser({
-        email: email,
-        email_confirm: true, // Auto-confirm placeholder users
-        user_metadata: {
-          net_id: row[CSV_RESERVED_COLUMNS.NETID],
-          name: name,
-        }
-      });
+      const { data: authUser, error: authError } =
+        await adminClient.auth.admin.createUser({
+          email: email,
+          email_confirm: true, // Auto-confirm placeholder users
+          user_metadata: {
+            net_id: row[CSV_RESERVED_COLUMNS.NETID],
+            name: name,
+          },
+        });
 
       if (authError || !authUser.user) {
         errors.push({
           row: rowNumber,
           netid: row[CSV_RESERVED_COLUMNS.NETID],
-          error: `Failed to create auth user: ${authError?.message || 'Unknown error'}`,
+          error: `Failed to create auth user: ${authError?.message || "Unknown error"}`,
         });
         if (!VALIDATION_CONFIG.skipInvalidRows) break;
         continue;
@@ -342,26 +348,26 @@ export async function processCSVRows<T>(
       // We use upsert here because a database trigger might have already created
       // the user record when the auth user was created.
       const { data: newUser, error: createError } = await supabase
-        .from('users')
-        .upsert({ 
+        .from("users")
+        .upsert({
           id: authUser.user.id, // CRITICAL: Use the Auth User ID
           net_id: row[CSV_RESERVED_COLUMNS.NETID],
           name: name, // This is now explicitly '-'
           email: email,
         })
-        .select('id, net_id')
+        .select("id, net_id")
         .single();
 
       if (createError || !newUser) {
         errors.push({
           row: rowNumber,
           netid: row[CSV_RESERVED_COLUMNS.NETID],
-          error: `Failed to create public user: ${createError?.message || 'Unknown error'}`,
+          error: `Failed to create public user: ${createError?.message || "Unknown error"}`,
         });
         if (!VALIDATION_CONFIG.skipInvalidRows) break;
         continue;
       }
-      
+
       user = newUser;
     }
 
@@ -380,7 +386,13 @@ export async function processCSVRows<T>(
     const formResponses = extractFormResponses(row);
 
     // Build record
-    const record = buildRecordFn(orgId, openingId, user.id, formResponses, defaultStatus);
+    const record = buildRecordFn(
+      orgId,
+      openingId,
+      user.id,
+      formResponses,
+      defaultStatus,
+    );
     records.push(record);
   }
 
@@ -397,7 +409,7 @@ export async function processCSVRows<T>(
 export function formatSuccessResponse(
   data: any[],
   errorCount: number,
-  errors: ProcessingError[]
+  errors: ProcessingError[],
 ) {
   return {
     data,

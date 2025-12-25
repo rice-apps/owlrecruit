@@ -44,10 +44,10 @@ export default async function OpeningPage({ params }: OpeningPageProps) {
 
   // Fetch opening details
   const { data: opening, error: openingError } = await supabase
-    .from('openings')
-    .select('id, org_id, title, description')
-    .eq('id', openingId)
-    .eq('org_id', orgId)
+    .from("openings")
+    .select("id, org_id, title, description")
+    .eq("id", openingId)
+    .eq("org_id", orgId)
     .single();
 
   if (openingError || !opening) {
@@ -55,7 +55,8 @@ export default async function OpeningPage({ params }: OpeningPageProps) {
       <div className="space-y-6">
         <h1 className="font-bold text-3xl">Opening Not Found</h1>
         <p className="text-muted-foreground">
-          The opening you are looking for does not exist or you do not have access to it.
+          The opening you are looking for does not exist or you do not have
+          access to it.
         </p>
       </div>
     );
@@ -63,8 +64,9 @@ export default async function OpeningPage({ params }: OpeningPageProps) {
 
   // Fetch applications for this specific opening
   const { data: applications, error } = await supabase
-    .from('applications')
-    .select(`
+    .from("applications")
+    .select(
+      `
       id,
       org_id,
       opening_id,
@@ -82,23 +84,28 @@ export default async function OpeningPage({ params }: OpeningPageProps) {
       application_reviews (
         score
       )
-    `)
-    .eq('opening_id', openingId);
+    `,
+    )
+    .eq("opening_id", openingId);
 
   if (error) {
-    console.error('Error fetching applications:', error);
+    console.error("Error fetching applications:", error);
   }
 
-  console.log('Fetched applications:', applications);
+  console.log("Fetched applications:", applications);
 
   // Transform the data to match the Application interface
-  const transformedApplications: Application[] = (applications || []).map(app => ({
-    ...app,
-    position: '',
-    notes: '',
-    users: Array.isArray(app.users) ? app.users[0] : app.users,
-    reviewScore: Array.isArray(app.application_reviews) ? app.application_reviews[0]?.score : null
-  }));
+  const transformedApplications: Application[] = (applications || []).map(
+    (app) => ({
+      ...app,
+      position: "",
+      notes: "",
+      users: Array.isArray(app.users) ? app.users[0] : app.users,
+      reviewScore: Array.isArray(app.application_reviews)
+        ? app.application_reviews[0]?.score
+        : null,
+    }),
+  );
 
   return (
     <div className="space-y-6">

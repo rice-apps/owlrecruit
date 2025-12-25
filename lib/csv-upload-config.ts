@@ -19,30 +19,30 @@
  */
 export const APPLICATION_STATUSES = {
   UPLOADED: {
-    value: 'No Status',
-    display: 'Uploaded Applications',
-    description: 'Applications uploaded via CSV that need review'
+    value: "No Status",
+    display: "Uploaded Applications",
+    description: "Applications uploaded via CSV that need review",
   },
   APPLIED: {
-    value: 'Applied',
-    display: 'Applied',
-    description: 'Applications that have been reviewed and approved'
+    value: "Applied",
+    display: "Applied",
+    description: "Applications that have been reviewed and approved",
   },
   INTERVIEWING: {
-    value: 'Interviewing',
-    display: 'Interviewing',
-    description: 'Applicants currently in interview process'
+    value: "Interviewing",
+    display: "Interviewing",
+    description: "Applicants currently in interview process",
   },
   OFFER: {
-    value: 'Offer',
-    display: 'Offer',
-    description: 'Applicants who received an offer'
+    value: "Offer",
+    display: "Offer",
+    description: "Applicants who received an offer",
   },
   REJECTED: {
-    value: 'Rejected',
-    display: 'Rejected',
-    description: 'Applications that were rejected'
-  }
+    value: "Rejected",
+    display: "Rejected",
+    description: "Applications that were rejected",
+  },
 } as const;
 
 /**
@@ -67,8 +67,8 @@ export const DEFAULT_UPLOAD_STATUS = APPLICATION_STATUSES.APPLIED.value;
  * - Remove columns to treat them as regular form questions
  */
 export const CSV_RESERVED_COLUMNS = {
-  NETID: 'netid',           // Required: Used to lookup user
-  RESUME: 'resume',         // Optional: URL to resume
+  NETID: "netid", // Required: Used to lookup user
+  RESUME: "resume", // Optional: URL to resume
   // Add more reserved columns here as needed
   // OPENING_ID: 'opening_id',  // Example: if you want this in CSV
 } as const;
@@ -96,28 +96,28 @@ export const REQUIRED_CSV_COLUMNS = [CSV_RESERVED_COLUMNS.NETID];
 export const DATABASE_FIELD_MAPPING = {
   applications: {
     // Core fields (always included)
-    org_id: 'org_id',
-    opening_id: 'opening_id',
-    applicant_id: 'applicant_id',
-    status: 'status',
+    org_id: "org_id",
+    opening_id: "opening_id",
+    applicant_id: "applicant_id",
+    status: "status",
 
     // JSON storage field for dynamic questions
-    form_responses: 'form_responses',
+    form_responses: "form_responses",
 
     // Optional fields - set to null if not in your schema
-    position: null,           // Not used currently
-    notes: null,              // Not used currently
-    resume: null,             // Stored in form_responses instead
+    position: null, // Not used currently
+    notes: null, // Not used currently
+    resume: null, // Stored in form_responses instead
   },
   interviews: {
     // Core fields
-    org_id: 'org_id',
-    opening_id: 'opening_id',
-    applicant_id: 'applicant_id',
+    org_id: "org_id",
+    opening_id: "opening_id",
+    applicant_id: "applicant_id",
 
     // JSON storage field for dynamic feedback
-    feedback: 'feedback',
-  }
+    feedback: "feedback",
+  },
 } as const;
 
 // =============================================================================
@@ -135,27 +135,27 @@ export const DATABASE_FIELD_MAPPING = {
  */
 export const KANBAN_COLUMNS = [
   {
-    id: 'nostatus',
+    id: "nostatus",
     title: APPLICATION_STATUSES.UPLOADED.display,
     status: APPLICATION_STATUSES.UPLOADED.value,
   },
   {
-    id: 'applied',
+    id: "applied",
     title: APPLICATION_STATUSES.APPLIED.display,
     status: APPLICATION_STATUSES.APPLIED.value,
   },
   {
-    id: 'interviewing',
+    id: "interviewing",
     title: APPLICATION_STATUSES.INTERVIEWING.display,
     status: APPLICATION_STATUSES.INTERVIEWING.value,
   },
   {
-    id: 'offer',
+    id: "offer",
     title: APPLICATION_STATUSES.OFFER.display,
     status: APPLICATION_STATUSES.OFFER.value,
   },
   {
-    id: 'rejected',
+    id: "rejected",
     title: APPLICATION_STATUSES.REJECTED.display,
     status: APPLICATION_STATUSES.REJECTED.value,
   },
@@ -178,14 +178,14 @@ export const KANBAN_GRID_COLS = KANBAN_COLUMNS.length;
  * Change these messages to customize user-facing error text.
  */
 export const ERROR_MESSAGES = {
-  MISSING_NETID: 'Missing required field: netid',
-  USER_NOT_FOUND: 'User not found',
-  OPENING_NOT_FOUND: 'Opening not found',
-  INVALID_CONTENT_TYPE: 'Content-Type must be text/csv or text/plain',
-  MISSING_OPENING_ID: 'X-Opening-Id header is required',
-  NO_VALID_DATA: 'No valid data rows found in CSV',
-  NO_VALID_RECORDS: 'No valid records to insert',
-  DUPLICATE_APPLICATION: 'Application already exists for this user',
+  MISSING_NETID: "Missing required field: netid",
+  USER_NOT_FOUND: "User not found",
+  OPENING_NOT_FOUND: "Opening not found",
+  INVALID_CONTENT_TYPE: "Content-Type must be text/csv or text/plain",
+  MISSING_OPENING_ID: "X-Opening-Id header is required",
+  NO_VALID_DATA: "No valid data rows found in CSV",
+  NO_VALID_RECORDS: "No valid records to insert",
+  DUPLICATE_APPLICATION: "Application already exists for this user",
 } as const;
 
 // =============================================================================
@@ -200,7 +200,7 @@ export const ERROR_MESSAGES = {
  * - Add custom validation rules by editing the validation utils
  */
 export const VALIDATION_CONFIG = {
-  skipInvalidRows: true,        // Continue processing if some rows fail
-  validateEmail: false,          // Set true to validate email format
-  validateResumeUrl: false,      // Set true to validate resume URLs
+  skipInvalidRows: true, // Continue processing if some rows fail
+  validateEmail: false, // Set true to validate email format
+  validateResumeUrl: false, // Set true to validate resume URLs
 } as const;

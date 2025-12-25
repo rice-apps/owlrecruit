@@ -30,7 +30,7 @@ import { KanbanColumn } from "./index";
 import ApplicationCard from "./ApplicationCard";
 import type { Application } from "../admin/[id]/page";
 import { createClient } from "@/lib/supabase/client";
-import { KANBAN_COLUMNS, KANBAN_GRID_COLS } from '@/lib/csv-upload-config';
+import { KANBAN_COLUMNS, KANBAN_GRID_COLS } from "@/lib/csv-upload-config";
 
 interface KanbanBoardProps {
   applications: Application[];
@@ -216,9 +216,11 @@ export default function KanbanBoard({ applications }: KanbanBoardProps) {
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <div 
+          <div
             className="grid gap-4"
-            style={{ gridTemplateColumns: `repeat(${KANBAN_GRID_COLS}, minmax(0, 1fr))` }}
+            style={{
+              gridTemplateColumns: `repeat(${KANBAN_GRID_COLS}, minmax(0, 1fr))`,
+            }}
           >
             {columns.map((column) => (
               <KanbanColumn
@@ -245,9 +247,11 @@ export default function KanbanBoard({ applications }: KanbanBoardProps) {
           </DragOverlay>
         </DndContext>
       ) : (
-        <div 
+        <div
           className="grid gap-4"
-          style={{ gridTemplateColumns: `repeat(${KANBAN_GRID_COLS}, minmax(0, 1fr))` }}
+          style={{
+            gridTemplateColumns: `repeat(${KANBAN_GRID_COLS}, minmax(0, 1fr))`,
+          }}
         >
           {columns.map((column) => (
             <KanbanColumn

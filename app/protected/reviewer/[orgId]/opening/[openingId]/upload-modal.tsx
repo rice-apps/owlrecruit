@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   Dialog,
@@ -22,40 +22,49 @@ export default function UploadDialog({ openingId }: UploadDialogProps) {
   const [isUploadingInterview, setIsUploadingInterview] = useState(false);
   const [isUploadingApplication, setIsUploadingApplication] = useState(false);
 
-  const uploadCSV = async (file: File, endpoint: string, type: 'interview' | 'application') => {
-    if (type === 'interview') setIsUploadingInterview(true);
+  const uploadCSV = async (
+    file: File,
+    endpoint: string,
+    type: "interview" | "application",
+  ) => {
+    if (type === "interview") setIsUploadingInterview(true);
     else setIsUploadingApplication(true);
-    
+
     setError(null);
 
     try {
       const response = await fetch(endpoint, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'text/csv',
-          'X-Opening-Id': openingId, // Pass opening_id in header
+          "Content-Type": "text/csv",
+          "X-Opening-Id": openingId, // Pass opening_id in header
         },
-        body: file
+        body: file,
       });
 
       const result = await response.json();
 
       if (!response.ok) {
         // Include error details if available
-        let errorMessage = result.error || 'Upload failed';
+        let errorMessage = result.error || "Upload failed";
         if (result.details && Array.isArray(result.details)) {
-          errorMessage += '\n\nDetails:\n' + result.details.slice(0, 10).map((d: any) => {
-            // Handle different error formats
-            if (d.message) {
-              // PapaParse error format
-              return `Row ${d.row !== undefined ? d.row : '?'}: ${d.message} (${d.type})`;
-            } else if (d.error) {
-              // Our custom error format
-              return `Row ${d.row}: ${d.error}${d.netid ? ` (netid: ${d.netid})` : ''}`;
-            } else {
-              return `Row ${d.row}: ${JSON.stringify(d)}`;
-            }
-          }).join('\n');
+          errorMessage +=
+            "\n\nDetails:\n" +
+            result.details
+              .slice(0, 10)
+              .map((d: any) => {
+                // Handle different error formats
+                if (d.message) {
+                  // PapaParse error format
+                  return `Row ${d.row !== undefined ? d.row : "?"}: ${d.message} (${d.type})`;
+                } else if (d.error) {
+                  // Our custom error format
+                  return `Row ${d.row}: ${d.error}${d.netid ? ` (netid: ${d.netid})` : ""}`;
+                } else {
+                  return `Row ${d.row}: ${JSON.stringify(d)}`;
+                }
+              })
+              .join("\n");
 
           if (result.details.length > 10) {
             errorMessage += `\n... and ${result.details.length - 10} more errors`;
@@ -68,24 +77,29 @@ export default function UploadDialog({ openingId }: UploadDialogProps) {
     } catch (err) {
       throw err;
     } finally {
-      if (type === 'interview') setIsUploadingInterview(false);
+      if (type === "interview") setIsUploadingInterview(false);
       else setIsUploadingApplication(false);
     }
   };
 
-  const handleFileChangeInterview = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChangeInterview = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
     if (file) {
       try {
         setFileName(file.name);
-        const result = await uploadCSV(file, "/api/interviews", 'interview');
+        const result = await uploadCSV(file, "/api/interviews", "interview");
         setIsUploaded(true);
-        
+
         // Handle partial warnings
         if (result.errors && result.errors.length > 0) {
-          const warningMessage = result.errors.map((d: any) => 
-            `Row ${d.row}: ${d.error}${d.netid ? ` (netid: ${d.netid})` : ''}`
-          ).join('\n');
+          const warningMessage = result.errors
+            .map(
+              (d: any) =>
+                `Row ${d.row}: ${d.error}${d.netid ? ` (netid: ${d.netid})` : ""}`,
+            )
+            .join("\n");
           setError(warningMessage);
         } else {
           setError(null);
@@ -97,20 +111,29 @@ export default function UploadDialog({ openingId }: UploadDialogProps) {
     }
   };
 
-  const handleFileChangeApplications = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChangeApplications = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
     if (file) {
       try {
         setFileName(file.name);
-        const result = await uploadCSV(file, "/api/applications", 'application');
+        const result = await uploadCSV(
+          file,
+          "/api/applications",
+          "application",
+        );
         console.log("Upload successful! Result:", result);
         setIsUploaded(true);
-        
+
         // Handle partial warnings
         if (result.errors && result.errors.length > 0) {
-          const warningMessage = result.errors.map((d: any) => 
-            `Row ${d.row}: ${d.error}${d.netid ? ` (netid: ${d.netid})` : ''}`
-          ).join('\n');
+          const warningMessage = result.errors
+            .map(
+              (d: any) =>
+                `Row ${d.row}: ${d.error}${d.netid ? ` (netid: ${d.netid})` : ""}`,
+            )
+            .join("\n");
           setError(warningMessage);
         } else {
           setError(null);
@@ -151,7 +174,9 @@ export default function UploadDialog({ openingId }: UploadDialogProps) {
           <div className="flex flex-col items-center gap-4 max-h-[500px] overflow-y-auto">
             <AlertCircle className="w-12 h-12 text-red-500" />
             <DialogTitle>Upload Failed</DialogTitle>
-            <pre className="text-sm text-gray-600 whitespace-pre-wrap text-left w-full max-w-md">{error}</pre>
+            <pre className="text-sm text-gray-600 whitespace-pre-wrap text-left w-full max-w-md">
+              {error}
+            </pre>
             <Button onClick={() => setError(null)}>Try Again</Button>
           </div>
         ) : isUploaded ? (
@@ -175,21 +200,39 @@ export default function UploadDialog({ openingId }: UploadDialogProps) {
               <>
                 <CheckCircle className="w-12 h-12 text-green-500" />
                 <DialogTitle>Upload Successful!</DialogTitle>
-                <p className="text-sm text-gray-600">File "{fileName}" has been uploaded!</p>
+                <p className="text-sm text-gray-600">
+                  File "{fileName}" has been uploaded!
+                </p>
               </>
             )}
-            <Button onClick={handleClose} variant="outline" className="mt-2">Close</Button>
+            <Button onClick={handleClose} variant="outline" className="mt-2">
+              Close
+            </Button>
           </div>
         ) : (
           <>
             <DialogTitle>Upload new data</DialogTitle>
             <DialogDescription>
-              Upload new form responses and interview notes here.
-              CSV should have netid and resume columns, plus any custom question columns.
+              Upload new form responses and interview notes here. CSV should
+              have netid and resume columns, plus any custom question columns.
             </DialogDescription>
-            <Button asChild size="lg" disabled={isUploadingInterview || isUploadingApplication}>
-              <label htmlFor="interviews-upload" style={{ cursor: (isUploadingInterview || isUploadingApplication) ? 'not-allowed' : 'pointer'}}>
-                {isUploadingInterview ? "Uploading..." : "Upload Interview Feedback"}
+            <Button
+              asChild
+              size="lg"
+              disabled={isUploadingInterview || isUploadingApplication}
+            >
+              <label
+                htmlFor="interviews-upload"
+                style={{
+                  cursor:
+                    isUploadingInterview || isUploadingApplication
+                      ? "not-allowed"
+                      : "pointer",
+                }}
+              >
+                {isUploadingInterview
+                  ? "Uploading..."
+                  : "Upload Interview Feedback"}
               </label>
             </Button>
             <input
@@ -197,12 +240,26 @@ export default function UploadDialog({ openingId }: UploadDialogProps) {
               id="interviews-upload"
               onChange={handleFileChangeInterview}
               accept=".csv,.txt"
-              style={{ display: 'none' }}
+              style={{ display: "none" }}
               disabled={isUploadingInterview || isUploadingApplication}
             />
-            <Button asChild size="lg" disabled={isUploadingInterview || isUploadingApplication}>
-              <label htmlFor="applications-upload" style={{ cursor: (isUploadingInterview || isUploadingApplication) ? 'not-allowed' : 'pointer'}}>
-                {isUploadingApplication ? "Uploading..." : "Upload Applications"}
+            <Button
+              asChild
+              size="lg"
+              disabled={isUploadingInterview || isUploadingApplication}
+            >
+              <label
+                htmlFor="applications-upload"
+                style={{
+                  cursor:
+                    isUploadingInterview || isUploadingApplication
+                      ? "not-allowed"
+                      : "pointer",
+                }}
+              >
+                {isUploadingApplication
+                  ? "Uploading..."
+                  : "Upload Applications"}
               </label>
             </Button>
             <input
@@ -210,7 +267,7 @@ export default function UploadDialog({ openingId }: UploadDialogProps) {
               id="applications-upload"
               onChange={handleFileChangeApplications}
               accept=".csv,.txt"
-              style={{ display: 'none' }}
+              style={{ display: "none" }}
               disabled={isUploadingInterview || isUploadingApplication}
             />
           </>
