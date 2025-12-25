@@ -12,9 +12,17 @@ export default async function ProtectedPage() {
   if (error || !data?.claims) {
     redirect("/auth/login");
   }
-
-  const isAdmin = true;
   const user = data.claims;
+
+  // Check if user is an admin by querying the admin table
+  const { data: adminData } = await supabase
+    .from("admin")
+    .select("id")
+    .eq("id", user.sub)
+    .single();
+
+  const isAdmin = !!adminData;
+
   return (
     <div className="flex-1 w-full flex flex-col gap-12">
       <div className="w-full">
@@ -35,9 +43,16 @@ export default async function ProtectedPage() {
           <Link href="/protected/applications">My Applications</Link>
         </Button>
         <Button asChild size="lg">
-          <Link href="/protected/roles">Manage Roles</Link>
+          <Link href="/protected/dashboard">My Organizations</Link>
         </Button>
-        {isAdmin && <UploadDialog />}
+        {isAdmin && (
+          <>
+            <Button asChild size="lg" variant="secondary">
+              <Link href="/admin">Admin Dashboard</Link>
+            </Button>
+            <UploadDialog />
+          </>
+        )}
       </div>
     </div>
   );
