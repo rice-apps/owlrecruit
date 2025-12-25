@@ -3,7 +3,7 @@
  *
  * Dialog for editing organization settings (name, description, etc.)
  */
-'use client';
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -39,7 +39,7 @@ export function OrgSettingsDialog({ org }: OrgSettingsDialogProps) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: org.name,
-    description: org.description || '',
+    description: org.description || "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,13 +49,13 @@ export function OrgSettingsDialog({ org }: OrgSettingsDialogProps) {
     try {
       const supabase = createClient();
       const { error } = await supabase
-        .from('orgs')
+        .from("orgs")
         .update({
           name: formData.name,
           description: formData.description,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', org.id);
+        .eq("id", org.id);
 
       if (error) throw error;
 
@@ -67,7 +67,7 @@ export function OrgSettingsDialog({ org }: OrgSettingsDialogProps) {
       setOpen(false);
       router.refresh();
     } catch (error) {
-      console.error('Error updating org:', error);
+      console.error("Error updating org:", error);
       toast({
         title: "Error",
         description: "Failed to update organization settings",

@@ -3,7 +3,7 @@
  *
  * Dialog for creating new job openings
  */
-'use client';
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -38,8 +38,8 @@ export function CreateOpeningDialog({
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
+    title: "",
+    description: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,13 +49,11 @@ export function CreateOpeningDialog({
     try {
       const supabase = createClient();
 
-      const { error } = await supabase
-        .from('openings')
-        .insert({
-          org_id: orgId,
-          title: formData.title,
-          description: formData.description,
-        });
+      const { error } = await supabase.from("openings").insert({
+        org_id: orgId,
+        title: formData.title,
+        description: formData.description,
+      });
 
       if (error) throw error;
 
@@ -65,11 +63,11 @@ export function CreateOpeningDialog({
       });
 
       // Reset form and close dialog
-      setFormData({ title: '', description: '' });
+      setFormData({ title: "", description: "" });
       onOpenChange(false);
       router.refresh();
     } catch (error) {
-      console.error('Error creating opening:', error);
+      console.error("Error creating opening:", error);
       toast({
         title: "Error",
         description: "Failed to create opening",

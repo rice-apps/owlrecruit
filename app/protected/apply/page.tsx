@@ -13,16 +13,17 @@ export default async function ApplyPage() {
   const supabase = await createClient();
 
   // Verify authentication
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    redirect('/auth/login');
+    redirect("/auth/login");
   }
 
   // Fetch all job openings with organization details (joined with orgs table)
-  const { data: openings } = await supabase
-    .from('openings')
-    .select(`
+  const { data: openings } = await supabase.from("openings").select(`
       id,
       org_id,
       title,

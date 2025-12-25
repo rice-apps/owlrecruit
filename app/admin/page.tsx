@@ -2,7 +2,13 @@
 
 import { uploadCSV } from "../api/upload/upload-csv";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { FileUp, Building2 } from "lucide-react";
 import Link from "next/link";
 
@@ -32,7 +38,9 @@ export default function ApplicationUpload() {
     <div className="space-y-8">
       <div>
         <h2 className="font-bold text-3xl mb-2">Admin Dashboard</h2>
-        <p className="text-muted-foreground">Manage organizations and upload data</p>
+        <p className="text-muted-foreground">
+          Manage organizations and upload data
+        </p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -67,7 +75,7 @@ export default function ApplicationUpload() {
           </CardHeader>
           <CardContent className="space-y-3">
             <Button asChild size="lg" className="w-full">
-              <label htmlFor="interviews-upload" style={{ cursor: "pointer"}}>
+              <label htmlFor="interviews-upload" style={{ cursor: "pointer" }}>
                 Upload Interview Feedback
               </label>
             </Button>
@@ -79,7 +87,10 @@ export default function ApplicationUpload() {
               style={{ display: "none" }}
             />
             <Button asChild size="lg" variant="outline" className="w-full">
-              <label htmlFor="applications-upload" style={{ cursor: "pointer"}}>
+              <label
+                htmlFor="applications-upload"
+                style={{ cursor: "pointer" }}
+              >
                 Upload Applications
               </label>
             </Button>

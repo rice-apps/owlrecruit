@@ -26,73 +26,78 @@ export default async function OrgManagePage({ params }: OrgManagePageProps) {
   const supabase = await createClient();
 
   // Verify user is authenticated
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    redirect('/auth/login');
+    redirect("/auth/login");
   }
 
   // Fetch organization details
   const { data: org, error: orgError } = await supabase
-    .from('orgs')
-    .select('*')
-    .eq('id', orgId)
+    .from("orgs")
+    .select("*")
+    .eq("id", orgId)
     .single();
 
   if (orgError || !org) {
-    redirect('/protected/dashboard');
+    redirect("/protected/dashboard");
   }
 
   // Verify user is admin of this org
   const { data: adminRecord } = await supabase
-    .from('admin')
-    .select('id')
-    .eq('id', user.id)
-    .eq('org_id', orgId)
+    .from("admin")
+    .select("id")
+    .eq("id", user.id)
+    .eq("org_id", orgId)
     .single();
 
   if (!adminRecord) {
-    redirect('/protected/dashboard');
+    redirect("/protected/dashboard");
   }
 
   // Fetch openings for this organization
   const { data: openings } = await supabase
-    .from('openings')
-    .select('*')
-    .eq('org_id', orgId);
+    .from("openings")
+    .select("*")
+    .eq("org_id", orgId);
 
   // Fetch admins for this organization
   const { data: rawAdmins } = await supabase
-    .from('admin')
-    .select(`
+    .from("admin")
+    .select(
+      `
       id,
       name,
       org_id
-    `)
-    .eq('org_id', orgId);
+    `,
+    )
+    .eq("org_id", orgId);
 
   // Fetch reviewers for this organization
   const { data: reviewers } = await supabase
-    .from('reviewers')
-    .select('*')
-    .eq('org_id', orgId);
+    .from("reviewers")
+    .select("*")
+    .eq("org_id", orgId);
 
   // Fetch application statistics
   const { count: totalApplications } = await supabase
-    .from('applications')
-    .select('*', { count: 'exact', head: true })
-    .eq('org_id', orgId);
+    .from("applications")
+    .select("*", { count: "exact", head: true })
+    .eq("org_id", orgId);
 
   const { count: pendingApplications } = await supabase
-    .from('applications')
-    .select('*', { count: 'exact', head: true })
-    .eq('org_id', orgId)
-    .eq('status', 'applied');
+    .from("applications")
+    .select("*", { count: "exact", head: true })
+    .eq("org_id", orgId)
+    .eq("status", "applied");
 
   // Calculate unique team member count to avoid double-counting
   // (since a person can be both an admin AND a reviewer)
-  const adminIds = new Set(rawAdmins?.map(a => a.id) || []);
-  const reviewerIds = new Set(reviewers?.map(r => r.id) || []);
+  const adminIds = new Set(rawAdmins?.map((a) => a.id) || []);
+  const reviewerIds = new Set(reviewers?.map((r) => r.id) || []);
   const uniqueTeamMemberIds = new Set([...adminIds, ...reviewerIds]);
   const totalTeamMembers = uniqueTeamMemberIds.size;
 
@@ -119,15 +124,12 @@ export default async function OrgManagePage({ params }: OrgManagePageProps) {
             totalOpenings: openings?.length || 0,
             totalAdmins: rawAdmins?.length || 0,
             totalReviewers: reviewers?.length || 0,
-            totalTeamMembers
+            totalTeamMembers,
           }}
         />
 
         {/* Openings Manager */}
-        <OpeningsManager
-          orgId={orgId}
-          openings={openings || []}
-        />
+        <OpeningsManager orgId={orgId} openings={openings || []} />
 
         {/* Admins and Reviewers Manager */}
         <TeamManager

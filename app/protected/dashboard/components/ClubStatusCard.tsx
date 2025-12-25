@@ -112,13 +112,11 @@ export default function ClubStatusCard({ userId }: ClubStatusCardProps) {
         // Fetch organizations where user is an admin, and their applications
         // Running both queries in parallel for better performance
         const [adminOrgsResult, applicationsResult] = await Promise.all([
+          supabase.from("admin").select("org_id").eq("id", userId),
           supabase
-            .from('admin')
-            .select('org_id')
-            .eq('id', userId),
-          supabase
-            .from('applications')
-            .select(`
+            .from("applications")
+            .select(
+              `
               org_id,
               status,
               created_at,
@@ -126,8 +124,9 @@ export default function ClubStatusCard({ userId }: ClubStatusCardProps) {
               openings:opening_id (
                 title
               )
-            `)
-            .eq('applicant_id', userId)
+            `,
+            )
+            .eq("applicant_id", userId),
         ]);
 
         // Log the fetched data
@@ -153,15 +152,18 @@ export default function ClubStatusCard({ userId }: ClubStatusCardProps) {
 
         // Extract unique org IDs to minimize database queries
         const orgIds = new Set([
-          ...(adminOrgs?.map(a => a.org_id) || []),
-          ...(applications?.map(a => a.org_id) || [])
+          ...(adminOrgs?.map((a) => a.org_id) || []),
+          ...(applications?.map((a) => a.org_id) || []),
         ]);
 
         // Fetch organization details
-        const orgsResult = orgIds.size > 0 ? await supabase
-          .from('orgs')
-          .select('id, name')
-          .in('id', Array.from(orgIds)) : { data: [], error: null };
+        const orgsResult =
+          orgIds.size > 0
+            ? await supabase
+                .from("orgs")
+                .select("id, name")
+                .in("id", Array.from(orgIds))
+            : { data: [], error: null };
 
         if (orgsResult.error) {
           throw new Error(
@@ -170,25 +172,29 @@ export default function ClubStatusCard({ userId }: ClubStatusCardProps) {
         }
 
         // Create lookup map for efficient name resolution
-        const orgMap = new Map(orgsResult.data?.map(org => [org.id, org.name]) || []);
+        const orgMap = new Map(
+          orgsResult.data?.map((org) => [org.id, org.name]) || [],
+        );
 
         // Transform raw data to include human-readable names
-        const transformedAdminOrgs = adminOrgs?.map(adminOrg => ({
-          ...adminOrg,
-          org_name: orgMap.get(adminOrg.org_id) || 'Unknown Club',
-        })) || [];
+        const transformedAdminOrgs =
+          adminOrgs?.map((adminOrg) => ({
+            ...adminOrg,
+            org_name: orgMap.get(adminOrg.org_id) || "Unknown Club",
+          })) || [];
 
-        const transformedApplications = applications?.map(application => {
-          const opening = Array.isArray(application.openings)
-            ? application.openings[0]
-            : application.openings;
+        const transformedApplications =
+          applications?.map((application) => {
+            const opening = Array.isArray(application.openings)
+              ? application.openings[0]
+              : application.openings;
 
-          return {
-            ...application,
-            org_name: orgMap.get(application.org_id) || 'Unknown Club',
-            opening_title: opening?.title,
-          };
-        }) || [];
+            return {
+              ...application,
+              org_name: orgMap.get(application.org_id) || "Unknown Club",
+              opening_title: opening?.title,
+            };
+          }) || [];
 
         setClubData({
           adminOrgs: transformedAdminOrgs,
@@ -305,7 +311,9 @@ export default function ClubStatusCard({ userId }: ClubStatusCardProps) {
                   }}
                 >
                   <div className="flex-1">
-                    <p className="font-medium">{application.org_name || 'Unknown Club'}</p>
+                    <p className="font-medium">
+                      {application.org_name || "Unknown Club"}
+                    </p>
                     {application.opening_title && (
                       <p className="text-sm text-muted-foreground">
                         Position: {application.opening_title}

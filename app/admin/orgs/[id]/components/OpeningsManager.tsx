@@ -3,12 +3,18 @@
  *
  * Manages job openings - create, edit, and delete
  */
-'use client';
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2, Loader2, Briefcase, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -53,10 +59,10 @@ export function OpeningsManager({ orgId, openings }: OpeningsManagerProps) {
 
       // First, check if there are any applications for this opening
       const { count } = await supabase
-        .from('applications')
-        .select('*', { count: 'exact', head: true })
-        .eq('org_id', orgId)
-        .eq('position', selectedOpening.title);
+        .from("applications")
+        .select("*", { count: "exact", head: true })
+        .eq("org_id", orgId)
+        .eq("position", selectedOpening.title);
 
       if (count && count > 0) {
         toast({
@@ -70,9 +76,9 @@ export function OpeningsManager({ orgId, openings }: OpeningsManagerProps) {
       }
 
       const { error } = await supabase
-        .from('openings')
+        .from("openings")
         .delete()
-        .eq('id', selectedOpening.id);
+        .eq("id", selectedOpening.id);
 
       if (error) throw error;
 
@@ -85,7 +91,7 @@ export function OpeningsManager({ orgId, openings }: OpeningsManagerProps) {
       setSelectedOpening(null);
       router.refresh();
     } catch (error) {
-      console.error('Error deleting opening:', error);
+      console.error("Error deleting opening:", error);
       toast({
         title: "Error",
         description: "Failed to delete opening",
@@ -107,9 +113,9 @@ export function OpeningsManager({ orgId, openings }: OpeningsManagerProps) {
             </CardDescription>
           </div>
           <div className="flex gap-2">
-            <Button 
+            <Button
               variant="outline"
-              onClick={() => router.push('/protected/apply')}
+              onClick={() => router.push("/protected/apply")}
             >
               <Eye className="h-4 w-4 mr-2" />
               View All Openings
@@ -125,7 +131,8 @@ export function OpeningsManager({ orgId, openings }: OpeningsManagerProps) {
             <div className="text-center py-12">
               <Briefcase className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground mb-4">
-                No openings yet. Create your first job opening to start recruiting.
+                No openings yet. Create your first job opening to start
+                recruiting.
               </p>
               <Button onClick={() => setCreateDialogOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
@@ -175,7 +182,8 @@ export function OpeningsManager({ orgId, openings }: OpeningsManagerProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Opening</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{selectedOpening?.title}"? This action cannot be undone.
+              Are you sure you want to delete "{selectedOpening?.title}"? This
+              action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

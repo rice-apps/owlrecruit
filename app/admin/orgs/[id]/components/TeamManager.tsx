@@ -3,12 +3,18 @@
  *
  * Manages admins and reviewers for the organization
  */
-'use client';
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, UserX, Loader2, Shield, UserCheck } from "lucide-react";
@@ -59,7 +65,7 @@ export function TeamManager({ orgId, admins, reviewers }: TeamManagerProps) {
   const [addReviewerDialogOpen, setAddReviewerDialogOpen] = useState(false);
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{
-    type: 'admin' | 'reviewer';
+    type: "admin" | "reviewer";
     id: string;
     name: string;
   } | null>(null);
@@ -72,45 +78,48 @@ export function TeamManager({ orgId, admins, reviewers }: TeamManagerProps) {
     try {
       const supabase = createClient();
 
-      if (selectedItem.type === 'admin') {
+      if (selectedItem.type === "admin") {
         // Removing an admin: just delete from admin table (demotes them to reviewer)
         // Must filter by both id AND org_id since users can be admins of multiple orgs
         const { error } = await supabase
-          .from('admin')
+          .from("admin")
           .delete()
-          .eq('id', selectedItem.id)
-          .eq('org_id', orgId);
+          .eq("id", selectedItem.id)
+          .eq("org_id", orgId);
 
         if (error) throw error;
       } else {
         // Removing a reviewer: must handle FK constraint (admin.id -> reviewers.id)
         // First try to delete from admin table (ignore errors if they're not an admin)
         await supabase
-          .from('admin')
+          .from("admin")
           .delete()
-          .eq('id', selectedItem.id)
-          .eq('org_id', orgId);
+          .eq("id", selectedItem.id)
+          .eq("org_id", orgId);
 
         // Now safe to delete from reviewers (completely removes them from org)
         const { error } = await supabase
-          .from('reviewers')
+          .from("reviewers")
           .delete()
-          .eq('id', selectedItem.id)
-          .eq('org_id', orgId);
+          .eq("id", selectedItem.id)
+          .eq("org_id", orgId);
 
         if (error) throw error;
       }
 
       toast({
         title: "Success",
-        description: `${selectedItem.type === 'admin' ? 'Admin' : 'Reviewer'} removed successfully`,
+        description: `${selectedItem.type === "admin" ? "Admin" : "Reviewer"} removed successfully`,
       });
 
       setRemoveDialogOpen(false);
       setSelectedItem(null);
       router.refresh();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : `Failed to remove ${selectedItem.type}`;
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : `Failed to remove ${selectedItem.type}`;
       toast({
         title: "Error",
         description: errorMessage,
@@ -142,7 +151,10 @@ export function TeamManager({ orgId, admins, reviewers }: TeamManagerProps) {
                   <Plus className="h-4 w-4 mr-2" />
                   Add Admin
                 </Button>
-                <Button variant="outline" onClick={() => setAddReviewerDialogOpen(true)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setAddReviewerDialogOpen(true)}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Add Reviewer
                 </Button>
@@ -156,7 +168,11 @@ export function TeamManager({ orgId, admins, reviewers }: TeamManagerProps) {
                   <Plus className="h-4 w-4 mr-2" />
                   Add Admin
                 </Button>
-                <Button variant="outline" onClick={() => setAddReviewerDialogOpen(true)} size="sm">
+                <Button
+                  variant="outline"
+                  onClick={() => setAddReviewerDialogOpen(true)}
+                  size="sm"
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Add Reviewer
                 </Button>
@@ -195,7 +211,7 @@ export function TeamManager({ orgId, admins, reviewers }: TeamManagerProps) {
                               size="sm"
                               onClick={() => {
                                 setSelectedItem({
-                                  type: 'admin',
+                                  type: "admin",
                                   id: admin.id,
                                   name: admin.name,
                                 });
@@ -248,7 +264,7 @@ export function TeamManager({ orgId, admins, reviewers }: TeamManagerProps) {
                               size="sm"
                               onClick={() => {
                                 setSelectedItem({
-                                  type: 'reviewer',
+                                  type: "reviewer",
                                   id: reviewer.id,
                                   name: reviewer.name,
                                 });
@@ -285,11 +301,12 @@ export function TeamManager({ orgId, admins, reviewers }: TeamManagerProps) {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              Remove {selectedItem?.type === 'admin' ? 'Admin' : 'Reviewer'}
+              Remove {selectedItem?.type === "admin" ? "Admin" : "Reviewer"}
             </AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to remove {selectedItem?.name}?
-              {selectedItem?.type === 'admin' && ' They will lose admin access to this organization.'}
+              {selectedItem?.type === "admin" &&
+                " They will lose admin access to this organization."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

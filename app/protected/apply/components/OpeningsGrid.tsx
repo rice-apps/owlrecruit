@@ -3,7 +3,7 @@
  *
  * Client component that displays job openings and handles opening detail modal.
  */
-'use client';
+"use client";
 
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,11 +16,13 @@ interface Opening {
   org_id: string;
   title: string;
   description?: string;
-  orgs: {
-    id: string;
-    name: string;
-    description?: string;
-  }[] | null;
+  orgs:
+    | {
+        id: string;
+        name: string;
+        description?: string;
+      }[]
+    | null;
 }
 
 interface OpeningsGridProps {
@@ -63,7 +65,7 @@ export function OpeningsGrid({ openings }: OpeningsGridProps) {
               <CardTitle className="text-xl mb-2">{opening.title}</CardTitle>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Building2 className="h-4 w-4" />
-                <span>{opening.orgs?.[0]?.name || 'Unknown Organization'}</span>
+                <span>{opening.orgs?.[0]?.name || "Unknown Organization"}</span>
               </div>
             </CardHeader>
             <CardContent>

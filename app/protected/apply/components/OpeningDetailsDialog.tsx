@@ -3,7 +3,7 @@
  *
  * Modal that displays full details of a job opening and allows users to apply.
  */
-'use client';
+"use client";
 
 import {
   Dialog,
@@ -21,11 +21,13 @@ interface Opening {
   org_id: string;
   title: string;
   description?: string;
-  orgs: {
-    id: string;
-    name: string;
-    description?: string;
-  }[] | null;
+  orgs:
+    | {
+        id: string;
+        name: string;
+        description?: string;
+      }[]
+    | null;
 }
 
 interface OpeningDetailsDialogProps {
@@ -50,11 +52,12 @@ export function OpeningDetailsDialog({
             <div className="flex-1">
               <DialogTitle className="text-2xl">{opening.title}</DialogTitle>
               <DialogDescription className="sr-only">
-                Job opening details for {opening.title} at {opening.orgs?.[0]?.name || 'Unknown Organization'}
+                Job opening details for {opening.title} at{" "}
+                {opening.orgs?.[0]?.name || "Unknown Organization"}
               </DialogDescription>
               <div className="flex items-center gap-2 mt-2 text-muted-foreground">
                 <Building2 className="h-4 w-4" />
-                <span>{opening.orgs?.[0]?.name || 'Unknown Organization'}</span>
+                <span>{opening.orgs?.[0]?.name || "Unknown Organization"}</span>
               </div>
             </div>
           </div>
@@ -95,9 +98,7 @@ export function OpeningDetailsDialog({
           >
             Close
           </Button>
-          <Button className="w-full sm:w-auto">
-            Apply Now
-          </Button>
+          <Button className="w-full sm:w-auto">Apply Now</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

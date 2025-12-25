@@ -4,7 +4,7 @@
  * Dialog for adding new reviewers to the organization.
  * Looks up existing users by email (reviewers must exist in users table due to FK constraint).
  */
-'use client';
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -37,7 +37,7 @@ export function AddReviewerDialog({
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,9 +49,9 @@ export function AddReviewerDialog({
       // Look up user in users table by email
       // Reviewers table has FK to users table, so user must exist
       const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('id, name, net_id, email')
-        .eq('email', email)
+        .from("users")
+        .select("id, name, net_id, email")
+        .eq("email", email)
         .single();
 
       if (userError || !userData) {
@@ -67,10 +67,10 @@ export function AddReviewerDialog({
       // Check if user is already a reviewer for this org
       // Using maybeSingle() to avoid 406 error when no record exists
       const { data: existingReviewer } = await supabase
-        .from('reviewers')
-        .select('id')
-        .eq('id', userData.id)
-        .eq('org_id', orgId)
+        .from("reviewers")
+        .select("id")
+        .eq("id", userData.id)
+        .eq("org_id", orgId)
         .maybeSingle();
 
       if (existingReviewer) {
@@ -84,15 +84,13 @@ export function AddReviewerDialog({
       }
 
       // Add reviewer
-      const { error } = await supabase
-        .from('reviewers')
-        .insert({
-          id: userData.id,
-          org_id: orgId,
-          name: userData.name,
-          email: userData.email,
-          net_id: userData.net_id,
-        });
+      const { error } = await supabase.from("reviewers").insert({
+        id: userData.id,
+        org_id: orgId,
+        name: userData.name,
+        email: userData.email,
+        net_id: userData.net_id,
+      });
 
       if (error) throw error;
 
@@ -101,12 +99,13 @@ export function AddReviewerDialog({
         description: "Reviewer added successfully",
       });
 
-      setEmail('');
+      setEmail("");
       onOpenChange(false);
       router.refresh();
     } catch (error) {
-      console.error('Error adding reviewer:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to add reviewer';
+      console.error("Error adding reviewer:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to add reviewer";
       toast({
         title: "Error",
         description: errorMessage,

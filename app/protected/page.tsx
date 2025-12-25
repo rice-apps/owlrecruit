@@ -16,9 +16,9 @@ export default async function ProtectedPage() {
 
   // Check if user is an admin by querying the admin table
   const { data: adminData } = await supabase
-    .from('admin')
-    .select('id')
-    .eq('id', user.sub)
+    .from("admin")
+    .select("id")
+    .eq("id", user.sub)
     .single();
 
   const isAdmin = !!adminData;
@@ -47,7 +47,7 @@ export default async function ProtectedPage() {
         </Button>
         {isAdmin && (
           <>
-            <Button asChild size='lg' variant="secondary">
+            <Button asChild size="lg" variant="secondary">
               <Link href="/admin">Admin Dashboard</Link>
             </Button>
             <UploadDialog />
