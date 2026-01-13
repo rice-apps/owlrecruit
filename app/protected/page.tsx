@@ -37,13 +37,22 @@ export default async function ProtectedPage() {
       </h2>
       <div className="flex gap-2 items-start">
         <Button asChild size="lg">
-          <Link href="/protected/apply">Apply</Link>
+          <Link href="/protected/discover">Discover</Link>
         </Button>
         <Button asChild size="lg">
           <Link href="/protected/applications">My Applications</Link>
         </Button>
         <Button asChild size="lg">
           <Link href="/protected/dashboard">My Organizations</Link>
+        </Button>
+        <Button asChild size="lg">
+          <Link href="/protected/reviewer">Review Applications</Link>
+        </Button>
+        <Button asChild size="lg">
+          <Link href="/protected/admin">Admin</Link>
+        </Button>
+        <Button asChild size="lg">
+          <Link href="/protected/roles">Manage Roles</Link>
         </Button>
         {isAdmin && (
           <>
