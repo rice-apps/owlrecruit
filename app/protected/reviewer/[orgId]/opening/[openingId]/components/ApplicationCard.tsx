@@ -1,13 +1,13 @@
 /**
  * ApplicationCard Component
- * 
+ *
  * Displays an individual application in a card format with applicant name and position.
  * Used within the Kanban board columns. Supports drag-and-drop functionality.
  */
-'use client';
+"use client";
 
-import { useDraggable } from '@dnd-kit/core';
-import { GripVertical } from 'lucide-react';
+import { useDraggable } from "@dnd-kit/core";
+import { GripVertical } from "lucide-react";
 import type { Application } from "../page";
 
 interface ApplicationCardProps {
@@ -17,11 +17,11 @@ interface ApplicationCardProps {
   isDragging?: boolean;
 }
 
-export default function ApplicationCard({ 
-  application, 
-  onClick, 
+export default function ApplicationCard({
+  application,
+  onClick,
   isDraggable = false,
-  isDragging = false 
+  isDragging = false,
 }: ApplicationCardProps) {
   const {
     attributes,
@@ -34,26 +34,29 @@ export default function ApplicationCard({
     disabled: !isDraggable,
   });
 
-
   // Format the applied date
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     });
   };
 
-  const style = transform ? {
-    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-  } : undefined;
+  const style = transform
+    ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+      }
+    : undefined;
 
   const cardClasses = [
-    'p-4 bg-card border rounded-lg shadow-sm space-y-3 transition-all hover:shadow-md',
-    isDraggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer',
-    (isCurrentlyDragging || isDragging) && 'opacity-50'
-  ].filter(Boolean).join(' ');
-    
+    "p-4 bg-card border rounded-lg shadow-sm space-y-3 transition-all hover:shadow-md",
+    isDraggable ? "cursor-grab active:cursor-grabbing" : "cursor-pointer",
+    (isCurrentlyDragging || isDragging) && "opacity-50",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <div
       ref={setNodeRef}
@@ -73,15 +76,14 @@ export default function ApplicationCard({
       {/* Name and Position */}
       <div>
         <h4 className="font-medium text-sm">{application.users?.name}</h4>
-        <p className="text-xs text-muted-foreground">
-          {application.position}
-        </p>
+        <p className="text-xs text-muted-foreground">{application.position}</p>
       </div>
 
       {/* Net ID and Email */}
       <div className="space-y-1">
         <p className="text-xs text-muted-foreground">
-          <span className="font-medium">NetID:</span> {application.users?.net_id}
+          <span className="font-medium">NetID:</span>{" "}
+          {application.users?.net_id}
         </p>
         <p className="text-xs text-muted-foreground">
           <span className="font-medium">Email:</span> {application.users?.email}
@@ -91,7 +93,8 @@ export default function ApplicationCard({
       {/* Applied Date */}
       <div className="pt-2 border-t border-border">
         <p className="text-xs text-muted-foreground">
-          <span className="font-medium">Applied:</span> {formatDate(application.created_at)}
+          <span className="font-medium">Applied:</span>{" "}
+          {formatDate(application.created_at)}
         </p>
       </div>
     </div>
