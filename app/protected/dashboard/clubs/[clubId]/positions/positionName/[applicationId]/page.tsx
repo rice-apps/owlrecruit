@@ -20,8 +20,6 @@ import {
   Star,
   ChevronDown,
   ExternalLink,
-  Mail,
-  User,
   Users,
   FileText,
   MessageSquare,
@@ -99,16 +97,12 @@ export default function ApplicationFeedbackPage() {
   const [status, setStatus] = useState(mockApplicationData.status);
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
-  const [writtenFeedback, setWrittenFeedback] = useState("");
   const [interviewNotes, setInterviewNotes] = useState("");
   const [selectedReviewers, setSelectedReviewers] = useState<string[]>(
     mockApplicationData.reviewers,
   );
   const [questionComments, setQuestionComments] = useState<
     Record<string, string>
-  >({});
-  const [expandedQuestions, setExpandedQuestions] = useState<
-    Record<string, boolean>
   >({});
 
   const averageRating =

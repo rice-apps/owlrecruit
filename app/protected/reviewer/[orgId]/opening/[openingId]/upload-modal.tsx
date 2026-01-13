@@ -52,18 +52,26 @@ export default function UploadDialog({ openingId }: UploadDialogProps) {
             "\n\nDetails:\n" +
             result.details
               .slice(0, 10)
-              .map((d: any) => {
-                // Handle different error formats
-                if (d.message) {
-                  // PapaParse error format
-                  return `Row ${d.row !== undefined ? d.row : "?"}: ${d.message} (${d.type})`;
-                } else if (d.error) {
-                  // Our custom error format
-                  return `Row ${d.row}: ${d.error}${d.netid ? ` (netid: ${d.netid})` : ""}`;
-                } else {
-                  return `Row ${d.row}: ${JSON.stringify(d)}`;
-                }
-              })
+              .map(
+                (d: {
+                  message?: string;
+                  row?: number;
+                  type?: string;
+                  error?: string;
+                  netid?: string;
+                }) => {
+                  // Handle different error formats
+                  if (d.message) {
+                    // PapaParse error format
+                    return `Row ${d.row !== undefined ? d.row : "?"}: ${d.message} (${d.type})`;
+                  } else if (d.error) {
+                    // Our custom error format
+                    return `Row ${d.row}: ${d.error}${d.netid ? ` (netid: ${d.netid})` : ""}`;
+                  } else {
+                    return `Row ${d.row}: ${JSON.stringify(d)}`;
+                  }
+                },
+              )
               .join("\n");
 
           if (result.details.length > 10) {
@@ -96,7 +104,7 @@ export default function UploadDialog({ openingId }: UploadDialogProps) {
         if (result.errors && result.errors.length > 0) {
           const warningMessage = result.errors
             .map(
-              (d: any) =>
+              (d: { row: number; error: string; netid?: string }) =>
                 `Row ${d.row}: ${d.error}${d.netid ? ` (netid: ${d.netid})` : ""}`,
             )
             .join("\n");
@@ -130,7 +138,7 @@ export default function UploadDialog({ openingId }: UploadDialogProps) {
         if (result.errors && result.errors.length > 0) {
           const warningMessage = result.errors
             .map(
-              (d: any) =>
+              (d: { row: number; error: string; netid?: string }) =>
                 `Row ${d.row}: ${d.error}${d.netid ? ` (netid: ${d.netid})` : ""}`,
             )
             .join("\n");
@@ -201,11 +209,15 @@ export default function UploadDialog({ openingId }: UploadDialogProps) {
                 <CheckCircle className="w-12 h-12 text-green-500" />
                 <DialogTitle>Upload Successful!</DialogTitle>
                 <p className="text-sm text-gray-600">
-                  File "{fileName}" has been uploaded!
+                  File &quot;{fileName}&quot; has been uploaded!
                 </p>
               </>
             )}
-            <Button onClick={handleClose} variant="outline" className="mt-2">
+            <Button
+              onClick={() => handleClose(false)}
+              variant="outline"
+              className="mt-2"
+            >
               Close
             </Button>
           </div>

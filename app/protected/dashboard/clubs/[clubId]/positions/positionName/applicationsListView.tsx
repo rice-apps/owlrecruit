@@ -63,9 +63,10 @@ export function ApplicationsListView<TData, TValue>({
   const statusColumn = table.getColumn("status");
   const uniqueStatuses = React.useMemo(() => {
     const statuses = new Set<string>();
-    data.forEach((row: any) => {
-      if (row.status) {
-        statuses.add(row.status);
+    data.forEach((row) => {
+      const rowWithStatus = row as { status?: string };
+      if (rowWithStatus.status) {
+        statuses.add(rowWithStatus.status);
       }
     });
     return Array.from(statuses);

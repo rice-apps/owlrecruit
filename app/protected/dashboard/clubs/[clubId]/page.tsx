@@ -12,7 +12,6 @@ import {
   Mail,
   Clock,
   AlertCircle,
-  Loader2,
   Building,
 } from "lucide-react";
 import Link from "next/link";
@@ -46,7 +45,10 @@ interface PageData {
   club: ClubData | null;
   application: ApplicationData | null;
   interviewers: InterviewerData[];
-  user: any;
+  user: {
+    id: string;
+    email?: string;
+  };
 }
 
 const fadeInUp = {
@@ -138,7 +140,7 @@ export default function ClubDetailPage() {
         return;
       }
 
-      const { data: application, error: appError } = await supabase
+      const { data: application } = await supabase
         .from("applications")
         .select("*")
         .eq("applicant_id", user.id)
@@ -190,6 +192,7 @@ export default function ClubDetailPage() {
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clubId]);
 
   if (loading) return <LoadingState />;

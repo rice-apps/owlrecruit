@@ -28,8 +28,9 @@ export default function ApplicantReviewPage() {
 
       <h1 className="text-3xl font-bold">Applicant Review</h1>
       <h2 className="text-xl text-muted-foreground">
-        Reviewing applicant "{applicantId}" for opening "{openingId}" in org "
-        {orgId}" - shows application details, resume, etc
+        Reviewing applicant &quot;{applicantId}&quot; for opening &quot;
+        {openingId}&quot; in org &quot;
+        {orgId}&quot; - shows application details, resume, etc
       </h2>
     </div>
   );

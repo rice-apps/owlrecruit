@@ -13,7 +13,9 @@ import { FileUp, Building2 } from "lucide-react";
 import Link from "next/link";
 
 export default function ApplicationUpload() {
-  const handleFileChangeInterview = async (e: any) => {
+  const handleFileChangeInterview = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files[0];
     if (file) {
       try {
@@ -23,7 +25,9 @@ export default function ApplicationUpload() {
       }
     }
   };
-  const handleFileChangeApplications = async (e: any) => {
+  const handleFileChangeApplications = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files[0];
     if (file) {
       try {

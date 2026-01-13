@@ -84,7 +84,7 @@ export function OrgSettingsDialog({ org }: OrgSettingsDialogProps) {
           <DialogHeader>
             <DialogTitle>Organization Settings</DialogTitle>
             <DialogDescription>
-              Update your organization's information and settings
+              Update your organization&apos;s information and settings
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">

@@ -34,7 +34,7 @@ export default async function AdminClubPage({ params }: AdminClubPageProps) {
   const supabase = await createClient();
 
   // Fetch applications with user data in one query
-  const { data: applications, error } = await supabase
+  const { data: applications } = await supabase
     .from("applications")
     .select(
       `

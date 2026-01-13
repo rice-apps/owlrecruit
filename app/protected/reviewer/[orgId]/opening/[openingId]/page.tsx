@@ -17,7 +17,7 @@ interface Application {
   position: string; // This will be derived from opening title
   status: string;
   notes: string; // This will be derived from form_responses
-  form_responses?: any;
+  form_responses?: Record<string, unknown>;
   url?: string;
   created_at: string;
   updated_at: string;
@@ -55,7 +55,7 @@ export default async function OpeningOverviewPage({
     .single();
 
   // Fetch applications with user data for this specific opening
-  const { data: applications, error } = await supabase
+  const { data: applications } = await supabase
     .from("applications")
     .select(
       `
@@ -80,10 +80,6 @@ export default async function OpeningOverviewPage({
     `,
     )
     .eq("opening_id", openingId);
-
-  if (error) {
-    console.error("Error fetching applications:", error);
-  }
 
   // Transform the data to match the Application interface
   const transformedApplications: Application[] = (applications || []).map(

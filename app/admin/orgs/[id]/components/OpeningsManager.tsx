@@ -174,8 +174,8 @@ export function OpeningsManager({ orgId, openings }: OpeningsManagerProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Opening</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{selectedOpening?.title}"? This
-              action cannot be undone.
+              Are you sure you want to delete &quot;{selectedOpening?.title}
+              &quot;? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

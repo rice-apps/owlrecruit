@@ -162,7 +162,7 @@ export default function KanbanBoard({ applications }: KanbanBoardProps) {
     setHasUnsavedChanges(false);
   };
 
-  const handleApplicationClick = (application: Application) => {
+  const handleApplicationClick = () => {
     if (!isEditMode) {
       // Handle application click - could open modal or navigate to detail view
       // console.log('Application clicked:', application);

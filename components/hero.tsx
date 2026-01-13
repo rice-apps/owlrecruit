@@ -16,8 +16,8 @@ export function Hero() {
             OwlRecruit brings club recruiting into the modern age. Browse open
             applications, track your submissions, and manage reviews—all in one
             place! No more lost emails, missed deadlines, or endless
-            spreadsheets. Whether you're finding your community or building it,
-            OwlRecruit makes it effortless.
+            spreadsheets. Whether you&apos;re finding your community or building
+            it, OwlRecruit makes it effortless.
           </p>
           <div className="w-1/4 center">
             <SignUpGoogleBtn />

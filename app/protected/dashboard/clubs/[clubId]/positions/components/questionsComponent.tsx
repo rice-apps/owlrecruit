@@ -8,11 +8,14 @@ type AppRow = {
   id: string;
   applicant_id: string;
   name?: string;
-  form_responses: Record<string, any>;
+  form_responses: Record<string, unknown>;
 };
 
 export default function QuestionsComponent() {
-  const apps: AppRow[] = (mockApps as any).applications || [];
+  const apps: AppRow[] = React.useMemo(
+    () => (mockApps as { applications?: AppRow[] }).applications || [],
+    [],
+  );
   // We assume each application row includes `name`.
 
   // build list of question keys from applications (union of keys)
@@ -85,7 +88,7 @@ export default function QuestionsComponent() {
 
         {/* Rows */}
         <div>
-          {apps.map((app, i) => {
+          {apps.map((app) => {
             const name = app.name || app.applicant_id.slice(0, 8);
             const answer = app.form_responses?.[questionKey] || ["", ""];
             const response = Array.isArray(answer) ? answer[0] : String(answer);

@@ -15,12 +15,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-interface Opening {
-  id: string;
-  title: string;
-  description: string;
-}
-
 interface ReviewerOrgPageProps {
   params: { orgId: string };
 }
@@ -39,7 +33,7 @@ export default async function ReviewerOrgPage({
     .single();
 
   // Fetch all openings for this organization
-  const { data: openings, error } = await supabase
+  const { data: openings } = await supabase
     .from("openings")
     .select("id, title, description")
     .eq("org_id", orgId)
