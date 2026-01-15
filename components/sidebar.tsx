@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Menu, Plus, HelpCircle, LogOut, ChevronLeft } from 'lucide-react';
+import { OrgFormDialog } from '@/components/org-form-dialog';
 import type { OrgWithRole } from '@/types/app';
 
 interface SidebarProps {
@@ -22,7 +23,7 @@ export function Sidebar({ orgs, user }: SidebarProps) {
 
   // Extract current org ID from pathname if on an org page
   const currentOrgId = React.useMemo(() => {
-    const match = pathname.match(/\/dashboard\/clubs\/([^/]+)/);
+    const match = pathname.match(/\/reviewer\/([^/]+)/);
     return match?.[1] || null;
   }, [pathname]);
 
@@ -50,7 +51,7 @@ export function Sidebar({ orgs, user }: SidebarProps) {
           {orgs.map((org) => (
             <li key={org.id}>
               <Link
-                href={`/protected/dashboard/clubs/${org.id}`}
+                href={`/protected/reviewer/${org.id}`}
                 className={cn(
                   'flex items-center gap-3 px-3 py-2 rounded-md transition-colors',
                   currentOrgId === org.id
@@ -74,22 +75,26 @@ export function Sidebar({ orgs, user }: SidebarProps) {
 
         {/* Add New Organization Button */}
         {isExpanded ? (
-          <Button
-            asChild
-            className="w-full mt-4 bg-cyan-500 hover:bg-cyan-600 text-white"
-          >
-            <Link href="/protected/create">
-              <Plus size={16} />
-              Add new organization
-            </Link>
-          </Button>
+          <div className="mt-4">
+            <OrgFormDialog
+              trigger={
+                <Button className="w-full bg-cyan-500 hover:bg-cyan-600 text-white">
+                  <Plus size={16} className="mr-2" />
+                  Add new organization
+                </Button>
+              }
+            />
+          </div>
         ) : (
-          <Link
-            href="/protected/create"
-            className="flex items-center justify-center w-10 h-10 mx-auto mt-4 bg-cyan-500 hover:bg-cyan-600 text-white rounded-md transition-colors"
-          >
-            <Plus size={16} />
-          </Link>
+          <div className="mt-4">
+            <OrgFormDialog
+              trigger={
+                <button className="flex items-center justify-center w-10 h-10 mx-auto bg-cyan-500 hover:bg-cyan-600 text-white rounded-md transition-colors">
+                  <Plus size={16} />
+                </button>
+              }
+            />
+          </div>
         )}
       </nav>
 

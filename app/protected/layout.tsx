@@ -19,6 +19,7 @@ export default async function ProtectedLayout({
   const userId = authData.claims.sub;
   const userMetadata = authData.claims.user_metadata as {
     full_name?: string;
+    name?: string;
     email?: string;
   };
 
