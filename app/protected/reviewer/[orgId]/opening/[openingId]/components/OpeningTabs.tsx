@@ -1,14 +1,8 @@
 "use client";
 
-import * as React from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
-
-interface OpeningTabsProps {
-  orgId: string;
-  openingId: string;
-}
 
 const tabs = [
   { id: "applicants", label: "Applicants" },
@@ -19,7 +13,7 @@ const tabs = [
 
 type TabId = (typeof tabs)[number]["id"];
 
-export function OpeningTabs({ orgId, openingId }: OpeningTabsProps) {
+export function OpeningTabs() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const currentTab = (searchParams.get("tab") as TabId) || "applicants";
