@@ -1,19 +1,21 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { OpeningStatusBadge } from '@/components/status-badge';
+import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { OpeningStatusBadge } from "@/components/status-badge";
 
 interface Opening {
   id: string;
   org_id: string;
   title: string | null;
   description: string | null;
-  orgs: {
-    id: string;
-    name: string;
-    description: string | null;
-  }[] | null;
+  orgs:
+    | {
+        id: string;
+        name: string;
+        description: string | null;
+      }[]
+    | null;
 }
 
 interface OpeningsGridProps {
@@ -42,19 +44,17 @@ export function OpeningsGrid({ openings }: OpeningsGridProps) {
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between">
                   <CardTitle className="text-lg">
-                    {opening.title || 'Untitled Opening'}
+                    {opening.title || "Untitled Opening"}
                   </CardTitle>
                   <OpeningStatusBadge status="open" />
                 </div>
                 {org && (
-                  <p className="text-sm text-muted-foreground">
-                    {org.name}
-                  </p>
+                  <p className="text-sm text-muted-foreground">{org.name}</p>
                 )}
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground line-clamp-3">
-                  {opening.description || 'No description provided.'}
+                  {opening.description || "No description provided."}
                 </p>
               </CardContent>
             </Card>
@@ -64,4 +64,3 @@ export function OpeningsGrid({ openings }: OpeningsGridProps) {
     </div>
   );
 }
-

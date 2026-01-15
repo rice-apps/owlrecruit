@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import Link from 'next/link';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import * as React from "react";
+import Link from "next/link";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -11,10 +11,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { StatusBadge } from '@/components/status-badge';
-import { Search, Filter, Eye, EyeOff } from 'lucide-react';
-import type { ApplicationStatus } from '@/types/app';
+} from "@/components/ui/table";
+import { StatusBadge } from "@/components/status-badge";
+import { Search, Filter, Eye, EyeOff } from "lucide-react";
+import type { ApplicationStatus } from "@/types/app";
 
 interface Applicant {
   id: string;
@@ -36,7 +36,7 @@ export function ApplicantsList({
   orgId,
   openingId,
 }: ApplicantsListProps) {
-  const [searchQuery, setSearchQuery] = React.useState('');
+  const [searchQuery, setSearchQuery] = React.useState("");
   const [anonymousView, setAnonymousView] = React.useState(false);
 
   const filteredApplicants = React.useMemo(() => {
@@ -46,7 +46,7 @@ export function ApplicantsList({
       (a) =>
         a.name.toLowerCase().includes(query) ||
         a.email.toLowerCase().includes(query) ||
-        a.netId.toLowerCase().includes(query)
+        a.netId.toLowerCase().includes(query),
     );
   }, [applicants, searchQuery]);
 
@@ -69,7 +69,11 @@ export function ApplicantsList({
           onClick={() => setAnonymousView(!anonymousView)}
           className="gap-2"
         >
-          {anonymousView ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          {anonymousView ? (
+            <EyeOff className="h-4 w-4" />
+          ) : (
+            <Eye className="h-4 w-4" />
+          )}
           Anonymous View
         </Button>
         <Button variant="outline" size="sm" className="gap-2">
@@ -94,10 +98,13 @@ export function ApplicantsList({
           <TableBody>
             {filteredApplicants.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-8 text-gray-500">
+                <TableCell
+                  colSpan={4}
+                  className="text-center py-8 text-gray-500"
+                >
                   {searchQuery
-                    ? 'No applicants match your search.'
-                    : 'No applicants yet.'}
+                    ? "No applicants match your search."
+                    : "No applicants yet."}
                 </TableCell>
               </TableRow>
             ) : (
@@ -117,7 +124,7 @@ export function ApplicantsList({
                     </Link>
                   </TableCell>
                   <TableCell className="text-gray-500">
-                    {anonymousView ? '***@rice.edu' : applicant.email}
+                    {anonymousView ? "***@rice.edu" : applicant.email}
                   </TableCell>
                   <TableCell>
                     <StatusBadge status={applicant.status} />

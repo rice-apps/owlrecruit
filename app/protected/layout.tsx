@@ -1,7 +1,7 @@
-import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
-import { Sidebar } from '@/components/sidebar';
-import type { OrgWithRole } from '@/types/app';
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { Sidebar } from "@/components/sidebar";
+import type { OrgWithRole } from "@/types/app";
 
 export default async function ProtectedLayout({
   children,
@@ -13,7 +13,7 @@ export default async function ProtectedLayout({
   // Verify user authentication
   const { data: authData, error: authError } = await supabase.auth.getClaims();
   if (authError || !authData?.claims) {
-    redirect('/auth/login');
+    redirect("/auth/login");
   }
 
   const userId = authData.claims.sub;
@@ -25,8 +25,9 @@ export default async function ProtectedLayout({
 
   // Fetch user's organizations with their role
   const { data: memberships, error: membershipsError } = await supabase
-    .from('org_members')
-    .select(`
+    .from("org_members")
+    .select(
+      `
       role,
       orgs (
         id,
@@ -35,16 +36,20 @@ export default async function ProtectedLayout({
         created_at,
         updated_at
       )
-    `)
-    .eq('user_id', userId);
+    `,
+    )
+    .eq("user_id", userId);
 
   if (membershipsError) {
-    console.error('Error fetching org memberships:', membershipsError);
+    console.error("Error fetching org memberships:", membershipsError);
   }
 
   // Transform data to OrgWithRole format
   const orgs: OrgWithRole[] = (memberships || [])
-    .filter((m): m is typeof m & { orgs: NonNullable<typeof m.orgs> } => m.orgs !== null)
+    .filter(
+      (m): m is typeof m & { orgs: NonNullable<typeof m.orgs> } =>
+        m.orgs !== null,
+    )
     .map((m) => {
       // Supabase returns single row joins as objects, but TS may infer as array
       const orgData = Array.isArray(m.orgs) ? m.orgs[0] : m.orgs;
@@ -55,8 +60,8 @@ export default async function ProtectedLayout({
     });
 
   const user = {
-    name: userMetadata.full_name || 'User',
-    email: userMetadata.email || '',
+    name: userMetadata.full_name || "User",
+    email: userMetadata.email || "",
   };
 
   return (

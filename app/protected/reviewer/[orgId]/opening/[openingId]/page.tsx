@@ -4,15 +4,15 @@
  * Displays opening details with tabs for Applicants, Questions, Overview, and Upload.
  */
 
-import { Suspense } from 'react';
-import { createClient } from '@/lib/supabase/server';
-import Link from 'next/link';
-import { ArrowLeft, Pencil } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { OpeningStatusBadge } from '@/components/status-badge';
-import { OpeningTabs } from './components/OpeningTabs';
-import { ApplicantsList } from './components/ApplicantsList';
-import type { ApplicationStatus } from '@/types/app';
+import { Suspense } from "react";
+import { createClient } from "@/lib/supabase/server";
+import Link from "next/link";
+import { ArrowLeft, Pencil } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { OpeningStatusBadge } from "@/components/status-badge";
+import { OpeningTabs } from "./components/OpeningTabs";
+import { ApplicantsList } from "./components/ApplicantsList";
+import type { ApplicationStatus } from "@/types/app";
 
 interface OpeningOverviewPageProps {
   params: Promise<{ orgId: string; openingId: string }>;
@@ -24,26 +24,26 @@ export default async function OpeningOverviewPage({
   searchParams,
 }: OpeningOverviewPageProps) {
   const { orgId, openingId } = await params;
-  const { tab = 'applicants' } = await searchParams;
+  const { tab = "applicants" } = await searchParams;
   const supabase = await createClient();
 
   // Fetch the organization name
   const { data: orgData } = await supabase
-    .from('orgs')
-    .select('name')
-    .eq('id', orgId)
+    .from("orgs")
+    .select("name")
+    .eq("id", orgId)
     .single();
 
   // Fetch the opening details
   const { data: openingData } = await supabase
-    .from('openings')
-    .select('title, description, status')
-    .eq('id', openingId)
+    .from("openings")
+    .select("title, description, status")
+    .eq("id", openingId)
     .single();
 
   // Fetch applications with user data for this specific opening
   const { data: applications } = await supabase
-    .from('applications')
+    .from("applications")
     .select(
       `
       id,
@@ -54,9 +54,9 @@ export default async function OpeningOverviewPage({
         net_id,
         email
       )
-    `
+    `,
     )
-    .eq('opening_id', openingId);
+    .eq("opening_id", openingId);
 
   // Transform applications to applicants list format
   const applicants = (applications || [])
@@ -65,17 +65,17 @@ export default async function OpeningOverviewPage({
       const user = Array.isArray(app.users) ? app.users[0] : app.users;
       return {
         id: user.id,
-        name: user.name || '-',
+        name: user.name || "-",
         email: user.email || `${user.net_id}@rice.edu`,
         netId: user.net_id,
-        status: (app.status || 'No Status') as ApplicationStatus,
+        status: (app.status || "No Status") as ApplicationStatus,
         applicationId: app.id,
       };
     });
 
   const renderTabContent = () => {
     switch (tab) {
-      case 'applicants':
+      case "applicants":
         return (
           <ApplicantsList
             applicants={applicants}
@@ -83,22 +83,22 @@ export default async function OpeningOverviewPage({
             openingId={openingId}
           />
         );
-      case 'questions':
+      case "questions":
         return (
           <div className="py-12 text-center text-gray-500">
             <p>Question configuration coming soon.</p>
           </div>
         );
-      case 'overview':
+      case "overview":
         return (
           <div className="py-8 space-y-4">
             <h3 className="font-semibold text-lg">Description</h3>
             <p className="text-gray-600">
-              {openingData?.description || 'No description provided.'}
+              {openingData?.description || "No description provided."}
             </p>
           </div>
         );
-      case 'upload':
+      case "upload":
         return (
           <div className="py-12 text-center text-gray-500">
             <p>Upload functionality coming soon.</p>
@@ -126,7 +126,7 @@ export default async function OpeningOverviewPage({
           <p className="text-sm text-gray-500 mb-1">{orgData?.name}</p>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold">
-              {openingData?.title || 'Untitled Opening'}
+              {openingData?.title || "Untitled Opening"}
             </h1>
             <Button variant="ghost" size="icon" className="h-8 w-8">
               <Pencil className="h-4 w-4" />
@@ -136,7 +136,7 @@ export default async function OpeningOverviewPage({
             {openingData?.description}
           </p>
         </div>
-        <OpeningStatusBadge status={openingData?.status || 'draft'} />
+        <OpeningStatusBadge status={openingData?.status || "draft"} />
       </div>
 
       {/* Tabs */}

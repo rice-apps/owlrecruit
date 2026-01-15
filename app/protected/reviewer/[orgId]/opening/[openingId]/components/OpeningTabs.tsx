@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
-import { cn } from '@/lib/utils';
+import * as React from "react";
+import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 interface OpeningTabsProps {
   orgId: string;
@@ -11,22 +11,22 @@ interface OpeningTabsProps {
 }
 
 const tabs = [
-  { id: 'applicants', label: 'Applicants' },
-  { id: 'questions', label: 'Questions' },
-  { id: 'overview', label: 'Overview' },
-  { id: 'upload', label: 'Upload Data' },
+  { id: "applicants", label: "Applicants" },
+  { id: "questions", label: "Questions" },
+  { id: "overview", label: "Overview" },
+  { id: "upload", label: "Upload Data" },
 ] as const;
 
-type TabId = (typeof tabs)[number]['id'];
+type TabId = (typeof tabs)[number]["id"];
 
 export function OpeningTabs({ orgId, openingId }: OpeningTabsProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const currentTab = (searchParams.get('tab') as TabId) || 'applicants';
+  const currentTab = (searchParams.get("tab") as TabId) || "applicants";
 
   const createTabUrl = (tabId: TabId) => {
     const params = new URLSearchParams(searchParams.toString());
-    params.set('tab', tabId);
+    params.set("tab", tabId);
     return `${pathname}?${params.toString()}`;
   };
 
@@ -38,10 +38,10 @@ export function OpeningTabs({ orgId, openingId }: OpeningTabsProps) {
             key={tab.id}
             href={createTabUrl(tab.id)}
             className={cn(
-              'py-3 px-1 text-sm font-medium border-b-2 transition-colors',
+              "py-3 px-1 text-sm font-medium border-b-2 transition-colors",
               currentTab === tab.id
-                ? 'border-cyan-500 text-cyan-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? "border-cyan-500 text-cyan-600"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300",
             )}
           >
             {tab.label}

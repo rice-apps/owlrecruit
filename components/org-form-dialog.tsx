@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { useRouter } from 'next/navigation';
+import * as React from "react";
+import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Plus } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Plus } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 interface OrgFormDialogProps {
   trigger?: React.ReactNode;
@@ -28,8 +28,8 @@ export function OrgFormDialog({ trigger, onSuccess }: OrgFormDialogProps) {
   const [error, setError] = React.useState<string | null>(null);
 
   const [formData, setFormData] = React.useState({
-    name: '',
-    description: '',
+    name: "",
+    description: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,7 +37,7 @@ export function OrgFormDialog({ trigger, onSuccess }: OrgFormDialogProps) {
     setError(null);
 
     if (!formData.name.trim()) {
-      setError('Organization name is required');
+      setError("Organization name is required");
       return;
     }
 
@@ -53,32 +53,32 @@ export function OrgFormDialog({ trigger, onSuccess }: OrgFormDialogProps) {
       } = await supabase.auth.getUser();
 
       if (authError || !user) {
-        throw new Error('You must be logged in to create an organization');
+        throw new Error("You must be logged in to create an organization");
       }
 
       // Create the organization
       const { data: newOrg, error: insertError } = await supabase
-        .from('orgs')
+        .from("orgs")
         .insert({
           name: formData.name.trim(),
           description: formData.description.trim() || null,
         })
-        .select('id')
+        .select("id")
         .single();
 
       if (insertError) throw insertError;
 
       // Add the creator as an admin of the organization
-      const { error: memberError } = await supabase.from('org_members').insert({
+      const { error: memberError } = await supabase.from("org_members").insert({
         user_id: user.id,
         org_id: newOrg.id,
-        role: 'admin',
+        role: "admin",
       });
 
       if (memberError) throw memberError;
 
       // Reset form and close
-      setFormData({ name: '', description: '' });
+      setFormData({ name: "", description: "" });
       setOpen(false);
 
       // Callback or redirect
@@ -89,9 +89,9 @@ export function OrgFormDialog({ trigger, onSuccess }: OrgFormDialogProps) {
         router.push(`/protected/reviewer/${newOrg.id}`);
       }
     } catch (err) {
-      console.error('Error creating organization:', err);
+      console.error("Error creating organization:", err);
       setError(
-        err instanceof Error ? err.message : 'Failed to create organization'
+        err instanceof Error ? err.message : "Failed to create organization",
       );
     } finally {
       setIsSubmitting(false);
@@ -101,7 +101,7 @@ export function OrgFormDialog({ trigger, onSuccess }: OrgFormDialogProps) {
   const handleClose = () => {
     setOpen(false);
     setError(null);
-    setFormData({ name: '', description: '' });
+    setFormData({ name: "", description: "" });
   };
 
   return (
@@ -173,7 +173,7 @@ export function OrgFormDialog({ trigger, onSuccess }: OrgFormDialogProps) {
               className="flex-1 bg-cyan-500 hover:bg-cyan-600"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Creating...' : 'Create Organization'}
+              {isSubmitting ? "Creating..." : "Create Organization"}
             </Button>
           </div>
         </form>

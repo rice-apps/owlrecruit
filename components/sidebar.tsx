@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Menu, Plus, HelpCircle, LogOut, ChevronLeft } from 'lucide-react';
-import { OrgFormDialog } from '@/components/org-form-dialog';
-import type { OrgWithRole } from '@/types/app';
+import * as React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Menu, Plus, HelpCircle, LogOut, ChevronLeft } from "lucide-react";
+import { OrgFormDialog } from "@/components/org-form-dialog";
+import type { OrgWithRole } from "@/types/app";
 
 interface SidebarProps {
   orgs: OrgWithRole[];
@@ -30,8 +30,8 @@ export function Sidebar({ orgs, user }: SidebarProps) {
   return (
     <aside
       className={cn(
-        'flex flex-col h-screen bg-white border-r border-gray-200 transition-all duration-200',
-        isExpanded ? 'w-64' : 'w-16'
+        "flex flex-col h-screen bg-white border-r border-gray-200 transition-all duration-200",
+        isExpanded ? "w-64" : "w-16",
       )}
     >
       {/* Header with toggle */}
@@ -39,7 +39,7 @@ export function Sidebar({ orgs, user }: SidebarProps) {
         <button
           onClick={() => setIsExpanded(!isExpanded)}
           className="p-2 hover:bg-gray-100 rounded-md transition-colors"
-          aria-label={isExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
+          aria-label={isExpanded ? "Collapse sidebar" : "Expand sidebar"}
         >
           {isExpanded ? <ChevronLeft size={20} /> : <Menu size={20} />}
         </button>
@@ -53,10 +53,10 @@ export function Sidebar({ orgs, user }: SidebarProps) {
               <Link
                 href={`/protected/reviewer/${org.id}`}
                 className={cn(
-                  'flex items-center gap-3 px-3 py-2 rounded-md transition-colors',
+                  "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
                   currentOrgId === org.id
-                    ? 'bg-cyan-50 text-cyan-700 border border-cyan-200'
-                    : 'hover:bg-gray-100 text-gray-700'
+                    ? "bg-cyan-50 text-cyan-700 border border-cyan-200"
+                    : "hover:bg-gray-100 text-gray-700",
                 )}
               >
                 {/* Org Icon/Avatar Placeholder */}

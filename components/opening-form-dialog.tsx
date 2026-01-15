@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { useRouter } from 'next/navigation';
+import * as React from "react";
+import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Plus, X } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Plus, X } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 interface OpeningFormDialogProps {
   orgId: string;
@@ -25,7 +25,7 @@ interface OpeningFormDialogProps {
     description: string | null;
     application_link: string | null;
     closes_at: string | null;
-    status: 'draft' | 'open' | 'closed';
+    status: "draft" | "open" | "closed";
   };
   trigger?: React.ReactNode;
   onSuccess?: () => void;
@@ -46,11 +46,11 @@ export function OpeningFormDialog({
   const isEditing = !!opening;
 
   const [formData, setFormData] = React.useState({
-    title: opening?.title || '',
-    description: opening?.description || '',
-    application_link: opening?.application_link || '',
-    closes_at: opening?.closes_at?.split('T')[0] || '',
-    status: opening?.status || 'draft',
+    title: opening?.title || "",
+    description: opening?.description || "",
+    application_link: opening?.application_link || "",
+    closes_at: opening?.closes_at?.split("T")[0] || "",
+    status: opening?.status || "draft",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,7 +58,7 @@ export function OpeningFormDialog({
     setError(null);
 
     if (!formData.title.trim()) {
-      setError('Position title is required');
+      setError("Position title is required");
       return;
     }
 
@@ -81,15 +81,15 @@ export function OpeningFormDialog({
       if (isEditing && opening) {
         // Update existing opening
         const { error: updateError } = await supabase
-          .from('openings')
+          .from("openings")
           .update(payload)
-          .eq('id', opening.id);
+          .eq("id", opening.id);
 
         if (updateError) throw updateError;
       } else {
         // Create new opening
         const { error: insertError } = await supabase
-          .from('openings')
+          .from("openings")
           .insert(payload);
 
         if (insertError) throw insertError;
@@ -99,8 +99,8 @@ export function OpeningFormDialog({
       onSuccess?.();
       router.refresh();
     } catch (err) {
-      console.error('Error saving opening:', err);
-      setError(err instanceof Error ? err.message : 'Failed to save opening');
+      console.error("Error saving opening:", err);
+      setError(err instanceof Error ? err.message : "Failed to save opening");
     } finally {
       setIsSubmitting(false);
     }
@@ -111,11 +111,11 @@ export function OpeningFormDialog({
     setError(null);
     if (!isEditing) {
       setFormData({
-        title: '',
-        description: '',
-        application_link: '',
-        closes_at: '',
-        status: 'draft',
+        title: "",
+        description: "",
+        application_link: "",
+        closes_at: "",
+        status: "draft",
       });
     }
   };
@@ -134,7 +134,7 @@ export function OpeningFormDialog({
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle>
-              {isEditing ? 'Edit Opening' : 'Create New Opening'}
+              {isEditing ? "Edit Opening" : "Create New Opening"}
             </DialogTitle>
             <button
               onClick={handleClose}
@@ -212,19 +212,19 @@ export function OpeningFormDialog({
           <div className="space-y-2">
             <Label>Status</Label>
             <div className="flex gap-2">
-              {(['draft', 'open', 'closed'] as const).map((status) => (
+              {(["draft", "open", "closed"] as const).map((status) => (
                 <button
                   key={status}
                   type="button"
                   onClick={() => setFormData({ ...formData, status })}
                   className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                     formData.status === status
-                      ? status === 'open'
-                        ? 'bg-cyan-100 text-cyan-700 border border-cyan-300'
-                        : status === 'draft'
-                          ? 'bg-gray-100 text-gray-700 border border-gray-300'
-                          : 'bg-gray-200 text-gray-600 border border-gray-400'
-                      : 'bg-gray-50 text-gray-500 border border-gray-200 hover:bg-gray-100'
+                      ? status === "open"
+                        ? "bg-cyan-100 text-cyan-700 border border-cyan-300"
+                        : status === "draft"
+                          ? "bg-gray-100 text-gray-700 border border-gray-300"
+                          : "bg-gray-200 text-gray-600 border border-gray-400"
+                      : "bg-gray-50 text-gray-500 border border-gray-200 hover:bg-gray-100"
                   }`}
                 >
                   {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -247,10 +247,10 @@ export function OpeningFormDialog({
             disabled={isSubmitting}
           >
             {isSubmitting
-              ? 'Saving...'
+              ? "Saving..."
               : isEditing
-                ? 'Save Changes'
-                : 'Create opening'}
+                ? "Save Changes"
+                : "Create opening"}
           </Button>
         </form>
       </DialogContent>

@@ -5,17 +5,12 @@
  * Admins can create new openings.
  */
 
-import { createClient } from '@/lib/supabase/server';
-import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { OpeningFormDialog } from '@/components/opening-form-dialog';
-import { OpeningStatusBadge } from '@/components/status-badge';
+import { createClient } from "@/lib/supabase/server";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { OpeningFormDialog } from "@/components/opening-form-dialog";
+import { OpeningStatusBadge } from "@/components/status-badge";
 
 interface ReviewerOrgPageProps {
   params: Promise<{ orgId: string }>;
@@ -33,27 +28,27 @@ export default async function ReviewerOrgPage({
 
   // Check if user is admin of this org
   const { data: membership } = await supabase
-    .from('org_members')
-    .select('role')
-    .eq('user_id', userId)
-    .eq('org_id', orgId)
+    .from("org_members")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("org_id", orgId)
     .single();
 
-  const isAdmin = membership?.role === 'admin';
+  const isAdmin = membership?.role === "admin";
 
   // Fetch the organization name
   const { data: orgData } = await supabase
-    .from('orgs')
-    .select('name, description')
-    .eq('id', orgId)
+    .from("orgs")
+    .select("name, description")
+    .eq("id", orgId)
     .single();
 
   // Fetch all openings for this organization
   const { data: openings } = await supabase
-    .from('openings')
-    .select('id, title, description, status, closes_at')
-    .eq('org_id', orgId)
-    .order('created_at', { ascending: false });
+    .from("openings")
+    .select("id, title, description, status, closes_at")
+    .eq("org_id", orgId)
+    .order("created_at", { ascending: false });
 
   return (
     <div className="flex-1 w-full max-w-5xl flex flex-col gap-6">
@@ -69,7 +64,7 @@ export default async function ReviewerOrgPage({
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold">
-            {orgData?.name || 'Organization'}
+            {orgData?.name || "Organization"}
           </h1>
           {orgData?.description && (
             <p className="text-lg text-gray-500 mt-2">{orgData.description}</p>
@@ -78,7 +73,7 @@ export default async function ReviewerOrgPage({
         {isAdmin && (
           <OpeningFormDialog
             orgId={orgId}
-            orgName={orgData?.name || 'Organization'}
+            orgName={orgData?.name || "Organization"}
           />
         )}
       </div>
@@ -95,17 +90,17 @@ export default async function ReviewerOrgPage({
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
                     <CardTitle className="text-lg">
-                      {opening.title || 'Untitled Opening'}
+                      {opening.title || "Untitled Opening"}
                     </CardTitle>
-                    <OpeningStatusBadge status={opening.status || 'draft'} />
+                    <OpeningStatusBadge status={opening.status || "draft"} />
                   </div>
                   {opening.closes_at && (
                     <p className="text-xs text-gray-400">
-                      Due:{' '}
-                      {new Date(opening.closes_at).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
+                      Due:{" "}
+                      {new Date(opening.closes_at).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
                       })}
                     </p>
                   )}
@@ -127,13 +122,13 @@ export default async function ReviewerOrgPage({
             </h3>
             <p className="text-sm text-gray-400 mb-4">
               {isAdmin
-                ? 'Create your first opening to start recruiting.'
-                : 'There are no openings for this organization yet.'}
+                ? "Create your first opening to start recruiting."
+                : "There are no openings for this organization yet."}
             </p>
             {isAdmin && (
               <OpeningFormDialog
                 orgId={orgId}
-                orgName={orgData?.name || 'Organization'}
+                orgName={orgData?.name || "Organization"}
               />
             )}
           </div>
