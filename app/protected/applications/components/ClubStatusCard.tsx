@@ -110,9 +110,9 @@ export default function ClubStatusCard({ userId }: ClubStatusCardProps) {
    */
   const handleMembershipClick = (membership: ClubMembership) => {
     if (isUserAdmin(membership.org_id)) {
-      router.push(`/protected/dashboard/clubs/admin/${membership.org_id}`);
+      router.push(`/protected/reviewer/${membership.org_id}`);
     } else {
-      router.push(`/protected/dashboard/clubs/${membership.org_id}`);
+      router.push(`/protected/discover/${membership.org_id}`);
     }
   };
 
@@ -120,7 +120,7 @@ export default function ClubStatusCard({ userId }: ClubStatusCardProps) {
    * Handle click on application container
    */
   const handleApplicationClick = (application: ClubApplication) => {
-    router.push(`/protected/dashboard/clubs/${application.org_id}`);
+    router.push(`/protected/discover/${application.org_id}`);
   };
 
   useEffect(() => {

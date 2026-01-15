@@ -91,14 +91,16 @@ export default function ClubStatusCard({ userId }: ClubStatusCardProps) {
    * Handle click on admin org container - routes to management page
    */
   const handleAdminOrgClick = (adminOrg: AdminOrg) => {
-    router.push(`/admin/orgs/${adminOrg.org_id}`);
+    router.push(`/protected/reviewer/${adminOrg.org_id}`);
   };
 
   /**
    * Handle click on application container - routes to club page
    */
   const handleApplicationClick = (application: ClubApplication) => {
-    router.push(`/protected/dashboard/clubs/${application.org_id}`);
+    // If we have an opening ID, we could route to specific application view,
+    // but for now, routing to the org page (discover mode) is a safe default for applicants
+    router.push(`/protected/discover/${application.org_id}`);
   };
 
   useEffect(() => {
