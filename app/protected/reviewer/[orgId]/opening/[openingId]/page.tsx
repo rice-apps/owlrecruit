@@ -141,7 +141,7 @@ export default async function OpeningOverviewPage({
 
       {/* Tabs */}
       <Suspense fallback={<div className="h-12" />}>
-        <OpeningTabs orgId={orgId} openingId={openingId} />
+        <OpeningTabs />
       </Suspense>
 
       {/* Tab content */}

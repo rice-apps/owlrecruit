@@ -1,5 +1,4 @@
 import { Hero } from "@/components/hero";
-import { ThemeSwitcher } from "@/components/theme-switcher";
 import Link from "next/link";
 
 export default function Home() {
@@ -31,7 +30,6 @@ export default function Home() {
               RiceApps
             </a>
           </p>
-          <ThemeSwitcher />
         </footer>
       </div>
     </main>
