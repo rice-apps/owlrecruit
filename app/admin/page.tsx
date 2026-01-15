@@ -16,7 +16,7 @@ export default function ApplicationUpload() {
   const handleFileChangeInterview = async (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (file) {
       try {
         await uploadCSV(file, "/api/interviews");
@@ -28,7 +28,7 @@ export default function ApplicationUpload() {
   const handleFileChangeApplications = async (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (file) {
       try {
         await uploadCSV(file, "/api/applications");

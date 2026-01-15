@@ -300,7 +300,7 @@ export async function processCSVRows<T>(
     // Look up or create user
     let user = await lookupUserByNetId(
       supabase,
-      row[CSV_RESERVED_COLUMNS.NETID],
+      row[CSV_RESERVED_COLUMNS.NETID] as string,
     );
 
     // If user not found, create a placeholder user
@@ -309,7 +309,7 @@ export async function processCSVRows<T>(
       if (!adminClient) {
         errors.push({
           row: rowNumber,
-          netid: row[CSV_RESERVED_COLUMNS.NETID],
+          netid: row[CSV_RESERVED_COLUMNS.NETID] as string,
           error: `User not found and admin access is required to create new users.`,
         });
         if (!VALIDATION_CONFIG.skipInvalidRows) break;
@@ -334,7 +334,7 @@ export async function processCSVRows<T>(
       if (authError || !authUser.user) {
         errors.push({
           row: rowNumber,
-          netid: row[CSV_RESERVED_COLUMNS.NETID],
+          netid: row[CSV_RESERVED_COLUMNS.NETID] as string,
           error: `Failed to create auth user: ${authError?.message || "Unknown error"}`,
         });
         if (!VALIDATION_CONFIG.skipInvalidRows) break;
@@ -358,7 +358,7 @@ export async function processCSVRows<T>(
       if (createError || !newUser) {
         errors.push({
           row: rowNumber,
-          netid: row[CSV_RESERVED_COLUMNS.NETID],
+          netid: row[CSV_RESERVED_COLUMNS.NETID] as string,
           error: `Failed to create public user: ${createError?.message || "Unknown error"}`,
         });
         if (!VALIDATION_CONFIG.skipInvalidRows) break;
@@ -372,7 +372,7 @@ export async function processCSVRows<T>(
     if (existingApplicantIds.has(user.id)) {
       errors.push({
         row: rowNumber,
-        netid: row[CSV_RESERVED_COLUMNS.NETID],
+        netid: row[CSV_RESERVED_COLUMNS.NETID] as string,
         error: ERROR_MESSAGES.DUPLICATE_APPLICATION,
       });
       if (!VALIDATION_CONFIG.skipInvalidRows) break;

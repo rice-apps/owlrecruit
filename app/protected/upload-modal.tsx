@@ -17,7 +17,7 @@ export default function UploadDialog() {
   const handleFileChangeInterview = async (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (file) {
       try {
         setFileName(file.name);
@@ -31,7 +31,7 @@ export default function UploadDialog() {
   const handleFileChangeApplications = async (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (file) {
       try {
         setFileName(file.name);
