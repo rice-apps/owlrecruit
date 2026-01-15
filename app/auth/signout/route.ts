@@ -4,16 +4,15 @@ import { type NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
-  console.log("Signout route hit");
   const supabase = await createClient();
 
-  // Check if we have a session
+  // Check if we have a user
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (session) {
-    console.log("Signing out user:", session.user.email);
+  if (user) {
+    console.log("Signing out user:", user.email);
     await supabase.auth.signOut();
   } else {
     console.log("No active session found during signout");
