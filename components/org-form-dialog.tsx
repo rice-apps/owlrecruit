@@ -114,16 +114,19 @@ export function OrgFormDialog({ trigger, onSuccess }: OrgFormDialogProps) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Create New Organization</DialogTitle>
+      <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="space-y-1 pb-6">
+          <DialogTitle className="text-2xl font-semibold">
+            Create New Organization
+          </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Organization Name */}
           <div className="space-y-2">
-            <Label htmlFor="org-name">
+            <Label htmlFor="org-name" className="text-base font-medium">
               Organization Name <span className="text-red-500">*</span>
+              <span className="text-gray-500 font-normal"> (required)</span>
             </Label>
             <Input
               id="org-name"
@@ -133,12 +136,15 @@ export function OrgFormDialog({ trigger, onSuccess }: OrgFormDialogProps) {
               }
               placeholder="e.g. Rice Apps"
               required
+              className="h-12 text-base"
             />
           </div>
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="org-description">Description</Label>
+            <Label htmlFor="org-description" className="text-base font-medium">
+              Description
+            </Label>
             <Textarea
               id="org-description"
               value={formData.description}
@@ -146,7 +152,8 @@ export function OrgFormDialog({ trigger, onSuccess }: OrgFormDialogProps) {
                 setFormData({ ...formData, description: e.target.value })
               }
               placeholder="Describe your organization..."
-              rows={3}
+              rows={1}
+              className="text-base resize-y min-h-[48px]"
             />
           </div>
 
@@ -158,19 +165,19 @@ export function OrgFormDialog({ trigger, onSuccess }: OrgFormDialogProps) {
           )}
 
           {/* Actions */}
-          <div className="flex gap-3 pt-2">
+          <div className="flex gap-3 pt-4">
             <Button
               type="button"
               variant="outline"
               onClick={handleClose}
-              className="flex-1"
+              className="flex-1 h-12 text-base"
               disabled={isSubmitting}
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              className="flex-1 bg-cyan-500 hover:bg-cyan-600"
+              className="flex-1 h-12 text-base bg-cyan-500 hover:bg-cyan-600"
               disabled={isSubmitting}
             >
               {isSubmitting ? "Creating..." : "Create Organization"}
