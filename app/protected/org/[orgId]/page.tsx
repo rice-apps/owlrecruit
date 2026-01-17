@@ -10,6 +10,7 @@ import { ArrowLeft, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { OpeningFormDialog } from "@/components/opening-form-dialog";
 import { OpeningStatusBadge } from "@/components/status-badge";
+import { MembersModal } from "./members-modal";
 
 interface OrgPageProps {
   params: Promise<{ orgId: string }>;
@@ -182,12 +183,14 @@ export default async function OrgPage({ params }: OrgPageProps) {
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">MEMBERS</h3>
           {isAdmin && (
-            <Link
-              href={`/protected/org/${orgId}`}
-              className="text-cyan-500 hover:text-cyan-600 text-sm"
-            >
-              Edit members
-            </Link>
+            <MembersModal
+              orgId={orgId}
+              trigger={
+                <button className="text-cyan-500 hover:text-cyan-600 text-sm">
+                  Edit members
+                </button>
+              }
+            />
           )}
         </div>
         {members && members.length > 0 ? (
@@ -209,7 +212,7 @@ export default async function OrgPage({ params }: OrgPageProps) {
                   key={member.id}
                   className="flex items-center gap-3 p-4 border rounded-xl bg-white"
                 >
-                  <div className="w-12 h-12 rounded-full bg-cyan-100 flex items-center justify-center text-cyan-700 font-semibold">
+                  <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-semibold">
                     {initials}
                   </div>
                   <p className="font-medium">{name}</p>
