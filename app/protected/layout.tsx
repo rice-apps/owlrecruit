@@ -13,7 +13,7 @@ export default async function ProtectedLayout({
   // Verify user authentication
   const { data: authData, error: authError } = await supabase.auth.getClaims();
   if (authError || !authData?.claims) {
-    redirect("/auth/login");
+    redirect("/");
   }
 
   const userId = authData.claims.sub;

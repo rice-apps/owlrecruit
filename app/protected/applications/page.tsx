@@ -16,7 +16,7 @@ export default async function DashboardPage() {
   // Verify authentication (redundant with layout but ensures security)
   const { data, error } = await supabase.auth.getClaims();
   if (error || !data?.claims) {
-    redirect("/auth/login");
+    redirect("/");
   }
 
   // Extract user ID from JWT claims for personalized content
