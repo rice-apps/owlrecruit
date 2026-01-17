@@ -1,12 +1,12 @@
 /**
  * Dashboard Main Page
  *
- * Main dashboard view that displays user's club status, recent activity, and quick actions.
+ * Main dashboard view that displays user's organization status, recent activity, and quick actions.
  * Includes authentication verification and user-specific content rendering.
  */
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { ClubStatusCard } from "./components";
+import { OrgStatusCard } from "./components";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -33,8 +33,8 @@ export default async function DashboardPage() {
 
       {/* Main Dashboard Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* User's Club Status Card */}
-        <ClubStatusCard userId={userId} />
+        {/* User's Organization Status Card */}
+        <OrgStatusCard userId={userId} />
 
         {/* Quick Actions and Activity Panel */}
         <div className="space-y-4">
@@ -44,14 +44,15 @@ export default async function DashboardPage() {
             <div className="p-4 border rounded-lg">
               <h3 className="font-medium mb-2">Recent Activity</h3>
               <p className="text-sm text-muted-foreground">
-                Your recent club activities and updates will appear here.
+                Your recent organization activities and updates will appear
+                here.
               </p>
             </div>
             {/* Notifications Placeholder */}
             <div className="p-4 border rounded-lg">
               <h3 className="font-medium mb-2">Notifications</h3>
               <p className="text-sm text-muted-foreground">
-                Stay updated with your application status and club
+                Stay updated with your application status and organization
                 announcements.
               </p>
             </div>

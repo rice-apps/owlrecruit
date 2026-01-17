@@ -1,1 +1,1 @@
-export { default as ClubStatusCard } from "./ClubStatusCard";
+export { default as OrgStatusCard } from "./OrgStatusCard";
