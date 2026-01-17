@@ -202,7 +202,7 @@ export default async function OrgPage({ params }: OrgPageProps) {
               const name = user?.name || "Unknown User";
               const initials = name
                 .split(" ")
-                .map((n) => n[0])
+                .map((n: string) => n[0])
                 .join("")
                 .toUpperCase()
                 .slice(0, 2);
