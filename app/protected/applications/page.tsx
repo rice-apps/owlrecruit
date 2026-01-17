@@ -5,6 +5,8 @@
  * Includes authentication verification and user-specific content rendering.
  */
 import { redirect } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { OrgStatusCard } from "./components";
 
@@ -21,13 +23,21 @@ export default async function DashboardPage() {
   const userId = data.claims.sub;
 
   return (
-    <div className="flex-1 w-full flex flex-col gap-12">
+    <div className="flex-1 w-full flex flex-col gap-6">
+      {/* Back Link */}
+      <Link
+        href="/protected"
+        className="flex items-center gap-2 w-fit text-sm text-gray-500 hover:text-gray-700 transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back
+      </Link>
+
       {/* Dashboard Header */}
       <div className="flex flex-col gap-2 items-start">
-        <h1 className="font-bold text-3xl mb-4">Dashboard</h1>
+        <h1 className="font-bold text-3xl mb-4">My Applications</h1>
         <p className="text-muted-foreground">
-          Welcome to your OwlRecruit dashboard. Manage your applications and
-          recruitment activities here.
+          View your organization memberships and application statuses.
         </p>
       </div>
 
