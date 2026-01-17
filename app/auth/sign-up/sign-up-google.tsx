@@ -15,7 +15,7 @@ export default function SignUpGoogleBtn() {
   const router = useRouter();
   const handleSignInWithGoogle = useCallback(
     async (response: { credential: string }) => {
-      const { data, error } = await supabase.auth.signInWithIdToken({
+      const { data } = await supabase.auth.signInWithIdToken({
         provider: "google",
         token: response.credential,
       });
@@ -23,7 +23,7 @@ export default function SignUpGoogleBtn() {
         router.push("/protected");
       }
     },
-    [],
+    [router],
   );
 
   useEffect(() => {

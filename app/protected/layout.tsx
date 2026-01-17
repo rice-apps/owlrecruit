@@ -1,40 +1,73 @@
-import { AuthButton } from "@/components/auth-button";
-import { ThemeSwitcher } from "@/components/theme-switcher";
-import Link from "next/link";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { Sidebar } from "@/components/sidebar";
+import type { OrgWithRole } from "@/types/app";
 
-export default function ProtectedLayout({
+export default async function ProtectedLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <main className="min-h-screen flex flex-col">
-      <div className="flex-1 w-full flex flex-col gap-20">
-        <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
-          <div className="w-full max-w-5xl flex justify-between items-center p-3 px-5 text-sm">
-            <div className="flex gap-5 items-center font-semibold">
-              <Link href={"/protected"}>OwlRecruit</Link>
-            </div>
-          </div>
-          <AuthButton />
-        </nav>
-        <div className="flex-1 flex flex-col gap-20 p-5 w-full">{children}</div>
+  const supabase = await createClient();
 
-        <footer className="w-full flex items-center justify-center border-t mx-auto text-center text-xs gap-8 py-16">
-          <p>
-            Built by{" "}
-            <a
-              href="https://riceapps.org/"
-              target="_blank"
-              className="font-bold hover:underline"
-              rel="noreferrer"
-            >
-              RiceApps
-            </a>
-          </p>
-          <ThemeSwitcher />
-        </footer>
-      </div>
-    </main>
+  // Verify user authentication
+  const { data: authData, error: authError } = await supabase.auth.getClaims();
+  if (authError || !authData?.claims) {
+    redirect("/");
+  }
+
+  const userId = authData.claims.sub;
+  const userMetadata = authData.claims.user_metadata as {
+    full_name?: string;
+    name?: string;
+    email?: string;
+  };
+
+  // Fetch user's organizations with their role
+  const { data: memberships, error: membershipsError } = await supabase
+    .from("org_members")
+    .select(
+      `
+      role,
+      orgs (
+        id,
+        name,
+        description,
+        created_at,
+        updated_at
+      )
+    `,
+    )
+    .eq("user_id", userId);
+
+  if (membershipsError) {
+    console.error("Error fetching org memberships:", membershipsError);
+  }
+
+  // Transform data to OrgWithRole format
+  const orgs: OrgWithRole[] = (memberships || [])
+    .filter(
+      (m): m is typeof m & { orgs: NonNullable<typeof m.orgs> } =>
+        m.orgs !== null,
+    )
+    .map((m) => {
+      // Supabase returns single row joins as objects, but TS may infer as array
+      const orgData = Array.isArray(m.orgs) ? m.orgs[0] : m.orgs;
+      return {
+        ...orgData,
+        role: m.role,
+      };
+    });
+
+  const user = {
+    name: userMetadata.full_name || "User",
+    email: userMetadata.email || "",
+  };
+
+  return (
+    <div className="flex h-screen bg-gray-50">
+      <Sidebar orgs={orgs} user={user} />
+      <main className="flex-1 overflow-y-auto p-6">{children}</main>
+    </div>
   );
 }

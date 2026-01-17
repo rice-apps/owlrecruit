@@ -18,7 +18,7 @@ import {
 // =============================================================================
 
 export interface CSVRow {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface ProcessingError {
@@ -58,7 +58,7 @@ export function validateRequiredFields(row: CSVRow): string | null {
 /**
  * Validates that netid is present and non-empty.
  */
-export function validateNetId(netid: any): boolean {
+export function validateNetId(netid: unknown): boolean {
   return !!netid && typeof netid === "string" && netid.trim().length > 0;
 }
 
@@ -77,8 +77,8 @@ export function validateNetId(netid: any): boolean {
  * @param row - The CSV row data
  * @returns Object with question/answer pairs
  */
-export function extractFormResponses(row: CSVRow): Record<string, any> {
-  const formResponses: Record<string, any> = {};
+export function extractFormResponses(row: CSVRow): Record<string, unknown> {
+  const formResponses: Record<string, unknown> = {};
   const reservedColumns = Object.values(CSV_RESERVED_COLUMNS) as string[];
 
   for (const [key, value] of Object.entries(row)) {
@@ -109,9 +109,9 @@ export function buildApplicationRecord(
   orgId: string,
   openingId: string,
   userId: string,
-  formResponses: Record<string, any>,
+  formResponses: Record<string, unknown>,
   status?: string,
-): Record<string, any> {
+): Record<string, unknown> {
   return {
     org_id: orgId,
     opening_id: openingId,
@@ -135,16 +135,14 @@ export function buildApplicationRecord(
  * @param openingId - Opening ID from request
  * @param userId - User ID from netid lookup
  * @param feedback - Extracted feedback responses
- * @param status - Optional status parameter (not used for interviews, included for signature compatibility)
  * @returns Database record object
  */
 export function buildInterviewRecord(
   orgId: string,
   openingId: string,
   userId: string,
-  feedback: Record<string, any>,
-  _status?: string, // Underscore prefix indicates intentionally unused (for signature compatibility)
-): Record<string, any> {
+  feedback: Record<string, unknown>,
+): Record<string, unknown> {
   return {
     org_id: orgId,
     opening_id: openingId,
@@ -154,7 +152,6 @@ export function buildInterviewRecord(
     // Example:
     // interviewer_id: getCurrentUserId(),
     // interview_date: feedback['Interview Date'],
-    // status: status, // Uncomment if interviews table has status
   };
 }
 
@@ -256,7 +253,7 @@ export async function processCSVRows<T>(
     orgId: string,
     openingId: string,
     userId: string,
-    data: Record<string, any>,
+    data: Record<string, unknown>,
     status?: string,
   ) => T,
   defaultStatus?: string,
@@ -275,7 +272,7 @@ export async function processCSVRows<T>(
       .eq("opening_id", openingId);
 
     if (existingApps) {
-      existingApps.forEach((app: any) =>
+      existingApps.forEach((app: { applicant_id: string }) =>
         existingApplicantIds.add(app.applicant_id),
       );
     }
@@ -303,7 +300,7 @@ export async function processCSVRows<T>(
     // Look up or create user
     let user = await lookupUserByNetId(
       supabase,
-      row[CSV_RESERVED_COLUMNS.NETID],
+      row[CSV_RESERVED_COLUMNS.NETID] as string,
     );
 
     // If user not found, create a placeholder user
@@ -312,7 +309,7 @@ export async function processCSVRows<T>(
       if (!adminClient) {
         errors.push({
           row: rowNumber,
-          netid: row[CSV_RESERVED_COLUMNS.NETID],
+          netid: row[CSV_RESERVED_COLUMNS.NETID] as string,
           error: `User not found and admin access is required to create new users.`,
         });
         if (!VALIDATION_CONFIG.skipInvalidRows) break;
@@ -337,7 +334,7 @@ export async function processCSVRows<T>(
       if (authError || !authUser.user) {
         errors.push({
           row: rowNumber,
-          netid: row[CSV_RESERVED_COLUMNS.NETID],
+          netid: row[CSV_RESERVED_COLUMNS.NETID] as string,
           error: `Failed to create auth user: ${authError?.message || "Unknown error"}`,
         });
         if (!VALIDATION_CONFIG.skipInvalidRows) break;
@@ -361,7 +358,7 @@ export async function processCSVRows<T>(
       if (createError || !newUser) {
         errors.push({
           row: rowNumber,
-          netid: row[CSV_RESERVED_COLUMNS.NETID],
+          netid: row[CSV_RESERVED_COLUMNS.NETID] as string,
           error: `Failed to create public user: ${createError?.message || "Unknown error"}`,
         });
         if (!VALIDATION_CONFIG.skipInvalidRows) break;
@@ -375,7 +372,7 @@ export async function processCSVRows<T>(
     if (existingApplicantIds.has(user.id)) {
       errors.push({
         row: rowNumber,
-        netid: row[CSV_RESERVED_COLUMNS.NETID],
+        netid: row[CSV_RESERVED_COLUMNS.NETID] as string,
         error: ERROR_MESSAGES.DUPLICATE_APPLICATION,
       });
       if (!VALIDATION_CONFIG.skipInvalidRows) break;
@@ -407,7 +404,7 @@ export async function processCSVRows<T>(
  * Formats a successful response.
  */
 export function formatSuccessResponse(
-  data: any[],
+  data: unknown[],
   errorCount: number,
   errors: ProcessingError[],
 ) {
@@ -422,7 +419,7 @@ export function formatSuccessResponse(
 /**
  * Formats an error response.
  */
-export function formatErrorResponse(message: string, details?: any) {
+export function formatErrorResponse(message: string, details?: unknown) {
   return {
     error: message,
     details,

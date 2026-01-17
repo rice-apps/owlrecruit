@@ -10,7 +10,7 @@ export default async function ProtectedPage() {
 
   const { data, error } = await supabase.auth.getClaims();
   if (error || !data?.claims) {
-    redirect("/auth/login");
+    redirect("/");
   }
   const user = data.claims;
 
@@ -35,25 +35,14 @@ export default async function ProtectedPage() {
       <h2 className="font-bold text-2xl mb-4">
         Hey {user.user_metadata.full_name}!
       </h2>
-      <div className="flex gap-2 items-start">
-        <Button asChild size="lg">
-          <Link href="/protected/discover">Discover</Link>
-        </Button>
+      <div className="flex gap-2 items-start flex-wrap">
         <Button asChild size="lg">
           <Link href="/protected/applications">My Applications</Link>
         </Button>
-        <Button asChild size="lg">
-          <Link href="/protected/dashboard">My Organizations</Link>
-        </Button>
-        <Button asChild size="lg">
-          <Link href="/protected/reviewer">Review Applications</Link>
-        </Button>
-        <Button asChild size="lg">
-          <Link href="/protected/admin">Admin</Link>
-        </Button>
-        <Button asChild size="lg">
-          <Link href="/protected/roles">Manage Roles</Link>
-        </Button>
+        <p className="text-sm text-muted-foreground w-full mt-4">
+          Select an organization from the sidebar to view openings and manage
+          applications.
+        </p>
         {isAdmin && (
           <>
             <Button asChild size="lg" variant="secondary">

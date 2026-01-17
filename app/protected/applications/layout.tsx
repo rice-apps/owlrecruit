@@ -17,7 +17,7 @@ export default async function DashboardLayout({
   // Verify user authentication before rendering dashboard
   const { data, error } = await supabase.auth.getClaims();
   if (error || !data?.claims) {
-    redirect("/auth/login");
+    redirect("/");
   }
 
   return <div className="flex-1 w-full flex flex-col gap-12">{children}</div>;

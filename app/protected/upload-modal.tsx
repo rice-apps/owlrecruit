@@ -14,8 +14,10 @@ import { useState } from "react";
 export default function UploadDialog() {
   const [isUploaded, setIsUploaded] = useState(false);
   const [fileName, setFileName] = useState("");
-  const handleFileChangeInterview = async (e: any) => {
-    const file = e.target.files[0];
+  const handleFileChangeInterview = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
     if (file) {
       try {
         setFileName(file.name);
@@ -26,8 +28,10 @@ export default function UploadDialog() {
       }
     }
   };
-  const handleFileChangeApplications = async (e: any) => {
-    const file = e.target.files[0];
+  const handleFileChangeApplications = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
     if (file) {
       try {
         setFileName(file.name);
@@ -52,7 +56,7 @@ export default function UploadDialog() {
             <CheckCircle className="w-12 h-12 text-green-500" />
             <DialogTitle>Upload Successful!</DialogTitle>
             <p className="text-sm text-gray-600">
-              File "{fileName}" has been uploaded!
+              File &quot;{fileName}&quot; has been uploaded!
             </p>
           </div>
         ) : (
