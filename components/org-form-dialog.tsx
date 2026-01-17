@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+
 import {
   Dialog,
   DialogContent,
@@ -22,7 +22,7 @@ interface OrgFormDialogProps {
 }
 
 export function OrgFormDialog({ trigger, onSuccess }: OrgFormDialogProps) {
-  const router = useRouter();
+
   const [open, setOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -85,8 +85,8 @@ export function OrgFormDialog({ trigger, onSuccess }: OrgFormDialogProps) {
       if (onSuccess) {
         onSuccess(newOrg.id);
       } else {
-        router.refresh();
-        router.push(`/protected/org/${newOrg.id}`);
+        // Force a full reload to ensure the sidebar layout updates with the new organization
+        window.location.href = `/protected/org/${newOrg.id}`;
       }
     } catch (err) {
       console.error("Error creating organization:", err);
