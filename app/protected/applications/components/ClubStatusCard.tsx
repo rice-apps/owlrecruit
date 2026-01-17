@@ -90,37 +90,17 @@ export default function ClubStatusCard({ userId }: ClubStatusCardProps) {
   const [error, setError] = useState<string | null>(null);
 
   /**
-   * Check if user has admin role for a specific organization
-   */
-  const isUserAdmin = (orgId: string): boolean => {
-    const membership = clubData.memberships.find((m) => m.org_id === orgId);
-    if (!membership) return false;
-
-    // Check if role name contains "admin" or similar admin indicators
-    const roleName = membership.role_name?.toLowerCase() || "";
-    return (
-      roleName.includes("admin") ||
-      roleName.includes("president") ||
-      roleName.includes("leader")
-    );
-  };
-
-  /**
    * Handle click on membership container
    */
   const handleMembershipClick = (membership: ClubMembership) => {
-    if (isUserAdmin(membership.org_id)) {
-      router.push(`/protected/reviewer/${membership.org_id}`);
-    } else {
-      router.push(`/protected/discover/${membership.org_id}`);
-    }
+    router.push(`/protected/org/${membership.org_id}`);
   };
 
   /**
    * Handle click on application container
    */
   const handleApplicationClick = (application: ClubApplication) => {
-    router.push(`/protected/discover/${application.org_id}`);
+    router.push(`/protected/org/${application.org_id}`);
   };
 
   useEffect(() => {

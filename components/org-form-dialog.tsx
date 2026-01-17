@@ -86,7 +86,7 @@ export function OrgFormDialog({ trigger, onSuccess }: OrgFormDialogProps) {
         onSuccess(newOrg.id);
       } else {
         router.refresh();
-        router.push(`/protected/reviewer/${newOrg.id}`);
+        router.push(`/protected/org/${newOrg.id}`);
       }
     } catch (err) {
       console.error("Error creating organization:", err);

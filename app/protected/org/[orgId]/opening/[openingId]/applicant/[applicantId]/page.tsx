@@ -18,7 +18,7 @@ export default function ApplicantReviewPage() {
       <Button
         variant="outline"
         onClick={() =>
-          router.push(`/protected/reviewer/${orgId}/opening/${openingId}`)
+          router.push(`/protected/org/${orgId}/opening/${openingId}`)
         }
         className="w-fit"
       >

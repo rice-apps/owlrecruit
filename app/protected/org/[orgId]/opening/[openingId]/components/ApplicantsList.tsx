@@ -115,7 +115,7 @@ export function ApplicantsList({
                   </TableCell>
                   <TableCell>
                     <Link
-                      href={`/protected/reviewer/${orgId}/opening/${openingId}/${applicant.applicationId}`}
+                      href={`/protected/org/${orgId}/opening/${openingId}/applicant/${applicant.applicationId}`}
                       className="font-medium text-gray-900 hover:text-cyan-600"
                     >
                       {anonymousView

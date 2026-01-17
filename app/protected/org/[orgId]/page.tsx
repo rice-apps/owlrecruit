@@ -53,11 +53,11 @@ export default async function ReviewerOrgPage({
   return (
     <div className="flex-1 w-full max-w-5xl flex flex-col gap-6">
       <Link
-        href="/protected/reviewer"
+        href="/protected"
         className="flex items-center gap-2 w-fit text-sm text-gray-500 hover:text-gray-700 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
-        Back to Organizations
+        Back
       </Link>
 
       {/* Header with Create Button */}
@@ -84,7 +84,7 @@ export default async function ReviewerOrgPage({
           openings.map((opening) => (
             <Link
               key={opening.id}
-              href={`/protected/reviewer/${orgId}/opening/${opening.id}`}
+              href={`/protected/org/${orgId}/opening/${opening.id}`}
             >
               <Card className="h-full hover:shadow-md transition-shadow cursor-pointer">
                 <CardHeader className="pb-2">

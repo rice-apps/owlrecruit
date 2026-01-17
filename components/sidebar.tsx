@@ -23,7 +23,7 @@ export function Sidebar({ orgs, user }: SidebarProps) {
 
   // Extract current org ID from pathname if on an org page
   const currentOrgId = React.useMemo(() => {
-    const match = pathname.match(/\/reviewer\/([^/]+)/);
+    const match = pathname.match(/\/org\/([^/]+)/);
     return match?.[1] || null;
   }, [pathname]);
 
@@ -51,7 +51,7 @@ export function Sidebar({ orgs, user }: SidebarProps) {
           {orgs.map((org) => (
             <li key={org.id}>
               <Link
-                href={`/protected/reviewer/${org.id}`}
+                href={`/protected/org/${org.id}`}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
                   currentOrgId === org.id
