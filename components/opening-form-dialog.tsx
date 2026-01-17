@@ -13,8 +13,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, X } from "lucide-react";
+import { Plus, X, UserPlus, ChevronDown } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+
+interface EligibleReviewer {
+  id: string;
+  user_id: string;
+  role: string;
+  users:
+    | { id: string; name: string | null; email: string }
+    | { id: string; name: string | null; email: string }[]
+    | null;
+}
 
 interface OpeningFormDialogProps {
   orgId: string;
@@ -42,6 +52,13 @@ export function OpeningFormDialog({
   const [open, setOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [eligibleReviewers, setEligibleReviewers] = React.useState<
+    EligibleReviewer[]
+  >([]);
+  const [selectedReviewers, setSelectedReviewers] = React.useState<string[]>(
+    [],
+  );
+  const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
 
   console.log("OpeningFormDialog opening:", opening);
 
@@ -66,6 +83,37 @@ export function OpeningFormDialog({
   });
 
   const [editingDue, setEditingDue] = React.useState(false);
+
+  // Fetch eligible reviewers when dialog opens
+  React.useEffect(() => {
+    if (open) {
+      const fetchReviewers = async () => {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("org_members")
+          .select(
+            `
+            id,
+            user_id,
+            role,
+            users:user_id (
+              id,
+              name,
+              email
+            )
+          `,
+          )
+          .eq("org_id", orgId)
+          .in("role", ["admin", "reviewer"]);
+
+        if (!error && data) {
+          setEligibleReviewers(data);
+        }
+      };
+
+      fetchReviewers();
+    }
+  }, [open, orgId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -298,12 +346,123 @@ export function OpeningFormDialog({
             </div>
           </div>
 
-           {/* Assign Reviewers Section **NOT IMPLEMENTED YET** */}
+          {/* Assign Reviewers Section */}
           <div className="space-y-3">
             <Label className="text-base font-medium uppercase text-gray-700 tracking-wide">
               Assign Reviewers
             </Label>
-            <p className="text-sm text-gray-500">No reviewers assigned</p>
+            
+            {/* Display selected reviewers as pills */}
+            <div className="flex flex-wrap gap-2">
+              {selectedReviewers.length > 0 ? (
+                selectedReviewers.map((userId) => {
+                  const reviewer = eligibleReviewers.find(
+                    (r) => r.user_id === userId,
+                  );
+                  if (!reviewer) return null;
+                  return (
+                    <button
+                      key={userId}
+                      type="button"
+                      onClick={() =>
+                        setSelectedReviewers(
+                          selectedReviewers.filter((id) => id !== userId),
+                        )
+                      }
+                      className="flex items-center gap-2 pl-4 pr-3 py-2 bg-white text-gray-900 rounded-full border-2 border-gray-200 hover:border-gray-300 transition-all shadow-sm hover:shadow"
+                    >
+                      <span className="font-medium text-sm">
+                        {Array.isArray(reviewer.users) 
+                          ? reviewer.users[0]?.name || reviewer.users[0]?.email
+                          : reviewer.users?.name || reviewer.users?.email}
+                      </span>
+                      <X className="h-3.5 w-3.5 text-gray-400" />
+                    </button>
+                  );
+                })
+              ) : (
+                <p className="text-sm text-gray-500 py-2">No reviewers assigned</p>
+              )}
+            </div>
+
+            {/* Reviewer selection dropdown/list */}
+            {eligibleReviewers.length > 0 && (
+              <div className="space-y-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-between gap-2"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsDropdownOpen(!isDropdownOpen);
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    <UserPlus className="h-4 w-4" />
+                    Add Reviewer
+                  </div>
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform duration-200 ${
+                      isDropdownOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </Button>
+                <div className={`${isDropdownOpen ? "" : "hidden"} border rounded-lg max-h-48 overflow-y-auto`}>
+                  {eligibleReviewers.map((reviewer) => {
+                    const isSelected = selectedReviewers.includes(
+                      reviewer.user_id,
+                    );
+                    return (
+                      <button
+                        key={reviewer.id}
+                        type="button"
+                        onClick={() => {
+                          if (isSelected) {
+                            setSelectedReviewers(
+                              selectedReviewers.filter(
+                                (id) => id !== reviewer.user_id,
+                              ),
+                            );
+                          } else {
+                            setSelectedReviewers([
+                              ...selectedReviewers,
+                              reviewer.user_id,
+                            ]);
+                          }
+                        }}
+                        className={`w-full flex items-center justify-between p-3 hover:bg-gray-50 border-b last:border-b-0 transition-colors ${
+                          isSelected ? "bg-cyan-50" : ""
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => {}}
+                            className="rounded"
+                          />
+                          <div className="text-left">
+                            <p className="font-medium text-sm">
+                              {Array.isArray(reviewer.users)
+                                ? reviewer.users[0]?.name || "Unknown User"
+                                : reviewer.users?.name || "Unknown User"}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {Array.isArray(reviewer.users)
+                                ? reviewer.users[0]?.email
+                                : reviewer.users?.email}
+                            </p>
+                          </div>
+                        </div>
+                        <span className="text-xs text-gray-500 uppercase">
+                          {reviewer.role}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Opening Status Section */}
