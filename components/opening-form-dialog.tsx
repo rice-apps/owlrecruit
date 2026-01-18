@@ -13,8 +13,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, X } from "lucide-react";
+import { Plus, X, UserPlus, ChevronDown } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+
+interface EligibleReviewer {
+  id: string;
+  user_id: string;
+  role: string;
+  users:
+    | { id: string; name: string | null; email: string }
+    | { id: string; name: string | null; email: string }[]
+    | null;
+}
 
 interface OpeningFormDialogProps {
   orgId: string;
@@ -42,16 +52,68 @@ export function OpeningFormDialog({
   const [open, setOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [eligibleReviewers, setEligibleReviewers] = React.useState<
+    EligibleReviewer[]
+  >([]);
+  const [selectedReviewers, setSelectedReviewers] = React.useState<string[]>(
+    [],
+  );
+  const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
+
+  console.log("OpeningFormDialog opening:", opening);
 
   const isEditing = !!opening;
+
+  // keep closes_at in a `datetime-local`-compatible string (YYYY-MM-DDTHH:MM)
+  const toLocalDatetime = (iso?: string | null) => {
+    if (!iso) return "";
+    const d = new Date(iso);
+    // create a locale-equivalent ISO without the timezone Z so it works with datetime-local
+    const tzOffset = d.getTimezoneOffset() * 60000;
+    const local = new Date(d.getTime() - tzOffset);
+    return local.toISOString().slice(0, 16);
+  };
 
   const [formData, setFormData] = React.useState({
     title: opening?.title || "",
     description: opening?.description || "",
     application_link: opening?.application_link || "",
-    closes_at: opening?.closes_at?.split("T")[0] || "",
+    closes_at: toLocalDatetime(opening?.closes_at || null),
     status: opening?.status || "draft",
   });
+
+  const [editingDue, setEditingDue] = React.useState(false);
+
+  // Fetch eligible reviewers when dialog opens
+  React.useEffect(() => {
+    if (open) {
+      const fetchReviewers = async () => {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("org_members")
+          .select(
+            `
+            id,
+            user_id,
+            role,
+            users:user_id (
+              id,
+              name,
+              email
+            )
+          `,
+          )
+          .eq("org_id", orgId)
+          .in("role", ["admin", "reviewer"]);
+
+        if (!error && data) {
+          setEligibleReviewers(data);
+        }
+      };
+
+      fetchReviewers();
+    }
+  }, [open, orgId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,28 +192,20 @@ export function OpeningFormDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle>
-              {isEditing ? "Edit Opening" : "Create New Opening"}
-            </DialogTitle>
-            <button
-              onClick={handleClose}
-              className="rounded-sm opacity-70 hover:opacity-100 transition-opacity"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
+      <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="space-y-1 pb-6">
+          <DialogTitle className="text-2xl font-semibold">
+            {isEditing ? "Edit Opening" : "Create New Opening"}
+          </DialogTitle>
           <p className="text-sm text-gray-500">{orgName}</p>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Position Title */}
           <div className="space-y-2">
-            <Label htmlFor="title">
+            <Label htmlFor="title" className="text-base font-medium">
               Position Title <span className="text-red-500">*</span>
-              <span className="text-gray-400 text-xs ml-1">(required)</span>
+              <span className="text-gray-500 font-normal"> (required)</span>
             </Label>
             <Input
               id="title"
@@ -161,14 +215,15 @@ export function OpeningFormDialog({
               }
               placeholder="e.g. Software Developer"
               required
+              className="h-12 text-base"
             />
           </div>
 
           {/* Application Link */}
           <div className="space-y-2">
-            <Label htmlFor="application_link">
-              Application Link
-              <span className="text-gray-400 text-xs ml-1">(optional)</span>
+            <Label htmlFor="application_link" className="text-base font-medium">
+              Application Link <span className="text-red-500">*</span>
+              <span className="text-gray-500 font-normal"> (required)</span>
             </Label>
             <Input
               id="application_link"
@@ -178,12 +233,15 @@ export function OpeningFormDialog({
                 setFormData({ ...formData, application_link: e.target.value })
               }
               placeholder="https://forms.google.com/..."
+              className="h-12 text-base"
             />
           </div>
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description" className="text-base font-medium">
+              Description
+            </Label>
             <Textarea
               id="description"
               value={formData.description}
@@ -191,40 +249,241 @@ export function OpeningFormDialog({
                 setFormData({ ...formData, description: e.target.value })
               }
               placeholder="Describe the position and responsibilities..."
-              rows={3}
+              rows={1}
+              className="text-base resize-y min-h-[48px]"
             />
           </div>
 
           {/* Due Date */}
           <div className="space-y-2">
-            <Label htmlFor="closes_at">Due Date</Label>
-            <Input
-              id="closes_at"
-              type="date"
-              value={formData.closes_at}
-              onChange={(e) =>
-                setFormData({ ...formData, closes_at: e.target.value })
-              }
-            />
+            <Label className="text-base font-medium">Due Date</Label>
+
+            {!editingDue ? (
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => setEditingDue(true)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") setEditingDue(true);
+                }}
+                className="flex items-center gap-2 text-gray-400 cursor-pointer"
+              >
+                <span className="underline decoration-gray-200">
+                  {formData.closes_at
+                    ? new Date(formData.closes_at).toLocaleDateString(undefined, {
+                        weekday: "long",
+                        month: "short",
+                        day: "numeric",
+                      })
+                    : "Select date"}
+                </span>
+                <span className="underline decoration-gray-200">
+                  {formData.closes_at
+                    ? new Date(formData.closes_at).toLocaleTimeString(undefined, {
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })
+                    : "Select time"}
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 w-auto">
+                <Input
+                  id="closes_date"
+                  type="date"
+                  value={formData.closes_at ? formData.closes_at.slice(0, 10) : ""}
+                  onChange={(e) => {
+                    const date = e.target.value;
+                    const time = formData.closes_at ? formData.closes_at.slice(11, 16) : "23:59";
+                    setFormData({ ...formData, closes_at: date ? `${date}T${time}` : "" });
+                  }}
+                  className="h-10 text-base w-auto"
+                />
+                <Input
+                  id="closes_time"
+                  type="time"
+                  value={formData.closes_at ? formData.closes_at.slice(11, 16) : "23:59"}
+                  onChange={(e) => {
+                    const time = e.target.value;
+                    const date = formData.closes_at ? formData.closes_at.slice(0, 10) : new Date().toISOString().slice(0, 10);
+                    setFormData({ ...formData, closes_at: date ? `${date}T${time}` : "" });
+                  }}
+                  className="h-10 text-base w-auto"
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setEditingDue(false)}
+                >
+                  Done
+                </Button>
+              </div>
+            )}
           </div>
 
-          {/* Status */}
-          <div className="space-y-2">
-            <Label>Status</Label>
-            <div className="flex gap-2">
+          {/* Applicant Stages Section */}
+          <div className="space-y-3">
+            <Label className="text-base font-medium uppercase text-gray-700 tracking-wide">
+              Applicant Stages
+            </Label>
+            <div className="flex flex-wrap gap-2">
+              {["Accepted", "Interview", "Rejected"].map((stage) => (
+                <button
+                  key={stage}
+                  type="button"
+                  className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
+                    stage === "Accepted"
+                      ? "bg-cyan-500 text-white shadow-md"
+                      : stage === "Interview"
+                        ? "bg-cyan-100 text-cyan-700 border border-cyan-300"
+                        : "bg-black text-white shadow-md"
+                  }`}
+                >
+                  {stage}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Assign Reviewers Section */}
+          <div className="space-y-3">
+            <Label className="text-base font-medium uppercase text-gray-700 tracking-wide">
+              Assign Reviewers
+            </Label>
+            
+            {/* Display selected reviewers as pills */}
+            <div className="flex flex-wrap gap-2">
+              {selectedReviewers.length > 0 ? (
+                selectedReviewers.map((userId) => {
+                  const reviewer = eligibleReviewers.find(
+                    (r) => r.user_id === userId,
+                  );
+                  if (!reviewer) return null;
+                  return (
+                    <button
+                      key={userId}
+                      type="button"
+                      onClick={() =>
+                        setSelectedReviewers(
+                          selectedReviewers.filter((id) => id !== userId),
+                        )
+                      }
+                      className="flex items-center gap-2 pl-4 pr-3 py-2 bg-white text-gray-900 rounded-full border-2 border-gray-200 hover:border-gray-300 transition-all shadow-sm hover:shadow"
+                    >
+                      <span className="font-medium text-sm">
+                        {Array.isArray(reviewer.users) 
+                          ? reviewer.users[0]?.name || reviewer.users[0]?.email
+                          : reviewer.users?.name || reviewer.users?.email}
+                      </span>
+                      <X className="h-3.5 w-3.5 text-gray-400" />
+                    </button>
+                  );
+                })
+              ) : (
+                <p className="text-sm text-gray-500 py-2">No reviewers assigned</p>
+              )}
+            </div>
+
+            {/* Reviewer selection dropdown/list */}
+            {eligibleReviewers.length > 0 && (
+              <div className="space-y-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-between gap-2"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsDropdownOpen(!isDropdownOpen);
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    <UserPlus className="h-4 w-4" />
+                    Add Reviewer
+                  </div>
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform duration-200 ${
+                      isDropdownOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </Button>
+                <div className={`${isDropdownOpen ? "" : "hidden"} border rounded-lg max-h-48 overflow-y-auto`}>
+                  {eligibleReviewers.map((reviewer) => {
+                    const isSelected = selectedReviewers.includes(
+                      reviewer.user_id,
+                    );
+                    return (
+                      <button
+                        key={reviewer.id}
+                        type="button"
+                        onClick={() => {
+                          if (isSelected) {
+                            setSelectedReviewers(
+                              selectedReviewers.filter(
+                                (id) => id !== reviewer.user_id,
+                              ),
+                            );
+                          } else {
+                            setSelectedReviewers([
+                              ...selectedReviewers,
+                              reviewer.user_id,
+                            ]);
+                          }
+                        }}
+                        className={`w-full flex items-center justify-between p-3 hover:bg-gray-50 border-b last:border-b-0 transition-colors ${
+                          isSelected ? "bg-cyan-50" : ""
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => {}}
+                            className="rounded"
+                          />
+                          <div className="text-left">
+                            <p className="font-medium text-sm">
+                              {Array.isArray(reviewer.users)
+                                ? reviewer.users[0]?.name || "Unknown User"
+                                : reviewer.users?.name || "Unknown User"}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {Array.isArray(reviewer.users)
+                                ? reviewer.users[0]?.email
+                                : reviewer.users?.email}
+                            </p>
+                          </div>
+                        </div>
+                        <span className="text-xs text-gray-500 uppercase">
+                          {reviewer.role}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Opening Status Section */}
+          <div className="space-y-3">
+            <Label className="text-base font-medium uppercase text-gray-700 tracking-wide">
+              Opening Status
+            </Label>
+            <div className="flex flex-wrap gap-2">
               {(["draft", "open", "closed"] as const).map((status) => (
                 <button
                   key={status}
                   type="button"
                   onClick={() => setFormData({ ...formData, status })}
-                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                  className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
                     formData.status === status
                       ? status === "open"
-                        ? "bg-cyan-100 text-cyan-700 border border-cyan-300"
+                        ? "bg-cyan-500 text-white shadow-md"
                         : status === "draft"
-                          ? "bg-gray-100 text-gray-700 border border-gray-300"
-                          : "bg-gray-200 text-gray-600 border border-gray-400"
-                      : "bg-gray-50 text-gray-500 border border-gray-200 hover:bg-gray-100"
+                          ? "bg-cyan-100 text-cyan-700 border border-cyan-300"
+                          : "bg-black text-white shadow-md"
+                      : "bg-white text-gray-600 border border-gray-300 hover:bg-gray-50"
                   }`}
                 >
                   {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -235,7 +494,7 @@ export function OpeningFormDialog({
 
           {/* Error message */}
           {error && (
-            <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+            <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md border border-red-200">
               {error}
             </div>
           )}
@@ -243,13 +502,13 @@ export function OpeningFormDialog({
           {/* Submit button */}
           <Button
             type="submit"
-            className="w-full bg-cyan-500 hover:bg-cyan-600"
+            className="w-full h-14 text-base bg-cyan-500 hover:bg-cyan-600 text-white font-medium rounded-xl"
             disabled={isSubmitting}
           >
             {isSubmitting
               ? "Saving..."
               : isEditing
-                ? "Save Changes"
+                ? "Save changes"
                 : "Create opening"}
           </Button>
         </form>
