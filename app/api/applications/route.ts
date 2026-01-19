@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
 
     const { data, error } = await supabase
       .from("applications")
-      .insert(applicationRecords)
+      .upsert(applicationRecords, { onConflict: "opening_id, applicant_id" })
       .select();
 
     if (error) {

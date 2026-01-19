@@ -323,20 +323,6 @@ export async function processCSVRows<T>(
   const records: T[] = [];
   const errors: ProcessingError[] = [];
 
-  // Optimization: Pre-fetch existing applicant IDs for this opening if duplicate check is enabled
-  const existingApplicantIds = new Set<string>();
-  if (tableName) {
-    const { data: existingApps } = await supabase
-      .from(tableName)
-      .select("applicant_id")
-      .eq("opening_id", openingId);
-
-    if (existingApps) {
-      existingApps.forEach((app: { applicant_id: string }) =>
-        existingApplicantIds.add(app.applicant_id),
-      );
-    }
-  }
 
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
@@ -377,17 +363,6 @@ export async function processCSVRows<T>(
         if (!VALIDATION_CONFIG.skipInvalidRows) break;
         continue;
       }
-    }
-
-    // Check for duplicate application
-    if (existingApplicantIds.has(user.id)) {
-      errors.push({
-        row: rowNumber,
-        netid: row[CSV_RESERVED_COLUMNS.NETID] as string,
-        error: ERROR_MESSAGES.DUPLICATE_APPLICATION,
-      });
-      if (!VALIDATION_CONFIG.skipInvalidRows) break;
-      continue;
     }
 
     // Extract form responses
@@ -453,24 +428,19 @@ export async function processAndUploadApplications(
         }
       });
 
-      // 3. Create Application
-      const { error: appError } = await supabase.from("applications").insert({
-        opening_id: openingId,
-        applicant_id: user.id,
-        form_responses: formResponses,
-        status: "Applied",
-      });
+      // 3. Upsert Application
+      const { error: appError } = await supabase.from("applications").upsert(
+        {
+          opening_id: openingId,
+          applicant_id: user.id,
+          form_responses: formResponses,
+          status: "Applied",
+        },
+        { onConflict: "opening_id, applicant_id" }
+      );
 
       if (appError) {
-        if (appError.code === "23505") {
-          results.errors.push({
-            row: rowNumber,
-            netid,
-            error: "Application already exists for this NetID"
-          });
-        } else {
-          throw appError;
-        }
+        throw appError;
       } else {
         results.successCount++;
       }
