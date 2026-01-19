@@ -191,20 +191,40 @@ export async function lookupUserByNetId(
 }
 
 /**
- * Ensures a user exists and returns their record.
+ * Looks up an applicant by their netid in the applicants table.
  */
-export async function ensureUser(
+export async function lookupApplicantByNetId(
+  supabase: SupabaseClient,
+  netid: string,
+): Promise<UserResult | null> {
+  const { data: applicant, error } = await supabase
+    .from("applicants")
+    .select("id, net_id, name")
+    .eq("net_id", netid)
+    .maybeSingle();
+
+  if (error || !applicant) {
+    return null;
+  }
+
+  return applicant;
+}
+
+/**
+ * Ensures an applicant exists and returns their record.
+ */
+export async function ensureApplicant(
   supabase: SupabaseClient,
   netid: string,
   name: string,
 ): Promise<UserResult> {
-  // 1. Try lookup first since we don't have a unique constraint on net_id for upsert
-  const existing = await lookupUserByNetId(supabase, netid);
+  // 1. Try lookup first
+  const existing = await lookupApplicantByNetId(supabase, netid);
   if (existing) {
     // Optionally update name if it's different/placeholder
     if (existing.name === "-" && name !== "-") {
       const { data: updated, error: updateError } = await supabase
-        .from("users")
+        .from("applicants")
         .update({ name })
         .eq("id", existing.id)
         .select()
@@ -215,17 +235,17 @@ export async function ensureUser(
   }
 
   // 2. Insert if not found
-  const { data: user, error } = await supabase
-    .from("users")
+  const { data: applicant, error } = await supabase
+    .from("applicants")
     .insert({ net_id: netid, name })
     .select()
     .single();
 
-  if (error || !user) {
-    throw new Error(`Failed to create user: ${error?.message}`);
+  if (error || !applicant) {
+    throw new Error(`Failed to create applicant: ${error?.message}`);
   }
 
-  return user;
+  return applicant;
 }
 
 /**
@@ -337,22 +357,22 @@ export async function processCSVRows<T>(
       continue;
     }
 
-    // Look up or create user
-    let user = await lookupUserByNetId(
+    // Look up or create applicant
+    let user = await lookupApplicantByNetId(
       supabase,
       row[CSV_RESERVED_COLUMNS.NETID] as string,
     );
 
-    // If user not found, create or lookup from netid
+    // If applicant not found, create
     if (!user) {
       const name = (columnMappings?.name && row[columnMappings.name]) as string || "-";
       try {
-        user = await ensureUser(supabase, row[CSV_RESERVED_COLUMNS.NETID] as string, name);
+        user = await ensureApplicant(supabase, row[CSV_RESERVED_COLUMNS.NETID] as string, name);
       } catch (err: any) {
         errors.push({
           row: rowNumber,
           netid: row[CSV_RESERVED_COLUMNS.NETID] as string,
-          error: `Failed to create user: ${err.message}`,
+          error: `Failed to create applicant: ${err.message}`,
         });
         if (!VALIDATION_CONFIG.skipInvalidRows) break;
         continue;
@@ -417,8 +437,8 @@ export async function processAndUploadApplications(
     }
 
     try {
-      // 1. Ensure User
-      const user = await ensureUser(supabase, netid, name);
+      // 1. Ensure Applicant
+      const user = await ensureApplicant(supabase, netid, name);
 
       // 2. Build form_responses
       const formResponses: Record<string, any> = {};

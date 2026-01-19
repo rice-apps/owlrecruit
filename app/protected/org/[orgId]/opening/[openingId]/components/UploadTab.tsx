@@ -62,6 +62,8 @@ export function UploadTab() {
   const [customQuestions, setCustomQuestions] = useState<CustomQuestion[]>([]);
   const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
   const [newQuestionText, setNewQuestionText] = useState("");
+  const [uploadErrors, setUploadErrors] = useState<{row?: number; error: string}[]>([]);
+  const [successCount, setSuccessCount] = useState(0);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -78,6 +80,7 @@ export function UploadTab() {
   const parseCSVHeaders = (file: File) => {
     Papa.parse(file, {
       header: true,
+      skipEmptyLines: 'greedy',
       complete: (results) => {
         if (results.data && results.data.length > 0) {
           const headers = Object.keys(results.data[0] as object);
@@ -158,6 +161,9 @@ export function UploadTab() {
 
   const handleFinishSetup = async () => {
     setIsUploading(true);
+    setUploadErrors([]);
+    setSuccessCount(0);
+    
     try {
       const supabase = createClient();
       
@@ -168,14 +174,12 @@ export function UploadTab() {
         customQuestions,
       });
 
+      setSuccessCount(results.successCount);
       if (results.errors.length > 0) {
-        // If there were some successes but also some errors
+        setUploadErrors(results.errors);
+        // If there were some successes, we'll still show the error list but maybe stay on the page or show a partial success state
         if (results.successCount > 0) {
-          alert(`Success: ${results.successCount} applications uploaded. Some errors occurred:\n\n${results.errors.map(e => `Row ${e.row}: ${e.error}`).join("\n")}`);
-          router.push(`/protected/org/${orgId}/opening/${openingId}?tab=applicants`);
-        } else {
-          // If everything failed
-          alert(`Failed to upload data:\n\n${results.errors.map(e => `Row ${e.row}: ${e.error}`).join("\n")}`);
+           // We'll let the UI display the partial success
         }
       } else {
         // Complete success
@@ -183,7 +187,7 @@ export function UploadTab() {
       }
     } catch (error: any) {
       console.error("Error uploading data:", error);
-      alert(`An error occurred while uploading data: ${error.message}`);
+      setUploadErrors([{ error: error.message || "An unknown error occurred" }]);
     } finally {
       setIsUploading(false);
     }
@@ -616,6 +620,32 @@ export function UploadTab() {
                 </div>
               </div>
             </div>
+
+            {/* Error/Success Messages */}
+            {(uploadErrors.length > 0 || (successCount > 0 && !isUploading)) && (
+              <div className={cn(
+                "p-4 mt-6 rounded-lg border text-sm",
+                uploadErrors.length > 0 ? "bg-red-50 border-red-200 text-red-800" : "bg-green-50 border-green-200 text-green-800"
+              )}>
+                {successCount > 0 && (
+                  <p className="font-semibold mb-2">
+                    Successfully uploaded {successCount} application{successCount !== 1 ? 's' : ''}.
+                  </p>
+                )}
+                {uploadErrors.length > 0 && (
+                  <>
+                    <p className="font-semibold mb-1">Errors encountered during upload:</p>
+                    <ul className="list-disc pl-5 space-y-1">
+                      {uploadErrors.map((err, idx) => (
+                        <li key={idx}>
+                          {err.row ? `Row ${err.row}: ` : ''}{err.error}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+              </div>
+            )}
 
             <div className="flex justify-between pt-8">
               <Button variant="outline" onClick={handleBack} className="w-24">
