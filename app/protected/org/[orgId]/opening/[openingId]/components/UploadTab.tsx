@@ -26,6 +26,7 @@ import { Label } from "@/components/ui/label";
 import { ChevronRight, CloudUpload, FileSpreadsheet, Folder, Plus, File as FileIcon, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { processAndUploadApplications } from "@/lib/csv-upload-utils";
 
 type ColumnMapping = {
   name: string;
@@ -160,78 +161,29 @@ export function UploadTab() {
     try {
       const supabase = createClient();
       
-      // Process each row in the CSV
-      for (const row of csvData) {
-        const name = row[columnMappings.name];
-        const netid = row[columnMappings.netid];
-        
-        if (!name || !netid) continue; // Skip rows with missing required fields
-        
-        // Check if user exists
-        const { data: existingUser, error: lookupError } = await supabase
-          .from('users')
-          .select('id')
-          .eq('net_id', netid)
-          .single();
-        
-        let userId: string;
-        
-        if (existingUser) {
-          userId = existingUser.id;
+      const results = await processAndUploadApplications(supabase, {
+        openingId,
+        csvData,
+        columnMappings,
+        customQuestions,
+      });
+
+      if (results.errors.length > 0) {
+        // If there were some successes but also some errors
+        if (results.successCount > 0) {
+          alert(`Success: ${results.successCount} applications uploaded. Some errors occurred:\n\n${results.errors.map(e => `Row ${e.row}: ${e.error}`).join("\n")}`);
+          router.push(`/protected/org/${orgId}/opening/${openingId}?tab=applicants`);
         } else {
-          // Create new user
-          const { data: newUser, error: userError } = await supabase
-            .from('users')
-            .insert({
-              name,
-              net_id: netid,
-            })
-            .select('id')
-            .single();
-          
-          if (userError || !newUser) {
-            console.error('Error creating user:', userError);
-            continue;
-          }
-          userId = newUser.id;
+          // If everything failed
+          alert(`Failed to upload data:\n\n${results.errors.map(e => `Row ${e.row}: ${e.error}`).join("\n")}`);
         }
-        
-        // Build form_responses object
-        const formResponses: Record<string, any> = {};
-        
-        // Add all mapped fields
-        if (columnMappings.name) formResponses.name = row[columnMappings.name];
-        if (columnMappings.netid) formResponses.netid = row[columnMappings.netid];
-        if (columnMappings.year) formResponses.year = row[columnMappings.year];
-        if (columnMappings.major) formResponses.major = row[columnMappings.major];
-        
-        // Add custom questions
-        customQuestions.forEach(q => {
-          if (columnMappings[q.id]) {
-            formResponses[q.text] = row[columnMappings[q.id]];
-          }
-        });
-        
-        // Create application
-        const { error: appError } = await supabase
-          .from('applications')
-          .insert({
-            opening_id: openingId,
-            applicant_id: userId,
-            form_responses: formResponses,
-            status: 'Applied',
-          });
-        
-        if (appError) {
-          console.error('Error creating application:', appError);
-        }
+      } else {
+        // Complete success
+        router.push(`/protected/org/${orgId}/opening/${openingId}?tab=applicants`);
       }
-      
-      // Redirect to applicants tab
-      router.push(`/protected/org/${orgId}/opening/${openingId}?tab=applicants`);
-    } catch (error) {
-      console.error('Error uploading data:', error);
-      alert('An error occurred while uploading data. Please try again.');
+    } catch (error: any) {
+      console.error("Error uploading data:", error);
+      alert(`An error occurred while uploading data: ${error.message}`);
     } finally {
       setIsUploading(false);
     }

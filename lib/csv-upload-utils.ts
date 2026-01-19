@@ -36,6 +36,17 @@ export interface OpeningLookupResult {
   org_id: string;
 }
 
+export interface UserResult {
+  id: string;
+  net_id: string;
+  name: string;
+}
+
+export interface UploadResult {
+  successCount: number;
+  errors: ProcessingError[];
+}
+
 // =============================================================================
 // VALIDATION FUNCTIONS
 // =============================================================================
@@ -160,29 +171,58 @@ export function buildInterviewRecord(
 // =============================================================================
 
 /**
- * Looks up a user by their netid.
- *
- * HOW TO MODIFY:
- * - Change table name if using different table
- * - Change column name if using different field for netid
- * - Add additional user data to select() if needed
- *
- * @param supabase - Supabase client
- * @param netid - User's netid
- * @returns User object or null if not found
+ * Looks up a user by their netid in the users table.
  */
 export async function lookupUserByNetId(
   supabase: SupabaseClient,
   netid: string,
-): Promise<UserLookupResult | null> {
+): Promise<UserResult | null> {
   const { data: user, error } = await supabase
     .from("users")
-    .select("id, net_id")
+    .select("id, net_id, name")
     .eq("net_id", netid)
-    .single();
+    .maybeSingle();
 
   if (error || !user) {
     return null;
+  }
+
+  return user;
+}
+
+/**
+ * Ensures a user exists and returns their record.
+ */
+export async function ensureUser(
+  supabase: SupabaseClient,
+  netid: string,
+  name: string,
+): Promise<UserResult> {
+  // 1. Try lookup first since we don't have a unique constraint on net_id for upsert
+  const existing = await lookupUserByNetId(supabase, netid);
+  if (existing) {
+    // Optionally update name if it's different/placeholder
+    if (existing.name === "-" && name !== "-") {
+      const { data: updated, error: updateError } = await supabase
+        .from("users")
+        .update({ name })
+        .eq("id", existing.id)
+        .select()
+        .single();
+      if (!updateError && updated) return updated;
+    }
+    return existing;
+  }
+
+  // 2. Insert if not found
+  const { data: user, error } = await supabase
+    .from("users")
+    .insert({ net_id: netid, name })
+    .select()
+    .single();
+
+  if (error || !user) {
+    throw new Error(`Failed to create user: ${error?.message}`);
   }
 
   return user;
@@ -258,7 +298,7 @@ export async function processCSVRows<T>(
   ) => T,
   defaultStatus?: string,
   tableName?: string,
-  adminClient?: SupabaseClient,
+  columnMappings?: Record<string, string>,
 ): Promise<{ records: T[]; errors: ProcessingError[] }> {
   const records: T[] = [];
   const errors: ProcessingError[] = [];
@@ -303,69 +343,20 @@ export async function processCSVRows<T>(
       row[CSV_RESERVED_COLUMNS.NETID] as string,
     );
 
-    // If user not found, create a placeholder user
+    // If user not found, create or lookup from netid
     if (!user) {
-      // Check if admin client is available
-      if (!adminClient) {
+      const name = (columnMappings?.name && row[columnMappings.name]) as string || "-";
+      try {
+        user = await ensureUser(supabase, row[CSV_RESERVED_COLUMNS.NETID] as string, name);
+      } catch (err: any) {
         errors.push({
           row: rowNumber,
           netid: row[CSV_RESERVED_COLUMNS.NETID] as string,
-          error: `User not found and admin access is required to create new users.`,
+          error: `Failed to create user: ${err.message}`,
         });
         if (!VALIDATION_CONFIG.skipInvalidRows) break;
         continue;
       }
-
-      const email = `${row[CSV_RESERVED_COLUMNS.NETID]}@rice.edu`;
-      // Use a dash as placeholder for name since it's required or preferred not to be null
-      const name = "-";
-
-      // 1. Create user in auth.users using admin client
-      const { data: authUser, error: authError } =
-        await adminClient.auth.admin.createUser({
-          email: email,
-          email_confirm: true, // Auto-confirm placeholder users
-          user_metadata: {
-            net_id: row[CSV_RESERVED_COLUMNS.NETID],
-            name: name,
-          },
-        });
-
-      if (authError || !authUser.user) {
-        errors.push({
-          row: rowNumber,
-          netid: row[CSV_RESERVED_COLUMNS.NETID] as string,
-          error: `Failed to create auth user: ${authError?.message || "Unknown error"}`,
-        });
-        if (!VALIDATION_CONFIG.skipInvalidRows) break;
-        continue;
-      }
-
-      // 2. Create or update user record in public.users
-      // We use upsert here because a database trigger might have already created
-      // the user record when the auth user was created.
-      const { data: newUser, error: createError } = await supabase
-        .from("users")
-        .upsert({
-          id: authUser.user.id, // CRITICAL: Use the Auth User ID
-          net_id: row[CSV_RESERVED_COLUMNS.NETID],
-          name: name, // This is now explicitly '-'
-          email: email,
-        })
-        .select("id, net_id")
-        .single();
-
-      if (createError || !newUser) {
-        errors.push({
-          row: rowNumber,
-          netid: row[CSV_RESERVED_COLUMNS.NETID] as string,
-          error: `Failed to create public user: ${createError?.message || "Unknown error"}`,
-        });
-        if (!VALIDATION_CONFIG.skipInvalidRows) break;
-        continue;
-      }
-
-      user = newUser;
     }
 
     // Check for duplicate application
@@ -394,6 +385,85 @@ export async function processCSVRows<T>(
   }
 
   return { records, errors };
+}
+
+/**
+ * High-level helper to process and upload CSV applications.
+ */
+export async function processAndUploadApplications(
+  supabase: SupabaseClient,
+  params: {
+    openingId: string;
+    csvData: any[];
+    columnMappings: Record<string, string>;
+    customQuestions: Array<{ id: string; text: string }>;
+  }
+): Promise<UploadResult> {
+  const { openingId, csvData, columnMappings, customQuestions } = params;
+  const results: UploadResult = { successCount: 0, errors: [] };
+
+  for (let i = 0; i < csvData.length; i++) {
+    const row = csvData[i];
+    const rowNumber = i + 1;
+    const netid = row[columnMappings.netid];
+    const name = row[columnMappings.name];
+
+    if (!netid || !name) {
+      results.errors.push({
+        row: rowNumber,
+        error: "Missing required fields: NetID or Name"
+      });
+      continue;
+    }
+
+    try {
+      // 1. Ensure User
+      const user = await ensureUser(supabase, netid, name);
+
+      // 2. Build form_responses
+      const formResponses: Record<string, any> = {};
+      formResponses.name = name;
+      formResponses.netid = netid;
+      if (columnMappings.year) formResponses.year = row[columnMappings.year];
+      if (columnMappings.major) formResponses.major = row[columnMappings.major];
+
+      customQuestions.forEach((q) => {
+        if (columnMappings[q.id]) {
+          formResponses[q.text] = row[columnMappings[q.id]];
+        }
+      });
+
+      // 3. Create Application
+      const { error: appError } = await supabase.from("applications").insert({
+        opening_id: openingId,
+        applicant_id: user.id,
+        form_responses: formResponses,
+        status: "Applied",
+      });
+
+      if (appError) {
+        if (appError.code === "23505") {
+          results.errors.push({
+            row: rowNumber,
+            netid,
+            error: "Application already exists for this NetID"
+          });
+        } else {
+          throw appError;
+        }
+      } else {
+        results.successCount++;
+      }
+    } catch (err: any) {
+      results.errors.push({
+        row: rowNumber,
+        netid,
+        error: err.message || "Unknown error occurred"
+      });
+    }
+  }
+
+  return results;
 }
 
 // =============================================================================
