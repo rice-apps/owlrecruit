@@ -212,13 +212,13 @@ export function UploadTab() {
           const isCompleted = step < currentStep;
 
           return (
-            <div key={step} className="bg-white px-2">
+            <div key={step} className="bg-gray-50 px-2">
               <div
                 className={cn(
                   "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium border-2 transition-colors",
                   isActive || isCompleted
                     ? "bg-cyan-500 border-cyan-500 text-white"
-                    : "bg-white border-gray-300 text-gray-400",
+                    : "bg-gray-50 border-gray-300 text-gray-400",
                 )}
               >
                 {step}
