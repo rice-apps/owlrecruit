@@ -7,7 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import { Json } from "@/types/supabase";
 import { createClient } from "@/lib/supabase/client";
 import { ApplicantTabs } from "./components/ApplicantTabs";
-
+import { BlankModal } from "./components/ApplicantReviews";
 
 interface ApplicationData {
   form_responses: Json;
@@ -17,6 +17,7 @@ interface ApplicationData {
 interface ResumeViewerProps {
   resumeUrl: string | null;
 }
+
 function ResumeViewer({ resumeUrl }: ResumeViewerProps) {
   if (!resumeUrl) {
     return <div className="text-gray-500">No resume available</div>;
@@ -114,6 +115,7 @@ export default function ApplicantReviewPage() {
                     </p>
                   </div>
                 ))}
+                <BlankModal />
               </div>
             )}
           </div>
