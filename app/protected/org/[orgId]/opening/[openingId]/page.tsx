@@ -19,6 +19,24 @@ interface OpeningOverviewPageProps {
   searchParams: Promise<{ tab?: string }>;
 }
 
+interface ApplicationRow {
+  id: string;
+  status: string;
+  applicant_id: string;
+  users_id: string | null;
+  user: {
+    id: string;
+    name: string;
+    net_id: string;
+    email: string;
+  } | null;
+  applicant: {
+    id: string;
+    net_id: string;
+    name: string;
+  } | null;
+}
+
 export default async function OpeningOverviewPage({
   params,
   searchParams,
@@ -42,36 +60,53 @@ export default async function OpeningOverviewPage({
     .single();
 
   // Fetch applications with user data for this specific opening
-  const { data: applications } = await supabase
+  const { data: applications, error: appError } = await supabase
     .from("applications")
     .select(
       `
       id,
       status,
-      users:applicant_id (
+      applicant_id,
+      users_id,
+      user:users_id (
         id,
         name,
         net_id,
         email
+      ),
+      applicant:applicant_id (
+        id,
+        net_id,
+        name
       )
     `,
     )
-    .eq("opening_id", openingId);
+    .eq("opening_id", openingId) as { data: ApplicationRow[] | null; error: any };
 
   // Transform applications to applicants list format
+  // Prefer user info if users_id is not empty, otherwise use applicant info
   const applicants = (applications || [])
-    .filter((app) => app.users !== null)
     .map((app) => {
-      const user = Array.isArray(app.users) ? app.users[0] : app.users;
+      const userData = app.user || app.applicant;
+      if (!userData) return null;
+      
       return {
-        id: user.id,
-        name: user.name || "-",
-        email: user.email || `${user.net_id}@rice.edu`,
-        netId: user.net_id,
+        id: app.applicant_id,
+        name: userData.name || 'Unknown',
+        email: app.user?.email || `${userData.net_id}@rice.edu`,
+        netId: userData.net_id || '',
         status: (app.status || "No Status") as ApplicationStatus,
         applicationId: app.id,
       };
-    });
+    })
+    .filter((app) => app !== null) as Array<{
+      id: any;
+      name: any;
+      email: any;
+      netId: any;
+      status: ApplicationStatus;
+      applicationId: any;
+    }>;
 
   const renderTabContent = () => {
     switch (tab) {
