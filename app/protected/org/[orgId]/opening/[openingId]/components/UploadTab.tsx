@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Papa from "papaparse";
 import { Button } from "@/components/ui/button";
@@ -69,6 +69,31 @@ export function UploadTab() {
   
   const steps = [1, 2, 3, 4];
 
+  // State for existing applicants optimization
+  const [existingApplicants, setExistingApplicants] = useState<Map<string, { applicantId: string; name: string }>>(new Map());
+
+  // Fetch existing applicants for this opening to optimize upload
+  useEffect(() => {
+    const fetchExistingApplicants = async () => {
+      try {
+        const response = await fetch(`/api/org/${orgId}/opening/${openingId}/applicants`);
+        if (response.ok) {
+          const data = await response.json();
+          const map = new Map();
+          data.applicants.forEach((app: any) => {
+            map.set(app.netId, { applicantId: app.applicantId, name: app.name });
+          });
+          setExistingApplicants(map);
+        }
+      } catch (error) {
+        console.error("Failed to fetch existing applicants:", error);
+      }
+    };
+    if (openingId && orgId) {
+        fetchExistingApplicants();
+    }
+  }, [openingId, orgId]);
+
   const handleNext = () => {
     if (currentStep < 4) setCurrentStep(currentStep + 1);
   };
@@ -76,6 +101,10 @@ export function UploadTab() {
   const handleBack = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
+   
+  // ... rest of component starts again below line 79 ...
+
+
 
   const parseCSVHeaders = (file: File) => {
     Papa.parse(file, {
@@ -172,6 +201,7 @@ export function UploadTab() {
         csvData,
         columnMappings,
         customQuestions,
+        existingApplicants,
       });
 
       setSuccessCount(results.successCount);

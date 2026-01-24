@@ -392,16 +392,17 @@ export async function processAndUploadApplications(
     csvData: any[];
     columnMappings: Record<string, string>;
     customQuestions: Array<{ id: string; text: string }>;
+    existingApplicants?: Map<string, { applicantId: string; name: string }>;
   }
 ): Promise<UploadResult> {
-  const { openingId, csvData, columnMappings, customQuestions } = params;
+  const { openingId, csvData, columnMappings, customQuestions, existingApplicants } = params;
   const results: UploadResult = { successCount: 0, errors: [] };
 
   for (let i = 0; i < csvData.length; i++) {
     const row = csvData[i];
     const rowNumber = i + 1;
     const netid = row[columnMappings.netid];
-    const name = row[columnMappings.name];
+    let name = row[columnMappings.name];
 
     if (!netid || !name) {
       results.errors.push({
@@ -413,7 +414,36 @@ export async function processAndUploadApplications(
 
     try {
       // 1. Ensure Applicant
-      const user = await ensureApplicant(supabase, netid, name);
+      let userId: string;
+
+      // Check cache first
+      if (existingApplicants?.has(netid)) {
+        const existing = existingApplicants.get(netid)!;
+        userId = existing.applicantId;
+        
+        // Optional: If existing name is "-" and new name is real, update it?
+        // logic from ensureApplicant:
+        // if (existing.name === "-" && name !== "-") { update... }
+        // We'll trust ensureApplicant logic if we think we need an update, 
+        // OR we can just skip if we don't care about name updates for existing applicants.
+        // For efficiency, let's skip the DB read if name is good or we don't assume update.
+        // But if we want perfection:
+        if (existing.name === "-" && name !== "-") {
+             // If name needs update, we call update directly or use ensureApplicant (which does a read first)
+             // calling ensureApplicant is safer but does a read.
+             // We can just call update directly since we have the ID.
+             const { error: updateError } = await supabase
+                .from("applicants")
+                .update({ name })
+                .eq("id", userId);
+             if (updateError) console.error("Error updating name:", updateError);   
+        }
+      } else {
+        // Not in our cache of "applicants for this opening".
+        // They might still exist in global 'applicants' table.
+        const user = await ensureApplicant(supabase, netid, name);
+        userId = user.id;
+      }
 
       // 2. Build form_responses
       const formResponses: Record<string, any> = {};
@@ -432,7 +462,7 @@ export async function processAndUploadApplications(
       const { error: appError } = await supabase.from("applications").upsert(
         {
           opening_id: openingId,
-          applicant_id: user.id,
+          applicant_id: userId,
           form_responses: formResponses,
           status: "Applied",
         },
