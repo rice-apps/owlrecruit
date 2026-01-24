@@ -14,6 +14,43 @@ interface ApplicationData {
   resume_url: string | null;
 }
 
+interface ResumeViewerProps {
+  resumeUrl: string | null;
+}
+function ResumeViewer({ resumeUrl }: ResumeViewerProps) {
+  if (!resumeUrl) {
+    return <div className="text-gray-500">No resume available</div>;
+  }
+
+  // Convert Google Drive URL to preview URL
+  const getPreviewUrl = (url: string): string => {
+    // Extract file ID from various Google Drive URL formats
+    // Format 1: https://drive.google.com/open?id=FILE_ID
+    // Format 2: https://drive.google.com/file/d/FILE_ID/view
+    // Format 3: https://drive.google.com/uc?id=FILE_ID
+    let fileId = '';
+    if (url.includes('/open?id=')) {
+      fileId = url.split('/open?id=')[1].split('&')[0];
+    } else if (url.includes('/file/d/')) {
+      fileId = url.split('/file/d/')[1].split('/')[0];
+    } else if (url.includes('?id=')) {
+      fileId = url.split('?id=')[1].split('&')[0];
+    }
+    return `https://drive.google.com/file/d/${fileId}/preview`;
+  };
+  const previewUrl = getPreviewUrl(resumeUrl);
+  return (
+    <div className="w-full h-[800px]">
+      <iframe
+        src={previewUrl}
+        className="w-full h-full border rounded-lg"
+        title="Applicant Resume"
+        allow="autoplay"
+      />
+    </div>
+  );
+}
+
 export default function ApplicantReviewPage() {
   const params = useParams();
   const router = useRouter();
@@ -87,14 +124,7 @@ export default function ApplicantReviewPage() {
             {applicationData?.resume_url && (
               <div>
                 <p className="text-xl text-muted-foreground">Resume:</p>
-                <a
-                  href={applicationData.resume_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline"
-                >
-                  {applicationData.resume_url}
-                </a>
+                <ResumeViewer resumeUrl={applicationData.resume_url} />
               </div>
             )}
           </div> 
