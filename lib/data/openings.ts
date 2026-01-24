@@ -27,47 +27,45 @@ export async function getOpeningData(
 ): Promise<OpeningData> {
   const supabase = await createClient();
 
-  // Fetch the organization name
-  const { data: orgData } = await supabase
-    .from("orgs")
-    .select("name")
-    .eq("id", orgId)
-    .single();
-
-  // Fetch the opening details
-  const { data: openingData } = await supabase
+  // Single optimized query using joins
+  const { data } = await supabase
     .from("openings")
-    .select("title, description, status")
-    .eq("id", openingId)
-    .single();
-
-  // Fetch applications with user data for this specific opening
-  const { data: applications } = await supabase
-    .from("applications")
     .select(
       `
-      id,
+      title,
+      description,
       status,
-      users:applicant_id (
+      orgs!openings_org_fkey(name),
+      applications(
         id,
-        name,
-        net_id,
-        email
+        status,
+        applicants:applicant_id(id, name, net_id)
       )
     `,
     )
-    .eq("opening_id", openingId);
+    .eq("id", openingId)
+    .eq("org_id", orgId)
+    .single();
 
-  // Transform applications to applicants list format
-  const applicants = (applications || [])
-    .filter((app) => app.users !== null)
+  // Transform to expected format
+  const orgs = data?.orgs as { name: string } | { name: string }[] | null;
+  const orgName = Array.isArray(orgs) ? orgs[0]?.name : orgs?.name;
+  const orgData = orgName ? { name: orgName } : null;
+  const openingData = data
+    ? { title: data.title, description: data.description, status: data.status }
+    : null;
+
+  const applicants = (data?.applications || [])
+    .filter((app) => app.applicants !== null)
     .map((app) => {
-      const user = Array.isArray(app.users) ? app.users[0] : app.users;
+      const applicant = Array.isArray(app.applicants)
+        ? app.applicants[0]
+        : app.applicants;
       return {
-        id: user.id,
-        name: user.name || "-",
-        email: user.email || `${user.net_id}@rice.edu`,
-        netId: user.net_id,
+        id: applicant.id,
+        name: applicant.name || "-",
+        email: `${applicant.net_id}@rice.edu`,
+        netId: applicant.net_id,
         status: app.status || "No Status",
         applicationId: app.id,
       };
