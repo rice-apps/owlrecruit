@@ -1,7 +1,9 @@
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowLeft, User, Calendar, FileText } from "lucide-react";
 import { ResumePreview } from "../../components";
 
 interface ApplicantReviewPageProps {
@@ -12,12 +14,11 @@ export default async function ApplicantReviewPage({
   params,
 }: ApplicantReviewPageProps) {
   const { orgId, openingId, applicantId } = await params;
-  console.log("Page params:", { orgId, openingId, applicantId });
 
   const supabase = await createClient();
   const adminSupabase = createAdminClient();
 
-  // Fetch the application data (applicantId here is the application ID)
+  // Fetch the application data
   const { data: application, error: fetchError } = await supabase
     .from("applications")
     .select(
@@ -25,7 +26,10 @@ export default async function ApplicantReviewPage({
       id,
       resume_url,
       status,
-      applicant_id
+      applicant_id,
+      form_responses,
+      created_at,
+      updated_at
     `,
     )
     .eq("id", applicantId)
@@ -46,12 +50,9 @@ export default async function ApplicantReviewPage({
     console.error("Error fetching application:", fetchError);
   }
 
-  console.log("Fetched application:", application);
-
   // Extract the file path from the stored signed URL and generate a fresh one
   let signedResumeUrl: string | null = null;
   if (application?.resume_url) {
-    console.log("Original resume_url:", application.resume_url);
     // Stored URL format: .../storage/v1/object/sign/Media_Bucket/<filepath>?token=...
     const bucketPrefix = "/storage/v1/object/sign/Media_Bucket/";
     const idx = application.resume_url.indexOf(bucketPrefix);
@@ -60,7 +61,6 @@ export default async function ApplicantReviewPage({
         idx + bucketPrefix.length,
       );
       const filePath = decodeURIComponent(pathWithParams.split("?")[0]);
-      console.log("Extracted filePath:", filePath);
 
       const { data, error } = await adminSupabase.storage
         .from("Media_Bucket")
@@ -71,15 +71,32 @@ export default async function ApplicantReviewPage({
       }
 
       signedResumeUrl = data?.signedUrl ?? null;
-      console.log("New signedResumeUrl:", signedResumeUrl);
-    } else {
-      console.log("Could not find bucket prefix in resume_url");
     }
-  } else {
-    console.log("No resume_url found on application");
   }
 
   const applicantName = user?.name || "Unknown Applicant";
+
+  if (!application) {
+    return (
+      <div className="flex-1 w-full flex flex-col gap-6 p-6">
+        <Button variant="outline" size="sm" asChild>
+          <Link href={`/protected/org/${orgId}/opening/${openingId}`}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Opening
+          </Link>
+        </Button>
+        <p className="text-muted-foreground">Application not found</p>
+      </div>
+    );
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
 
   return (
     <div className="flex-1 w-full max-w-5xl flex flex-col gap-6">
@@ -91,14 +108,101 @@ export default async function ApplicantReviewPage({
         Back to Opening
       </Link>
 
-      <div>
-        <h1 className="text-2xl font-bold">{applicantName}</h1>
-        {user?.email && (
-          <p className="text-muted-foreground mt-1">{user.email}</p>
-        )}
+      {/* Page Title */}
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold">Applicant Review</h1>
+        <p className="text-muted-foreground">
+          Review application details and resume
+        </p>
       </div>
 
-      <ResumePreview resumeUrl={signedResumeUrl} applicantName={applicantName} />
+      {/* Two Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left Column - Application Details */}
+        <div className="space-y-6">
+          {/* Applicant Info Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Applicant Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <p className="text-xl font-semibold">{applicantName}</p>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>{user?.net_id || "N/A"}</span>
+                  <span>•</span>
+                  <span>{user?.email || "N/A"}</span>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-muted-foreground">
+                  Status
+                </p>
+                <p className="text-lg font-semibold">{application.status}</p>
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Applied Date
+                </p>
+                <p>{formatDate(application.created_at)}</p>
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Last Updated
+                </p>
+                <p>{formatDate(application.updated_at)}</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Application Responses Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Application Responses
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {application.form_responses &&
+              typeof application.form_responses === "object" ? (
+                <div className="space-y-3">
+                  {Object.entries(application.form_responses).map(
+                    ([key, value]) => (
+                      <div key={key} className="space-y-1">
+                        <p className="text-sm font-medium text-muted-foreground capitalize">
+                          {key}
+                        </p>
+                        <p className="text-sm">{String(value)}</p>
+                      </div>
+                    ),
+                  )}
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">
+                  No responses available
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Column - Resume */}
+        <div>
+          <ResumePreview
+            resumeUrl={signedResumeUrl}
+            applicantName={applicantName}
+          />
+        </div>
+      </div>
     </div>
   );
 }
