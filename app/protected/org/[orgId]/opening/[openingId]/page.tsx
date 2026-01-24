@@ -48,11 +48,11 @@ export default async function OpeningOverviewPage({
       `
       id,
       status,
+      created_at,
       users:applicant_id (
         id,
         name,
-        net_id,
-        email
+        net_id
       )
     `,
     )
@@ -66,10 +66,11 @@ export default async function OpeningOverviewPage({
       return {
         id: user.id,
         name: user.name || "-",
-        email: user.email || `${user.net_id}@rice.edu`,
+        email: `${user.net_id}@rice.edu`,
         netId: user.net_id,
         status: (app.status || "No Status") as ApplicationStatus,
         applicationId: app.id,
+        createdAt: app.created_at,
       };
     });
 
