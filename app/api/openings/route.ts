@@ -18,10 +18,7 @@ export async function GET() {
         orgs (
           name
         ),
-        rubrics (
-          name,
-          max_score
-        )
+        rubric
       `,
       )
       .order("created_at", { ascending: false });
@@ -34,6 +31,10 @@ export async function GET() {
     const openings = data.map((opening) => {
       // Supabase returns nested relation as object for FK, but TS infers as array
       const org = Array.isArray(opening.orgs) ? opening.orgs[0] : opening.orgs;
+      
+      // Cast rubric to expected type since it's Json
+      const rubric = (opening.rubric as any as Array<{ name: string; max_score: number }>) ?? [];
+
       return {
         id: opening.id,
         org_name: org?.name ?? null,
@@ -42,7 +43,7 @@ export async function GET() {
         application_link: opening.application_link,
         status: opening.status,
         closes_at: opening.closes_at,
-        rubrics: (opening.rubrics ?? []).map((r) => ({
+        rubrics: rubric.map((r) => ({
           name: r.name,
           max_val: r.max_score,
         })),

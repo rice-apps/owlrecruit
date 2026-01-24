@@ -39,7 +39,7 @@ export type Database = {
           id: string
           notes: string | null
           reviewer_id: string
-          score: Database["public"]["Enums"]["score"] | null
+          score: number | null
           updated_at: string | null
         }
         Insert: {
@@ -48,7 +48,7 @@ export type Database = {
           id?: string
           notes?: string | null
           reviewer_id: string
-          score?: Database["public"]["Enums"]["score"] | null
+          score?: number | null
           updated_at?: string | null
         }
         Update: {
@@ -57,7 +57,7 @@ export type Database = {
           id?: string
           notes?: string | null
           reviewer_id?: string
-          score?: Database["public"]["Enums"]["score"] | null
+          score?: number | null
           updated_at?: string | null
         }
         Relationships: [
@@ -87,6 +87,7 @@ export type Database = {
           resume_url: string | null
           status: Database["public"]["Enums"]["status"] | null
           updated_at: string | null
+          users_id: string | null
         }
         Insert: {
           applicant_id: string
@@ -97,6 +98,7 @@ export type Database = {
           resume_url?: string | null
           status?: Database["public"]["Enums"]["status"] | null
           updated_at?: string | null
+          users_id?: string | null
         }
         Update: {
           applicant_id?: string
@@ -107,6 +109,7 @@ export type Database = {
           resume_url?: string | null
           status?: Database["public"]["Enums"]["status"] | null
           updated_at?: string | null
+          users_id?: string | null
         }
         Relationships: [
           {
@@ -121,6 +124,13 @@ export type Database = {
             columns: ["opening_id"]
             isOneToOne: false
             referencedRelation: "openings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applications_users_id_fkey"
+            columns: ["users_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -223,6 +233,7 @@ export type Database = {
           description: string | null
           id: string
           org_id: string
+          rubric: Json[] | null
           status: Database["public"]["Enums"]["opening_status"] | null
           title: string
           updated_at: string | null
@@ -234,6 +245,7 @@ export type Database = {
           description?: string | null
           id?: string
           org_id: string
+          rubric?: Json[] | null
           status?: Database["public"]["Enums"]["opening_status"] | null
           title: string
           updated_at?: string | null
@@ -245,6 +257,7 @@ export type Database = {
           description?: string | null
           id?: string
           org_id?: string
+          rubric?: Json[] | null
           status?: Database["public"]["Enums"]["opening_status"] | null
           title?: string
           updated_at?: string | null
@@ -347,74 +360,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "questions_opening_fkey"
-            columns: ["opening_id"]
-            isOneToOne: false
-            referencedRelation: "openings"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      review_scores: {
-        Row: {
-          id: string
-          review_id: string
-          rubric_id: string
-          score: number
-        }
-        Insert: {
-          id?: string
-          review_id: string
-          rubric_id: string
-          score: number
-        }
-        Update: {
-          id?: string
-          review_id?: string
-          rubric_id?: string
-          score?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "review_scores_review_fkey"
-            columns: ["review_id"]
-            isOneToOne: false
-            referencedRelation: "application_reviews"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "review_scores_rubric_fkey"
-            columns: ["rubric_id"]
-            isOneToOne: false
-            referencedRelation: "rubrics"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      rubrics: {
-        Row: {
-          id: string
-          max_score: number
-          name: string
-          opening_id: string
-          sort_order: number | null
-        }
-        Insert: {
-          id?: string
-          max_score?: number
-          name: string
-          opening_id: string
-          sort_order?: number | null
-        }
-        Update: {
-          id?: string
-          max_score?: number
-          name?: string
-          opening_id?: string
-          sort_order?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "rubrics_opening_fkey"
             columns: ["opening_id"]
             isOneToOne: false
             referencedRelation: "openings"
