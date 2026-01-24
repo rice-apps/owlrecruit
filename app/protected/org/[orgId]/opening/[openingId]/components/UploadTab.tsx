@@ -25,8 +25,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ChevronRight, CloudUpload, FileSpreadsheet, Folder, Plus, File as FileIcon, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
-import { processAndUploadApplications } from "@/lib/csv-upload-utils";
 
 type ColumnMapping = {
   name: string;
@@ -194,15 +192,28 @@ export function UploadTab() {
     setSuccessCount(0);
     
     try {
-      const supabase = createClient();
-      
-      const results = await processAndUploadApplications(supabase, {
-        openingId,
-        csvData,
-        columnMappings,
-        customQuestions,
-        existingApplicants,
+      // Serialize map to array of entries for JSON transport
+      const existingApplicantsArray = Array.from(existingApplicants.entries());
+
+      const response = await fetch(`/api/org/${orgId}/opening/${openingId}/upload`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            csvData,
+            columnMappings,
+            customQuestions,
+            existingApplicants: existingApplicantsArray
+        }),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to upload data");
+      }
+
+      const results = await response.json();
 
       setSuccessCount(results.successCount);
       if (results.errors.length > 0) {
