@@ -35,7 +35,7 @@ export default function ApplicantReviewPage() {
           {orgId}&quot; - shows application details, resume, etc
         </h2>
       </div>
-      <CommentsSidebar applicantId={applicantId} />
+      <CommentsSidebar applicantId={applicantId} openingId={openingId} />
     </div>
   );
 }

@@ -1,18 +1,23 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Loader2, Plus, X, MessageSquare, Search, ArrowUp } from "lucide-react";
+import { Loader2, X, MessageSquare, Search, ArrowUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface CommentsSidebarProps {
   applicantId: string;
+  openingId: string;
+}
+
+interface Rubric {
+  name: string;
+  max_val: number;
 }
 
 interface Comment {
@@ -22,11 +27,15 @@ interface Comment {
   userName?: string;
 }
 
-const SKILLS = ["Teamwork", "Experience", "Diversity"];
-
-export function CommentsSidebar({ applicantId }: CommentsSidebarProps) {
+export function CommentsSidebar({
+  applicantId,
+  openingId,
+}: CommentsSidebarProps) {
+  // Rubrics State
+  const [rubrics, setRubrics] = useState<Rubric[]>([]);
+  const [loadingRubrics, setLoadingRubrics] = useState(true);
   const [activeTab, setActiveTab] = useState<"comments" | "skills">("comments");
-  
+
   // Comments State
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
@@ -38,6 +47,31 @@ export function CommentsSidebar({ applicantId }: CommentsSidebarProps) {
   const [scores, setScores] = useState<Record<string, number>>({});
   const [savingScore, setSavingScore] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Fetch rubrics for the opening
+  useEffect(() => {
+    const fetchRubrics = async () => {
+      setLoadingRubrics(true);
+      try {
+        const res = await fetch("/api/openings");
+        if (res.ok) {
+          const openings = await res.json();
+          const currentOpening = openings.find(
+            (o: { id: string }) => o.id === openingId,
+          );
+          if (currentOpening?.rubrics) {
+            setRubrics(currentOpening.rubrics);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching rubrics:", error);
+      } finally {
+        setLoadingRubrics(false);
+      }
+    };
+
+    fetchRubrics();
+  }, [openingId]);
 
   // Fetch comments when the accordion is opened or tab is active
   useEffect(() => {
@@ -53,7 +87,7 @@ export function CommentsSidebar({ applicantId }: CommentsSidebarProps) {
         const data = await res.json();
         setComments(data);
       } else {
-         console.warn("Failed to fetch comments, API might be missing");
+        console.warn("Failed to fetch comments, API might be missing");
       }
     } catch (error) {
       console.error("Error fetching comments:", error);
@@ -70,7 +104,7 @@ export function CommentsSidebar({ applicantId }: CommentsSidebarProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: newComment }),
       });
-      
+
       if (res.ok || res.status === 404) {
         setNewComment("");
         setShowToast(true);
@@ -84,173 +118,231 @@ export function CommentsSidebar({ applicantId }: CommentsSidebarProps) {
     }
   };
 
-  const updateScore = (skill: string, value: string) => {
+  const updateScore = (skill: string, value: string, maxVal: number) => {
     const num = parseFloat(value);
-    let newScores = { ...scores };
-    
-    if (!isNaN(num) && num >= 0 && num <= 10) {
+    const newScores = { ...scores };
+
+    if (!isNaN(num) && num >= 0 && num <= maxVal) {
       newScores[skill] = num;
     } else if (value === "") {
-        delete newScores[skill];
+      delete newScores[skill];
     }
-    
+
     setScores(newScores);
     debouncedSaveScore(newScores);
   };
 
   const debouncedSaveScore = (currentScores: Record<string, number>) => {
-      if (saveTimeoutRef.current) {
-          clearTimeout(saveTimeoutRef.current);
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    setSavingScore(true);
+    saveTimeoutRef.current = setTimeout(async () => {
+      const values = Object.values(currentScores);
+      const total = values.reduce((a, b) => a + b, 0);
+      const average =
+        values.length > 0 ? (total / values.length).toFixed(1) : 0;
+
+      try {
+        // Mock API call to save score
+        const res = await fetch(`/api/applications/${applicantId}`, {
+          method: "PUT", // Assuming PUT to update application
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ score: average }),
+        });
+
+        if (!res.ok && res.status !== 404) {
+          console.warn("Failed to save score");
+        }
+      } catch (e) {
+        console.error("Error saving score", e);
+      } finally {
+        setSavingScore(false);
       }
-      
-      setSavingScore(true);
-      saveTimeoutRef.current = setTimeout(async () => {
-          const values = Object.values(currentScores);
-          const total = values.reduce((a, b) => a + b, 0);
-          const average = values.length > 0 ? (total / values.length).toFixed(1) : 0;
-          
-          try {
-              // Mock API call to save score
-              const res = await fetch(`/api/applications/${applicantId}`, {
-                  method: "PUT", // Assuming PUT to update application
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ score: average })
-              });
-              
-              if (!res.ok && res.status !== 404) {
-                  console.warn("Failed to save score");
-              }
-          } catch (e) {
-              console.error("Error saving score", e);
-          } finally {
-              setSavingScore(false);
-          }
-      }, 1000); // 1 second debounce
+    }, 1000); // 1 second debounce
   };
 
   const totalScoreAverage = (() => {
-      const values = Object.values(scores);
-      if (values.length === 0) return 0;
-      const sum = values.reduce((a, b) => a + b, 0);
-      return (sum / values.length).toFixed(1);
+    const values = Object.values(scores);
+    if (values.length === 0) return 0;
+    const sum = values.reduce((a, b) => a + b, 0);
+    return (sum / values.length).toFixed(1);
   })();
 
   return (
     <div className="w-[350px] border-l h-full flex flex-col bg-background relative">
-      
       {/* Tab Toggle / Actions Header */}
       <div className="flex items-center justify-end p-2 gap-2 border-b">
-         <div className="flex bg-muted/50 rounded-lg p-1">
-             <button
-                onClick={() => setActiveTab("skills")}
-                className={cn(
-                    "p-2 rounded-md transition-all hover:text-cyan-600",
-                    activeTab === "skills" ? "bg-white shadow text-cyan-600" : "text-muted-foreground"
-                )}
-                title="Skills & Rubric"
-             >
-                <Search className="w-5 h-5" />
-             </button>
-             <button
-                onClick={() => setActiveTab("comments")}
-                className={cn(
-                    "p-2 rounded-md transition-all hover:text-cyan-600",
-                    activeTab === "comments" ? "bg-white shadow text-cyan-600" : "text-muted-foreground"
-                )}
-                title="Comments"
-             >
-                <MessageSquare className="w-5 h-5" />
-             </button>
-         </div>
+        <div className="flex bg-muted/50 rounded-lg p-1">
+          <button
+            onClick={() => setActiveTab("skills")}
+            className={cn(
+              "p-2 rounded-md transition-all hover:text-cyan-600",
+              activeTab === "skills"
+                ? "bg-white shadow text-cyan-600"
+                : "text-muted-foreground",
+            )}
+            title="Skills & Rubric"
+          >
+            <Search className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => setActiveTab("comments")}
+            className={cn(
+              "p-2 rounded-md transition-all hover:text-cyan-600",
+              activeTab === "comments"
+                ? "bg-white shadow text-cyan-600"
+                : "text-muted-foreground",
+            )}
+            title="Comments"
+          >
+            <MessageSquare className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto">
         {activeTab === "comments" ? (
-            <div className="p-4 flex flex-col gap-4">
-                 <div className="flex items-center justify-between">
-                     <div className="relative w-full">
-                        <input
-                            value={newComment}
-                            onChange={(e) => setNewComment(e.target.value)}
-                            className="w-full pl-4 pr-10 py-3 rounded-full text-sm bg-white border border-input text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-cyan-600/50"
-                            placeholder="Add comment..."
-                            onKeyDown={(e) => e.key === "Enter" && handlePostComment()}
-                        />
-                        <button 
-                            onClick={handlePostComment}
-                            disabled={loading || !newComment.trim()}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-cyan-600 disabled:opacity-30 transition-colors"
+          <div className="p-4 flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div className="relative w-full">
+                <input
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  className="w-full pl-4 pr-10 py-3 rounded-full text-sm bg-white border border-input text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-cyan-600/50"
+                  placeholder="Add comment..."
+                  onKeyDown={(e) => e.key === "Enter" && handlePostComment()}
+                />
+                <button
+                  onClick={handlePostComment}
+                  disabled={loading || !newComment.trim()}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-cyan-600 disabled:opacity-30 transition-colors"
+                >
+                  {loading ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <div className="bg-muted rounded-full p-1">
+                      <ArrowUp className="h-4 w-4" />
+                    </div>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <Accordion
+              type="single"
+              collapsible
+              className="w-full"
+              onValueChange={(val) => setIsCommentsOpen(val === "item-1")}
+            >
+              <AccordionItem value="item-1" className="border-none">
+                <AccordionTrigger className="py-2 hover:no-underline font-semibold text-lg text-foreground">
+                  Comments
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="flex flex-col gap-3 py-2">
+                    {comments.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        No comments yet.
+                      </p>
+                    ) : (
+                      comments.map((comment, i) => (
+                        <div
+                          key={comment.id || i}
+                          className="bg-muted/30 p-3 rounded-md text-sm border border-border"
                         >
-                            {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <div className="bg-muted rounded-full p-1"><ArrowUp className="h-4 w-4" /></div>}
-                        </button>
-                     </div>
-                 </div>
-
-                <Accordion type="single" collapsible className="w-full" onValueChange={(val) => setIsCommentsOpen(val === "item-1")}>
-                    <AccordionItem value="item-1" className="border-none">
-                        <AccordionTrigger className="py-2 hover:no-underline font-semibold text-lg text-foreground">
-                            Comments
-                        </AccordionTrigger>
-                        <AccordionContent>
-                            <div className="flex flex-col gap-3 py-2">
-                                {comments.length === 0 ? (
-                                    <p className="text-sm text-muted-foreground text-center py-4">No comments yet.</p>
-                                ) : (
-                                    comments.map((comment, i) => (
-                                        <div key={comment.id || i} className="bg-muted/30 p-3 rounded-md text-sm border border-border">
-                                            <p className="text-foreground">{comment.content}</p>
-                                            <span className="text-xs text-muted-foreground block mt-1">
-                                                {comment.createdAt ? new Date(comment.createdAt).toLocaleDateString() : "Just now"}
-                                            </span>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        </AccordionContent>
-                    </AccordionItem>
-                </Accordion>
-            </div>
-        ) : (
-            <div className="p-4">
-                <div className="border rounded-xl p-6 shadow-sm bg-card">
-                    <div className="flex justify-between items-center mb-6">
-                         <span className="text-muted-foreground font-medium">Skills</span>
-                         <span className="text-muted-foreground font-medium">Your Score</span>
-                    </div>
-                    
-                    <div className="flex flex-col gap-6">
-                        {SKILLS.map(skill => (
-                            <div key={skill} className="flex items-center justify-between">
-                                <span className="font-semibold text-sm">{skill}</span>
-                                <div className="flex items-center gap-2">
-                                    <input 
-                                        type="number" 
-                                        min="0" 
-                                        max="10"
-                                        className="w-16 h-9 border rounded-[10px] text-center text-sm focus:outline-none focus:ring-1 focus:ring-cyan-600 bg-white"
-                                        value={scores[skill] ?? ""}
-                                        onChange={(e) => updateScore(skill, e.target.value)}
-                                    />
-                                    <span className="text-muted-foreground text-sm font-medium w-6 text-right">/ 10</span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="mt-8 pt-4 border-t flex justify-between items-center">
-                        <span className="font-semibold text-sm">Total Score:</span>
-                        <div className="flex items-center gap-2">
-                             {savingScore && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
-                             <span className="font-semibold text-sm text-foreground">{totalScoreAverage}</span>
-                             <span className="text-muted-foreground text-sm font-medium"> / 10</span>
+                          <p className="text-foreground">{comment.content}</p>
+                          <span className="text-xs text-muted-foreground block mt-1">
+                            {comment.createdAt
+                              ? new Date(comment.createdAt).toLocaleDateString()
+                              : "Just now"}
+                          </span>
                         </div>
+                      ))
+                    )}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </div>
+        ) : (
+          <div className="p-4">
+            <div className="border rounded-xl p-6 shadow-sm bg-card">
+              <div className="flex justify-between items-center mb-6">
+                <span className="text-muted-foreground font-medium">
+                  Skills
+                </span>
+                <span className="text-muted-foreground font-medium">
+                  Your Score
+                </span>
+              </div>
+
+              <div className="flex flex-col gap-6">
+                {loadingRubrics ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : rubrics.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No rubrics defined for this opening.
+                  </p>
+                ) : (
+                  rubrics.map((rubric) => (
+                    <div
+                      key={rubric.name}
+                      className="flex items-center justify-between"
+                    >
+                      <span className="font-semibold text-sm">
+                        {rubric.name}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          min="0"
+                          max={rubric.max_val}
+                          className="w-16 h-9 border rounded-[10px] text-center text-sm focus:outline-none focus:ring-1 focus:ring-cyan-600 bg-white"
+                          value={scores[rubric.name] ?? ""}
+                          onChange={(e) =>
+                            updateScore(
+                              rubric.name,
+                              e.target.value,
+                              rubric.max_val,
+                            )
+                          }
+                        />
+                        <span className="text-muted-foreground text-sm font-medium w-8 text-right">
+                          / {rubric.max_val}
+                        </span>
+                      </div>
                     </div>
+                  ))
+                )}
+              </div>
+
+              <div className="mt-8 pt-4 border-t flex justify-between items-center">
+                <span className="font-semibold text-sm">Total Score:</span>
+                <div className="flex items-center gap-2">
+                  {savingScore && (
+                    <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+                  )}
+                  <span className="font-semibold text-sm text-foreground">
+                    {totalScoreAverage}
+                  </span>
+                  <span className="text-muted-foreground text-sm font-medium">
+                    {" "}
+                    / 10
+                  </span>
                 </div>
-                
-                <div className="mt-4 flex justify-end">
-                     <button className="text-cyan-600 text-sm hover:underline">Rubric Details</button>
-                </div>
+              </div>
             </div>
+
+            <div className="mt-4 flex justify-end">
+              <button className="text-cyan-600 text-sm hover:underline">
+                Rubric Details
+              </button>
+            </div>
+          </div>
         )}
       </div>
 
@@ -258,7 +350,10 @@ export function CommentsSidebar({ applicantId }: CommentsSidebarProps) {
       {showToast && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-neutral-900 text-white px-4 py-2 rounded-md shadow-lg text-sm flex items-center gap-2 animate-in fade-in slide-in-from-top-2 z-50">
           <span>Comment successfully posted!</span>
-          <button onClick={() => setShowToast(false)} className="ml-2 hover:opacity-80">
+          <button
+            onClick={() => setShowToast(false)}
+            className="ml-2 hover:opacity-80"
+          >
             <X className="h-3 w-3" />
           </button>
         </div>
