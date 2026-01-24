@@ -48,6 +48,7 @@ export default async function OpeningOverviewPage({
       `
       id,
       status,
+      created_at,
       users:applicant_id (
         id,
         name,
@@ -70,6 +71,7 @@ export default async function OpeningOverviewPage({
         netId: user.net_id,
         status: (app.status || "No Status") as ApplicationStatus,
         applicationId: app.id,
+        createdAt: app.created_at,
       };
     });
 
