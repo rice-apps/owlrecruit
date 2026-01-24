@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Download, FileText } from "lucide-react";
 
@@ -8,7 +7,6 @@ interface ResumePreviewProps {
 }
 
 export function ResumePreview({ resumeUrl, applicantName }: ResumePreviewProps) {
-  // Handle case where resume_url is null
   if (!resumeUrl) {
     return (
       <Card>
@@ -30,12 +28,6 @@ export function ResumePreview({ resumeUrl, applicantName }: ResumePreviewProps) 
     );
   }
 
-  // TODO: Integrate actual PDF viewer or iframe
-  const handleDownload = () => {
-    // TODO: Implement download functionality
-    console.log("Download resume:", resumeUrl);
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -44,21 +36,24 @@ export function ResumePreview({ resumeUrl, applicantName }: ResumePreviewProps) 
             <FileText className="h-5 w-5" />
             Resume {applicantName && `- ${applicantName}`}
           </CardTitle>
-          <Button variant="outline" size="sm" onClick={handleDownload}>
-            <Download className="h-4 w-4 mr-2" />
+          <a
+            href={resumeUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            download
+            className="inline-flex items-center gap-2 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
+          >
+            <Download className="h-4 w-4" />
             Download
-          </Button>
+          </a>
         </div>
       </CardHeader>
       <CardContent>
-        {/* TODO: Replace with actual PDF viewer or iframe */}
-        <div className="border rounded-md h-96 bg-muted flex items-center justify-center">
-          <div className="text-center text-muted-foreground">
-            <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
-            <p>Resume preview coming soon</p>
-            <p className="text-sm mt-2">URL: {resumeUrl}</p>
-          </div>
-        </div>
+        <iframe
+          src={`${resumeUrl}#toolbar=0&navpanes=0&view=FitH`}
+          title={`Resume - ${applicantName || "Applicant"}`}
+          className="w-full h-[700px] rounded-md border-none"
+        />
       </CardContent>
     </Card>
   );
