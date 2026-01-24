@@ -3,6 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { ResumePreview } from "../../components";
 
 export default function ApplicantReviewPage() {
   const params = useParams();
@@ -32,6 +33,9 @@ export default function ApplicantReviewPage() {
         {openingId}&quot; in org &quot;
         {orgId}&quot; - shows application details, resume, etc
       </h2>
+
+      {/* TODO: Fetch actual application data and pass resume_url */}
+      <ResumePreview resumeUrl={null} applicantName="Sample Applicant" />
     </div>
   );
 }
