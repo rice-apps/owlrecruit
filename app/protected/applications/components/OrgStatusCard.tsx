@@ -14,6 +14,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Enums } from "@/types/supabase";
+import { logger } from "@/lib/logger";
 
 // Application status type from database enum
 type ApplicationStatus = Enums<"status">;
@@ -146,7 +147,7 @@ export default function OrgStatusCard({ userId }: OrgStatusCardProps) {
         ]);
 
         // Log the fetched data
-        console.log("Fetched org data:", {
+        logger.debug("Fetched org data", {
           membershipsResult,
           applicationsResult,
           userId,
@@ -231,7 +232,7 @@ export default function OrgStatusCard({ userId }: OrgStatusCardProps) {
           applications: transformedApplications,
         });
       } catch (err) {
-        console.error("Error fetching org data:", err);
+        logger.error("Error fetching org data", { error: err });
         setError(
           err instanceof Error ? err.message : "An unexpected error occurred",
         );

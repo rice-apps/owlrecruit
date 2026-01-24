@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Upload, CheckCircle, AlertCircle } from "lucide-react";
 import { useState } from "react";
+import { logger } from "@/lib/logger";
 
 interface UploadDialogProps {
   openingId: string;
@@ -113,7 +114,7 @@ export default function UploadDialog({ openingId }: UploadDialogProps) {
           setError(null);
         }
       } catch (error) {
-        console.error("Couldn't upload file: ", error);
+        logger.error("Couldn't upload file", { error });
         setError(error instanceof Error ? error.message : "Upload failed");
       }
     }
@@ -131,7 +132,7 @@ export default function UploadDialog({ openingId }: UploadDialogProps) {
           "/api/applications",
           "application",
         );
-        console.log("Upload successful! Result:", result);
+        logger.debug("Upload successful", { result });
         setIsUploaded(true);
 
         // Handle partial warnings
@@ -147,7 +148,7 @@ export default function UploadDialog({ openingId }: UploadDialogProps) {
           setError(null);
         }
       } catch (error) {
-        console.error("Couldn't upload file: ", error);
+        logger.error("Couldn't upload file", { error });
         setError(error instanceof Error ? error.message : "Upload failed");
       }
     }

@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, X, UserPlus, ChevronDown } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { logger } from "@/lib/logger";
 
 interface EligibleReviewer {
   id: string;
@@ -60,7 +61,7 @@ export function OpeningFormDialog({
   );
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
 
-  console.log("OpeningFormDialog opening:", opening);
+  logger.debug("OpeningFormDialog opening", { opening });
 
   const isEditing = !!opening;
 
@@ -160,9 +161,9 @@ export function OpeningFormDialog({
       setOpen(false);
       onSuccess?.();
       router.refresh();
-    } catch (err) {
-      console.error("Error saving opening:", err);
-      setError(err instanceof Error ? err.message : "Failed to save opening");
+    } catch (error) {
+      logger.error("Error saving opening", {error });
+      setError(error instanceof Error ? error.message : "Failed to save opening");
     } finally {
       setIsSubmitting(false);
     }

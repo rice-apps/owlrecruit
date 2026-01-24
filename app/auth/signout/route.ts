@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { type NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -12,10 +13,10 @@ export async function POST(req: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (user) {
-    console.log("Signing out user:", user.email);
+    logger.info("Signing out user", { email: user.email });
     await supabase.auth.signOut();
   } else {
-    console.log("No active session found during signout");
+    logger.info("No active session found during signout");
   }
 
   return NextResponse.redirect(new URL("/", req.url), {

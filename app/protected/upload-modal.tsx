@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 import {
   Dialog,
   DialogContent,
@@ -24,7 +25,7 @@ export default function UploadDialog() {
         await uploadCSV(file, "/api/interviews");
         setIsUploaded(true);
       } catch (error) {
-        console.error("Couldn't read file: ", error);
+        logger.error("Couldn't read file: ", { error} );
       }
     }
   };
@@ -38,7 +39,7 @@ export default function UploadDialog() {
         await uploadCSV(file, "/api/applications");
         setIsUploaded(true);
       } catch (error) {
-        console.error("Couldn't read file: ", error);
+        logger.error("Couldn't read file", { error });
       }
     }
   };

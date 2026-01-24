@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { logger } from "@/lib/logger";
 
 interface OrgFormDialogProps {
   trigger?: React.ReactNode;
@@ -89,7 +90,7 @@ export function OrgFormDialog({ trigger, onSuccess }: OrgFormDialogProps) {
         window.location.href = `/protected/org/${newOrg.id}`;
       }
     } catch (err) {
-      console.error("Error creating organization:", err);
+      logger.error("Error creating organization", { error: err });
       setError(
         err instanceof Error ? err.message : "Failed to create organization",
       );
