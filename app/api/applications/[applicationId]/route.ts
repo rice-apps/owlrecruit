@@ -57,7 +57,10 @@ export async function PATCH(
     }
 
     // Check if user has permission (admin or reviewer of the org)
-    const orgId = application.openings.org_id;
+    const orgId = Array.isArray(application.openings) 
+      ? application.openings[0]?.org_id  // if array, get first case
+      : application.openings.org_id;     // otherwise, direct access
+      
     const { data: membership } = await supabase
       .from("org_members")
       .select("role")
