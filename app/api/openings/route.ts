@@ -33,7 +33,7 @@ export async function GET() {
       const org = Array.isArray(opening.orgs) ? opening.orgs[0] : opening.orgs;
       
       // Cast rubric to expected type since it's Json
-      const rubric = (opening.rubric as any as Array<{ name: string; max_score: number }>) ?? [];
+      const rubric = (opening.rubric as any as Array<{ name: string; max_val: number }>) ?? [];
 
       return {
         id: opening.id,
@@ -45,7 +45,7 @@ export async function GET() {
         closes_at: opening.closes_at,
         rubrics: rubric.map((r) => ({
           name: r.name,
-          max_val: r.max_score,
+          max_val: r.max_val,
         })),
       };
     });

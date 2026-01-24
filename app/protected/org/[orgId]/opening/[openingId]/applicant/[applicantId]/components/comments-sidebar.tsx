@@ -46,7 +46,6 @@ export function CommentsSidebar({
   // Skills State
   const [scores, setScores] = useState<Record<string, number>>({});
   const [savingScore, setSavingScore] = useState(false);
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch rubrics for the opening
   useEffect(() => {
@@ -102,7 +101,7 @@ export function CommentsSidebar({
       const res = await fetch(`/api/applications/${applicantId}/reviews`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: newComment }),
+        body: JSON.stringify({ notes: newComment }),
       });
 
       if (res.ok || res.status === 404) {
@@ -129,46 +128,32 @@ export function CommentsSidebar({
     }
 
     setScores(newScores);
-    debouncedSaveScore(newScores);
   };
 
-  const debouncedSaveScore = (currentScores: Record<string, number>) => {
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-
+  const handleSaveScore = async () => {
     setSavingScore(true);
-    saveTimeoutRef.current = setTimeout(async () => {
-      const values = Object.values(currentScores);
-      const total = values.reduce((a, b) => a + b, 0);
-      const average =
-        values.length > 0 ? (total / values.length).toFixed(1) : 0;
+    const values = Object.values(scores);
+    const total = values.reduce((a, b) => a + b, 0);
+    
+    try {
+      const res = await fetch(`/api/applications/${applicantId}/reviews`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ score: total }),
+      });
 
-      try {
-        // Mock API call to save score
-        const res = await fetch(`/api/applications/${applicantId}`, {
-          method: "PUT", // Assuming PUT to update application
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ score: average }),
-        });
-
-        if (!res.ok && res.status !== 404) {
-          console.warn("Failed to save score");
-        }
-      } catch (e) {
-        console.error("Error saving score", e);
-      } finally {
-        setSavingScore(false);
+      if (!res.ok) {
+        console.warn("Failed to save score");
       }
-    }, 1000); // 1 second debounce
+    } catch (e) {
+      console.error("Error saving score", e);
+    } finally {
+      setSavingScore(false);
+    }
   };
 
-  const totalScoreAverage = (() => {
-    const values = Object.values(scores);
-    if (values.length === 0) return 0;
-    const sum = values.reduce((a, b) => a + b, 0);
-    return (sum / values.length).toFixed(1);
-  })();
+  const totalScore = Object.values(scores).reduce((a, b) => a + b, 0);
+  const maxTotalScore = rubrics.reduce((a, b) => a + b.max_val, 0);
 
   return (
     <div className="w-[350px] border-l h-full flex flex-col bg-background relative">
@@ -320,20 +305,33 @@ export function CommentsSidebar({
                 )}
               </div>
 
-              <div className="mt-8 pt-4 border-t flex justify-between items-center">
-                <span className="font-semibold text-sm">Total Score:</span>
-                <div className="flex items-center gap-2">
-                  {savingScore && (
-                    <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
-                  )}
-                  <span className="font-semibold text-sm text-foreground">
-                    {totalScoreAverage}
-                  </span>
-                  <span className="text-muted-foreground text-sm font-medium">
-                    {" "}
-                    / 10
-                  </span>
+              <div className="mt-8 pt-4 border-t">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="font-semibold text-sm">Total Score:</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-sm text-foreground">
+                      {totalScore}
+                    </span>
+                    <span className="text-muted-foreground text-sm font-medium">
+                      {" "}
+                      / {maxTotalScore}
+                    </span>
+                  </div>
                 </div>
+                <button 
+                    onClick={handleSaveScore}
+                    disabled={savingScore}
+                    className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                >
+                    {savingScore ? (
+                        <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Saving...
+                        </>
+                    ) : (
+                        "Submit Score"
+                    )}
+                </button>
               </div>
             </div>
 

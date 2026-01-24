@@ -1,43 +1,75 @@
 import { createClient } from "@/lib/supabase/server";
-import type { NextRequest } from "next/server";
-import { Constants } from "@/types/supabase";
+import { type NextRequest, NextResponse } from "next/server";
 
-const VALID_SCORES = Constants.public.Enums.score;
+export async function GET(
+  request: NextRequest,
+  props: { params: Promise<{ applicationId: string }> },
+) {
+  const params = await props.params;
+  try {
+    const supabase = await createClient();
+    const { applicationId } = params;
+
+    const { data: reviews, error } = await supabase
+      .from("application_reviews")
+      .select(
+        `
+        id,
+        score,
+        notes,
+        created_at,
+        reviewer:users!reviewer_id(name)
+      `,
+      )
+      .eq("application_id", applicationId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    // Map to comment format expected by sidebar
+    const comments = reviews.map((r) => ({
+      id: r.id,
+      content: r.notes || "",
+      createdAt: r.created_at,
+      userName: (r.reviewer as any)?.name || "Unknown",
+      score: r.score,
+    })).filter(c => c.content); // Only return reviews with notes as comments? Or return all? The sidebar logic seems to treat them as comments. Let's return all but empty notes might look weird.
+
+    return NextResponse.json(comments);
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Internal Server Error" },
+      { status: 500 },
+    );
+  }
+}
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ applicationId: string }> },
+  props: { params: Promise<{ applicationId: string }> },
 ) {
+  const params = await props.params;
   try {
-    // Extract applicationId from route params
-    const { applicationId } = await params;
+    const { applicationId } = params;
 
     // Parse JSON body
-    let body: { score?: string; notes?: string };
+    let body: { score?: number | string; notes?: string; content?: string };
     try {
       body = await request.json();
     } catch {
-      return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
-        status: 400,
-      });
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
+
+    // Map content to notes if provided (for compatibility)
+    const notes = body.notes || body.content;
+    const scoreVal = body.score ? Number(body.score) : undefined;
 
     // Validate at least one of score/notes is provided
-    if (!body.score && !body.notes) {
-      return new Response(
-        JSON.stringify({
-          error: "At least one of score or notes must be provided",
-        }),
-        { status: 400 },
-      );
-    }
-
-    // Validate score against enum if provided
-    if (body.score && !VALID_SCORES.includes(body.score as any)) {
-      return new Response(
-        JSON.stringify({
-          error: `Invalid score. Must be one of: ${VALID_SCORES.join(", ")}`,
-        }),
+    if (scoreVal === undefined && !notes) {
+      return NextResponse.json(
+        { error: "At least one of score or notes must be provided" },
         { status: 400 },
       );
     }
@@ -49,22 +81,18 @@ export async function POST(
       error: authError,
     } = await supabase.auth.getUser();
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-      });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Verify application exists and get opening_id
+    // Verify application exists and get opening_id (for org check)
     const { data: application, error: appError } = await supabase
       .from("applications")
-      .select("id, opening_id, openings!inner(org_id)")
+      .select("id, openings!inner(org_id)")
       .eq("id", applicationId)
       .single();
 
     if (appError || !application) {
-      return new Response(JSON.stringify({ error: "Application not found" }), {
-        status: 404,
-      });
+      return NextResponse.json({ error: "Application not found" }, { status: 404 });
     }
 
     // Get org_id from opening
@@ -79,51 +107,59 @@ export async function POST(
       .single();
 
     if (memberError || !membership) {
-      return new Response(JSON.stringify({ error: "Forbidden" }), {
-        status: 403,
-      });
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Check for existing review
-    const { data: existingReview, error: checkError } = await supabase
+    // UPSERT Review
+    // We want to merge updates. If a review exists, we update provided fields.
+    // However, Supabase upsert requires a complete record or it replaces?
+    // Actually, upsert works by Primary Key or Unique Constraint.
+    // 'application_reviews' usually doesn't have a unique constraint on (app_id, reviewer_id) unless we added one. 
+    // The previous code did a check for existence.
+    // Let's check if there is an existing review ID first to be safe and do an UPDATE, or INSERT if not.
+    
+     const { data: existingReview } = await supabase
       .from("application_reviews")
       .select("id")
       .eq("application_id", applicationId)
       .eq("reviewer_id", user.id)
       .single();
 
+    let result;
     if (existingReview) {
-      return new Response(
-        JSON.stringify({ error: "Review already exists for this application" }),
-        { status: 409 },
-      );
+        // Update
+        const updates: any = {};
+        if (scoreVal !== undefined) updates.score = scoreVal;
+        if (notes !== undefined) updates.notes = notes;
+        
+        result = await supabase
+            .from("application_reviews")
+            .update(updates)
+            .eq("id", existingReview.id)
+            .select()
+            .single();
+    } else {
+        // Insert
+        result = await supabase
+            .from("application_reviews")
+            .insert({
+                application_id: applicationId,
+                reviewer_id: user.id,
+                score: scoreVal !== undefined ? scoreVal : null,
+                notes: notes || null
+            })
+            .select()
+            .single();
     }
 
-    // Insert review with reviewer_id = user.id
-    const { data: review, error: insertError } = await supabase
-      .from("application_reviews")
-      .insert({
-        application_id: applicationId,
-        reviewer_id: user.id,
-        score: body.score || null,
-        notes: body.notes || null,
-      })
-      .select()
-      .single();
-
-    if (insertError) {
-      return new Response(JSON.stringify({ error: insertError.message }), {
-        status: 500,
-      });
+    if (result.error) {
+      return NextResponse.json({ error: result.error.message }, { status: 500 });
     }
 
-    // Return 201 with created review
-    return new Response(JSON.stringify(review), { status: 201 });
+    return NextResponse.json(result.data, { status: 201 });
   } catch (err) {
-    return new Response(
-      JSON.stringify({
-        error: err instanceof Error ? err.message : "Unknown error",
-      }),
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Unknown error" },
       { status: 500 },
     );
   }
