@@ -36,6 +36,17 @@ export interface OpeningLookupResult {
   org_id: string;
 }
 
+export interface UserResult {
+  id: string;
+  net_id: string;
+  name: string;
+}
+
+export interface UploadResult {
+  successCount: number;
+  errors: ProcessingError[];
+}
+
 // =============================================================================
 // VALIDATION FUNCTIONS
 // =============================================================================
@@ -160,32 +171,81 @@ export function buildInterviewRecord(
 // =============================================================================
 
 /**
- * Looks up a user by their netid.
- *
- * HOW TO MODIFY:
- * - Change table name if using different table
- * - Change column name if using different field for netid
- * - Add additional user data to select() if needed
- *
- * @param supabase - Supabase client
- * @param netid - User's netid
- * @returns User object or null if not found
+ * Looks up a user by their netid in the users table.
  */
 export async function lookupUserByNetId(
   supabase: SupabaseClient,
   netid: string,
-): Promise<UserLookupResult | null> {
+): Promise<UserResult | null> {
   const { data: user, error } = await supabase
     .from("users")
-    .select("id, net_id")
+    .select("id, net_id, name")
     .eq("net_id", netid)
-    .single();
+    .maybeSingle();
 
   if (error || !user) {
     return null;
   }
 
   return user;
+}
+
+/**
+ * Looks up an applicant by their netid in the applicants table.
+ */
+export async function lookupApplicantByNetId(
+  supabase: SupabaseClient,
+  netid: string,
+): Promise<UserResult | null> {
+  const { data: applicant, error } = await supabase
+    .from("applicants")
+    .select("id, net_id, name")
+    .eq("net_id", netid)
+    .maybeSingle();
+
+  if (error || !applicant) {
+    return null;
+  }
+
+  return applicant;
+}
+
+/**
+ * Ensures an applicant exists and returns their record.
+ */
+export async function ensureApplicant(
+  supabase: SupabaseClient,
+  netid: string,
+  name: string,
+): Promise<UserResult> {
+  // 1. Try lookup first
+  const existing = await lookupApplicantByNetId(supabase, netid);
+  if (existing) {
+    // Optionally update name if it's different/placeholder
+    if (existing.name === "-" && name !== "-") {
+      const { data: updated, error: updateError } = await supabase
+        .from("applicants")
+        .update({ name })
+        .eq("id", existing.id)
+        .select()
+        .single();
+      if (!updateError && updated) return updated;
+    }
+    return existing;
+  }
+
+  // 2. Insert if not found
+  const { data: applicant, error } = await supabase
+    .from("applicants")
+    .insert({ net_id: netid, name })
+    .select()
+    .single();
+
+  if (error || !applicant) {
+    throw new Error(`Failed to create applicant: ${error?.message}`);
+  }
+
+  return applicant;
 }
 
 /**
@@ -258,25 +318,11 @@ export async function processCSVRows<T>(
   ) => T,
   defaultStatus?: string,
   tableName?: string,
-  adminClient?: SupabaseClient,
+  columnMappings?: Record<string, string>,
 ): Promise<{ records: T[]; errors: ProcessingError[] }> {
   const records: T[] = [];
   const errors: ProcessingError[] = [];
 
-  // Optimization: Pre-fetch existing applicant IDs for this opening if duplicate check is enabled
-  const existingApplicantIds = new Set<string>();
-  if (tableName) {
-    const { data: existingApps } = await supabase
-      .from(tableName)
-      .select("applicant_id")
-      .eq("opening_id", openingId);
-
-    if (existingApps) {
-      existingApps.forEach((app: { applicant_id: string }) =>
-        existingApplicantIds.add(app.applicant_id),
-      );
-    }
-  }
 
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
@@ -297,86 +343,26 @@ export async function processCSVRows<T>(
       continue;
     }
 
-    // Look up or create user
-    let user = await lookupUserByNetId(
+    // Look up or create applicant
+    let user = await lookupApplicantByNetId(
       supabase,
       row[CSV_RESERVED_COLUMNS.NETID] as string,
     );
 
-    // If user not found, create a placeholder user
+    // If applicant not found, create
     if (!user) {
-      // Check if admin client is available
-      if (!adminClient) {
+      const name = (columnMappings?.name && row[columnMappings.name]) as string || "-";
+      try {
+        user = await ensureApplicant(supabase, row[CSV_RESERVED_COLUMNS.NETID] as string, name);
+      } catch (err: any) {
         errors.push({
           row: rowNumber,
           netid: row[CSV_RESERVED_COLUMNS.NETID] as string,
-          error: `User not found and admin access is required to create new users.`,
+          error: `Failed to create applicant: ${err.message}`,
         });
         if (!VALIDATION_CONFIG.skipInvalidRows) break;
         continue;
       }
-
-      const email = `${row[CSV_RESERVED_COLUMNS.NETID]}@rice.edu`;
-      // Use a dash as placeholder for name since it's required or preferred not to be null
-      const name = "-";
-
-      // 1. Create user in auth.users using admin client
-      const { data: authUser, error: authError } =
-        await adminClient.auth.admin.createUser({
-          email: email,
-          email_confirm: true, // Auto-confirm placeholder users
-          user_metadata: {
-            net_id: row[CSV_RESERVED_COLUMNS.NETID],
-            name: name,
-          },
-        });
-
-      if (authError || !authUser.user) {
-        errors.push({
-          row: rowNumber,
-          netid: row[CSV_RESERVED_COLUMNS.NETID] as string,
-          error: `Failed to create auth user: ${authError?.message || "Unknown error"}`,
-        });
-        if (!VALIDATION_CONFIG.skipInvalidRows) break;
-        continue;
-      }
-
-      // 2. Create or update user record in public.users
-      // We use upsert here because a database trigger might have already created
-      // the user record when the auth user was created.
-      const { data: newUser, error: createError } = await supabase
-        .from("users")
-        .upsert({
-          id: authUser.user.id, // CRITICAL: Use the Auth User ID
-          net_id: row[CSV_RESERVED_COLUMNS.NETID],
-          name: name, // This is now explicitly '-'
-          email: email,
-        })
-        .select("id, net_id")
-        .single();
-
-      if (createError || !newUser) {
-        errors.push({
-          row: rowNumber,
-          netid: row[CSV_RESERVED_COLUMNS.NETID] as string,
-          error: `Failed to create public user: ${createError?.message || "Unknown error"}`,
-        });
-        if (!VALIDATION_CONFIG.skipInvalidRows) break;
-        continue;
-      }
-
-      user = newUser;
-    }
-
-    // Check for duplicate application
-    if (existingApplicantIds.has(user.id)) {
-      errors.push({
-        row: rowNumber,
-        netid: row[CSV_RESERVED_COLUMNS.NETID] as string,
-        error: ERROR_MESSAGES.DUPLICATE_APPLICATION,
-      });
-      if (!VALIDATION_CONFIG.skipInvalidRows) break;
-      continue;
     }
 
     // Extract form responses
@@ -394,6 +380,110 @@ export async function processCSVRows<T>(
   }
 
   return { records, errors };
+}
+
+/**
+ * High-level helper to process and upload CSV applications.
+ */
+export async function processAndUploadApplications(
+  supabase: SupabaseClient,
+  params: {
+    openingId: string;
+    csvData: any[];
+    columnMappings: Record<string, string>;
+    customQuestions: Array<{ id: string; text: string }>;
+    existingApplicants?: Map<string, { applicantId: string; name: string }>;
+  }
+): Promise<UploadResult> {
+  const { openingId, csvData, columnMappings, customQuestions, existingApplicants } = params;
+  const results: UploadResult = { successCount: 0, errors: [] };
+
+  for (let i = 0; i < csvData.length; i++) {
+    const row = csvData[i];
+    const rowNumber = i + 1;
+    const netid = row[columnMappings.netid];
+    let name = row[columnMappings.name];
+
+    if (!netid || !name) {
+      results.errors.push({
+        row: rowNumber,
+        error: "Missing required fields: NetID or Name"
+      });
+      continue;
+    }
+
+    try {
+      // 1. Ensure Applicant
+      let userId: string;
+
+      // Check cache first
+      if (existingApplicants?.has(netid)) {
+        const existing = existingApplicants.get(netid)!;
+        userId = existing.applicantId;
+        
+        // Optional: If existing name is "-" and new name is real, update it?
+        // logic from ensureApplicant:
+        // if (existing.name === "-" && name !== "-") { update... }
+        // We'll trust ensureApplicant logic if we think we need an update, 
+        // OR we can just skip if we don't care about name updates for existing applicants.
+        // For efficiency, let's skip the DB read if name is good or we don't assume update.
+        // But if we want perfection:
+        if (existing.name === "-" && name !== "-") {
+             // If name needs update, we call update directly or use ensureApplicant (which does a read first)
+             // calling ensureApplicant is safer but does a read.
+             // We can just call update directly since we have the ID.
+             const { error: updateError } = await supabase
+                .from("applicants")
+                .update({ name })
+                .eq("id", userId);
+             if (updateError) console.error("Error updating name:", updateError);   
+        }
+      } else {
+        // Not in our cache of "applicants for this opening".
+        // They might still exist in global 'applicants' table.
+        const user = await ensureApplicant(supabase, netid, name);
+        userId = user.id;
+      }
+
+      // 2. Build form_responses
+      const formResponses: Record<string, any> = {};
+      formResponses.name = name;
+      formResponses.netid = netid;
+      if (columnMappings.year) formResponses.year = row[columnMappings.year];
+      if (columnMappings.major) formResponses.major = row[columnMappings.major];
+
+      customQuestions.forEach((q) => {
+        if (columnMappings[q.id]) {
+          formResponses[q.text] = row[columnMappings[q.id]];
+        }
+      });
+
+      // 3. Upsert Application
+      const { error: appError } = await supabase.from("applications").upsert(
+        {
+          opening_id: openingId,
+          applicant_id: userId,
+          form_responses: formResponses,
+          status: "Applied",
+        },
+        { onConflict: "opening_id, applicant_id" }
+      );
+
+      if (appError) {
+        throw appError;
+      } else {
+        results.successCount++;
+      }
+    } catch (err: any) {
+      results.errors.push({
+        row: rowNumber,
+        netid,
+        error: err.message || "Unknown error occurred"
+      });
+    }
+  }
+
+  return results;
 }
 
 // =============================================================================
