@@ -5,10 +5,10 @@ import type { ApplicationStatus, Score } from "@/types/app";
 const statusColors: Record<ApplicationStatus, string> = {
   "No Status": "bg-gray-100 text-gray-700 border-gray-300",
   Applied: "bg-blue-100 text-blue-700 border-blue-300",
-  Interviewing: "bg-cyan-100 text-cyan-700 border-cyan-300",
+  Interviewing: "bg-transparent text-[#22D3EE] border-[#22D3EE]",
   Offer: "bg-green-100 text-green-700 border-green-300",
-  "Accepted Offer": "bg-emerald-100 text-emerald-700 border-emerald-300",
-  Rejected: "bg-red-100 text-red-700 border-red-300",
+  "Accepted Offer": "bg-[#06B6D4] text-white border-transparent",
+  Rejected: "bg-black text-white border-transparent",
 };
 
 interface StatusBadgeProps {
