@@ -50,6 +50,7 @@ export default async function OpeningOverviewPage({
       id,
       status,
       form_responses,
+      created_at,
       applicants:applicant_id (
         id,
         name,
@@ -74,6 +75,7 @@ export default async function OpeningOverviewPage({
         major: responses.major || "-",
         status: (app.status || "No Status") as ApplicationStatus,
         applicationId: app.id,
+        createdAt: app.created_at,
       };
     });
 
