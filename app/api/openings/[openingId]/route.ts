@@ -19,8 +19,15 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { title, description, application_link, closes_at, status, org_id } =
-      body;
+    const {
+      title,
+      description,
+      application_link,
+      closes_at,
+      status,
+      org_id,
+      rubric,
+    } = body;
 
     // Verify user has permission to update opening in this org
     // We need org_id to verify membership. It should be passed in body or we fetch it.
@@ -55,6 +62,7 @@ export async function PATCH(
     if (application_link !== undefined) updates.application_link = application_link?.trim() || null;
     if (closes_at !== undefined) updates.closes_at = closes_at || null;
     if (status !== undefined) updates.status = status;
+    if (rubric !== undefined) updates.rubric = rubric;
 
     const { error: updateError } = await supabase
       .from("openings")

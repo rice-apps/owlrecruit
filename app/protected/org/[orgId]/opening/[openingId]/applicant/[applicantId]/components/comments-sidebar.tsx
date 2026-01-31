@@ -1,6 +1,7 @@
 "use client";
 
 import { formatRelativeTime } from "@/lib/date-utils";
+import { RubricEditorDialog } from "@/components/rubric-editor-dialog";
 
 import { useState, useEffect } from "react";
 import {
@@ -388,9 +389,16 @@ export function CommentsSidebar({
             </div>
 
             <div className="mt-4 flex justify-end">
-              <button className="text-cyan-600 text-sm hover:underline">
-                Rubric Details
-              </button>
+              <RubricEditorDialog
+                openingId={openingId}
+                initialRubric={rubrics}
+                onSuccess={(updatedRubric) => setRubrics(updatedRubric)}
+                trigger={
+                  <button className="text-cyan-600 text-sm hover:underline">
+                    Rubric Details
+                  </button>
+                }
+              />
             </div>
           </div>
         )}
