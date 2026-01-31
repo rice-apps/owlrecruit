@@ -49,8 +49,8 @@ export default async function OpeningOverviewPage({
       `
       id,
       status,
-      created_at,
       form_responses,
+      created_at,
       applicants:applicant_id (
         id,
         name,
@@ -65,16 +65,14 @@ export default async function OpeningOverviewPage({
     .filter((app) => app.applicants !== null)
     .map((app) => {
       const applicant = Array.isArray(app.applicants) ? app.applicants[0] : app.applicants;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const responses = (app.form_responses as any) || {};
-
       return {
         id: applicant.id,
         name: applicant.name || "-",
         email: `${applicant.net_id}@rice.edu`,
         netId: applicant.net_id,
-        year: responses.year || responses.Year || "-",
-        major: responses.major || responses.Major || "-",
+        year: responses.year || "-",
+        major: responses.major || "-",
         status: (app.status || "No Status") as ApplicationStatus,
         applicationId: app.id,
         createdAt: app.created_at,
