@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 interface CommentsSidebarProps {
   applicantId: string;
   openingId: string;
+  orgId: string;
 }
 
 interface Rubric {
@@ -32,6 +33,7 @@ interface Comment {
 export function CommentsSidebar({
   applicantId,
   openingId,
+  orgId,
 }: CommentsSidebarProps) {
   const [rubrics, setRubrics] = useState<Rubric[]>([]);
   const [loadingRubrics, setLoadingRubrics] = useState(true);
@@ -53,7 +55,7 @@ export function CommentsSidebar({
     const fetchRubrics = async () => {
       setLoadingRubrics(true);
       try {
-        const res = await fetch("/api/openings");
+        const res = await fetch(`/api/org/${orgId}/openings`);
         if (res.ok) {
           const openings = await res.json();
           const currentOpening = openings.find(
@@ -85,7 +87,9 @@ export function CommentsSidebar({
 
   const fetchComments = async () => {
     try {
-      const res = await fetch(`/api/applications/${applicantId}/reviews`);
+      const res = await fetch(
+        `/api/org/${orgId}/applications/${applicantId}/reviews`,
+      );
       if (res.ok) {
         const data = await res.json();
         setComments(data.comments);
@@ -105,11 +109,14 @@ export function CommentsSidebar({
 
     setLoading(true);
     try {
-      const res = await fetch(`/api/applications/${applicantId}/reviews`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notes: newComment }),
-      });
+      const res = await fetch(
+        `/api/org/${orgId}/applications/${applicantId}/reviews`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ notes: newComment }),
+        },
+      );
 
       if (res.ok) {
         setNewComment("");
@@ -149,11 +156,14 @@ export function CommentsSidebar({
     const total = values.reduce((a, b) => a + b, 0);
 
     try {
-      const res = await fetch(`/api/applications/${applicantId}/reviews`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ score: total }),
-      });
+      const res = await fetch(
+        `/api/org/${orgId}/applications/${applicantId}/reviews`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ score: total }),
+        },
+      );
 
       if (!res.ok) {
         console.warn("Failed to save score");
