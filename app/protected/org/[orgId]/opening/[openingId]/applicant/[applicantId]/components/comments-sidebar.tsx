@@ -2,6 +2,7 @@
 
 import { formatRelativeTime } from "@/lib/date-utils";
 import { RubricEditorDialog } from "@/components/rubric-editor-dialog";
+import { useParams } from "next/navigation";
 
 import { useState, useEffect } from "react";
 import {
@@ -34,9 +35,34 @@ export function CommentsSidebar({
   applicantId,
   openingId,
 }: CommentsSidebarProps) {
+  /* eslint-disable @typescript-eslint/no-unused-vars */
+  const params = useParams();
+  const orgId = params?.orgId as string;
+  /* eslint-enable @typescript-eslint/no-unused-vars */
+
   const [rubrics, setRubrics] = useState<Rubric[]>([]);
   const [loadingRubrics, setLoadingRubrics] = useState(true);
   const [activeTab, setActiveTab] = useState<"comments" | "skills">("comments");
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const checkRole = async () => {
+      try {
+        const res = await fetch(`/api/org/${orgId}/my-role`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.role === "admin") {
+            setIsAdmin(true);
+          }
+        }
+      } catch (error) {
+        console.error("Error checking role:", error);
+      }
+    };
+    if (orgId) {
+      checkRole();
+    }
+  }, [orgId]);
 
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
@@ -388,18 +414,20 @@ export function CommentsSidebar({
               </div>
             </div>
 
-            <div className="mt-4 flex justify-end">
-              <RubricEditorDialog
-                openingId={openingId}
-                initialRubric={rubrics}
-                onSuccess={(updatedRubric) => setRubrics(updatedRubric)}
-                trigger={
-                  <button className="text-cyan-600 text-sm hover:underline">
-                    Rubric Details
-                  </button>
-                }
-              />
-            </div>
+            {isAdmin && (
+              <div className="mt-4 flex justify-end">
+                <RubricEditorDialog
+                  openingId={openingId}
+                  initialRubric={rubrics}
+                  onSuccess={(updatedRubric) => setRubrics(updatedRubric)}
+                  trigger={
+                    <button className="text-cyan-600 text-sm hover:underline">
+                      Rubric Details
+                    </button>
+                  }
+                />
+              </div>
+            )}
           </div>
         )}
       </div>
