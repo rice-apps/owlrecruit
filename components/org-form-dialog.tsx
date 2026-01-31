@@ -14,7 +14,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 
 interface OrgFormDialogProps {
   trigger?: React.ReactNode;
@@ -43,38 +42,22 @@ export function OrgFormDialog({ trigger, onSuccess }: OrgFormDialogProps) {
     setIsSubmitting(true);
 
     try {
-      const supabase = createClient();
-
-      // Get current user
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
-
-      if (authError || !user) {
-        throw new Error("You must be logged in to create an organization");
-      }
-
-      // Create the organization
-      const { data: newOrg, error: insertError } = await supabase
-        .from("orgs")
-        .insert({
+      const response = await fetch("/api/orgs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
           name: formData.name.trim(),
           description: formData.description.trim() || null,
-        })
-        .select("id")
-        .single();
-
-      if (insertError) throw insertError;
-
-      // Add the creator as an admin of the organization
-      const { error: memberError } = await supabase.from("org_members").insert({
-        user_id: user.id,
-        org_id: newOrg.id,
-        role: "admin",
+        }),
       });
 
-      if (memberError) throw memberError;
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create organization");
+      }
 
       // Reset form and close
       setFormData({ name: "", description: "" });
@@ -82,10 +65,10 @@ export function OrgFormDialog({ trigger, onSuccess }: OrgFormDialogProps) {
 
       // Callback or redirect
       if (onSuccess) {
-        onSuccess(newOrg.id);
+        onSuccess(data.id);
       } else {
         // Force a full reload to ensure the sidebar layout updates with the new organization
-        window.location.href = `/protected/org/${newOrg.id}`;
+        window.location.href = `/protected/org/${data.id}`;
       }
     } catch (err) {
       console.error("Error creating organization:", err);
