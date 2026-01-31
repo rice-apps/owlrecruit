@@ -159,7 +159,21 @@ export default function ApplicantReviewPage() {
       ) : (
         <>
           <ApplicantTabs />
-          <div className="flex-1">{renderTabContent()}</div>
+          <div className="flex gap-4">  
+              <div className="w-2/3 border-r border-gray-300 pr-4 w-2/3">{renderTabContent()}</div>
+              <div className="w-1/3">
+                  <div className="flex justify-end">
+                    <button className="px-4 py-2 bg-blue-500 text-white rounded-l-full hover:bg-blue-600">
+                      Left
+                    </button>
+                    <div className="w-px bg-white"></div>
+                    <button className="px-4 py-2 bg-blue-500 text-white rounded-r-full hover:bg-blue-600">
+                      Right
+                    </button>
+                  </div>
+              </div>
+          </div>
+          
         </>
       )}
     </div>
