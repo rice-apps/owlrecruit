@@ -74,7 +74,6 @@ export function CommentsSidebar({
 
   const [scores, setScores] = useState<Record<string, number>>({});
   const [savingScore, setSavingScore] = useState(false);
-  const [savedTotalScore, setSavedTotalScore] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchRubrics = async () => {
@@ -116,8 +115,8 @@ export function CommentsSidebar({
       if (res.ok) {
         const data = await res.json();
         setComments(data.comments);
-        if (data.myScore !== null && data.myScore !== undefined) {
-          setSavedTotalScore(data.myScore);
+        if (data.myScoreSkills) {
+          setScores(data.myScoreSkills);
         }
       } else {
         console.warn("Failed to fetch comments, API might be missing");
@@ -172,14 +171,11 @@ export function CommentsSidebar({
 
   const handleSaveScore = async () => {
     setSavingScore(true);
-    const values = Object.values(scores);
-    const total = values.reduce((a, b) => a + b, 0);
-
     try {
       const res = await fetch(`/api/applications/${applicantId}/reviews`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ score: total }),
+        body: JSON.stringify({ scoreSkills: scores }),
       });
 
       if (!res.ok) {
@@ -192,7 +188,7 @@ export function CommentsSidebar({
         setToastMessage("Score successfully saved!");
         setToastType("success");
         setShowToast(true);
-        setSavedTotalScore(total);
+        setShowToast(true);
         setTimeout(() => setShowToast(false), 3000);
       }
     } catch (e) {
@@ -378,13 +374,6 @@ export function CommentsSidebar({
               </div>
 
               <div className="mt-8 pt-4 border-t">
-                {savedTotalScore !== null && (
-                  <div className="mb-4 p-3 bg-muted/30 rounded-lg border border-border">
-                    <p className="text-sm text-foreground font-medium">
-                      Last Saved Score: {savedTotalScore} / {maxTotalScore}
-                    </p>
-                  </div>
-                )}
                 <div className="flex justify-between items-center mb-4">
                   <span className="font-semibold text-sm">Total Score:</span>
                   <div className="flex items-center gap-2">
