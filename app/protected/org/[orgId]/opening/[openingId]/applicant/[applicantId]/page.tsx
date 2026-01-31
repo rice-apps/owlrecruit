@@ -148,8 +148,9 @@ export default function ApplicantReviewPage() {
       </Button>
 
       <h1 className="text-3xl font-bold">{applicantName}</h1>
-      <h2 className="text-xl text-muted-foreground">{applicantEmail} {applicantMajor}</h2>
-      
+      <h2 className="text-xl text-muted-foreground">
+        {applicantEmail} <span className="mx-2">•</span> {applicantMajor}
+      </h2>
       {loading ? (
         <p>Loading application data...</p>
       ) : (
