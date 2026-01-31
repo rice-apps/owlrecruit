@@ -18,7 +18,8 @@ export async function GET(
         score,
         notes,
         created_at,
-        reviewer:users!reviewer_id(name)
+        reviewer:users!reviewer_id(name),
+        reviewer_id
       `,
       )
       .eq("application_id", applicationId)
@@ -35,7 +36,8 @@ export async function GET(
       createdAt: r.created_at,
       userName: (r.reviewer as any)?.name || "Unknown",
       score: r.score,
-    })).filter(c => c.content); // Only return reviews with notes as comments? Or return all? The sidebar logic seems to treat them as comments. Let's return all but empty notes might look weird.
+      reviewerId: r.reviewer_id,
+    }));
 
     return NextResponse.json(comments);
   } catch (err) {

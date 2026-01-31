@@ -25,6 +25,8 @@ interface Comment {
   content: string;
   createdAt: string;
   userName?: string;
+  score?: number;
+  reviewerId?: string;
 }
 
 export function CommentsSidebar({
@@ -42,6 +44,8 @@ export function CommentsSidebar({
   const [loading, setLoading] = useState(false);
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState<"success" | "error">("success");
 
   // Skills State
   const [scores, setScores] = useState<Record<string, number>>({});
@@ -93,6 +97,28 @@ export function CommentsSidebar({
     }
   };
 
+  useEffect(() => {
+    const fetchUserAndLoadScore = async () => {
+      try {
+        const res = await fetch("/api/auth/me");
+        if (res.ok) {
+            const { id } = await res.json();
+            if (id && comments.length > 0) {
+                const myReview = comments.find(c => c.reviewerId === id);
+                if (myReview && myReview.score !== undefined && myReview.score !== null) {
+                    setSavedTotalScore(myReview.score);
+                }
+            }
+        }
+      } catch (e) {
+        console.error("Error fetching user", e);
+      }
+    };
+    fetchUserAndLoadScore();
+  }, [comments]);
+
+  const [savedTotalScore, setSavedTotalScore] = useState<number | null>(null);
+
   const handlePostComment = async () => {
     if (!newComment.trim()) return;
 
@@ -104,14 +130,20 @@ export function CommentsSidebar({
         body: JSON.stringify({ notes: newComment }),
       });
 
-      if (res.ok || res.status === 404) {
+      if (res.ok) {
         setNewComment("");
+        setToastMessage("Comment successfully posted!");
+        setToastType("success");
         setShowToast(true);
-        if (res.ok) fetchComments();
+        fetchComments();
         setTimeout(() => setShowToast(false), 3000);
       }
     } catch (error) {
       console.error("Error posting comment:", error);
+      setToastMessage("Error posting comment.");
+      setToastType("error");
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
     } finally {
       setLoading(false);
     }
@@ -144,9 +176,23 @@ export function CommentsSidebar({
 
       if (!res.ok) {
         console.warn("Failed to save score");
+        setToastMessage("Failed to save score");
+        setToastType("error");
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+      } else {
+        setToastMessage("Score successfully saved!");
+        setToastType("success");
+        setShowToast(true);
+        fetchComments(); // Re-fetch comments to update savedTotalScore
+        setTimeout(() => setShowToast(false), 3000);
       }
     } catch (e) {
       console.error("Error saving score", e);
+      setToastMessage("Error saving score");
+      setToastType("error");
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
     } finally {
       setSavingScore(false);
     }
@@ -306,6 +352,11 @@ export function CommentsSidebar({
               </div>
 
               <div className="mt-8 pt-4 border-t">
+                {savedTotalScore !== null && (
+                    <div className="mb-4 p-3 bg-muted/30 rounded-lg border border-border">
+                        <p className="text-sm text-foreground font-medium">Last Saved Score: {savedTotalScore} / {maxTotalScore}</p>
+                    </div>
+                )}
                 <div className="flex justify-between items-center mb-4">
                   <span className="font-semibold text-sm">Total Score:</span>
                   <div className="flex items-center gap-2">
@@ -344,10 +395,15 @@ export function CommentsSidebar({
         )}
       </div>
 
-      {/* Success Popup (Toast) */}
+      {/* Toast Notification */}
       {showToast && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-neutral-900 text-white px-4 py-2 rounded-md shadow-lg text-sm flex items-center gap-2 animate-in fade-in slide-in-from-top-2 z-50">
-          <span>Comment successfully posted!</span>
+        <div
+          className={cn(
+            "absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-md shadow-lg text-sm flex items-center gap-2 animate-in fade-in slide-in-from-top-2 z-50 text-white",
+            toastType === "success" ? "bg-neutral-900" : "bg-red-600",
+          )}
+        >
+          <span>{toastMessage}</span>
           <button
             onClick={() => setShowToast(false)}
             className="ml-2 hover:opacity-80"
