@@ -64,7 +64,9 @@ export default async function OpeningOverviewPage({
   const applicants = (applications || [])
     .filter((app) => app.applicants !== null)
     .map((app) => {
-      const applicant = Array.isArray(app.applicants) ? app.applicants[0] : app.applicants;
+      const applicant = Array.isArray(app.applicants)
+        ? app.applicants[0]
+        : app.applicants;
       const responses = (app.form_responses as any) || {};
       return {
         id: applicant.id,
