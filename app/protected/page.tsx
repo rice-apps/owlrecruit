@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { InfoIcon } from "lucide-react";
-import UploadDialog from "./upload-modal";
 
 export default async function ProtectedPage() {
   const supabase = await createClient();
@@ -44,12 +43,9 @@ export default async function ProtectedPage() {
           applications.
         </p>
         {isAdmin && (
-          <>
-            <Button asChild size="lg" variant="secondary">
-              <Link href="/admin">Admin Dashboard</Link>
-            </Button>
-            <UploadDialog />
-          </>
+          <Button asChild size="lg" variant="secondary">
+            <Link href="/admin">Admin Dashboard</Link>
+          </Button>
         )}
       </div>
     </div>
