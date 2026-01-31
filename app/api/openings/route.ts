@@ -31,8 +31,6 @@ export async function GET() {
     const openings = data.map((opening) => {
       // Supabase returns nested relation as object for FK, but TS infers as array
       const org = Array.isArray(opening.orgs) ? opening.orgs[0] : opening.orgs;
-
-      // Cast rubric to expected type since it's Json
       const rubric =
         (opening.rubric as any as Array<{ name: string; max_val: number }>) ??
         [];
