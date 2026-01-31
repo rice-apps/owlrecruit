@@ -383,6 +383,63 @@ export async function processCSVRows<T>(
 }
 
 /**
+ * Extracts questions from CSV headers and upserts them into the questions table.
+ * 
+ * @param supabase - Supabase client
+ * @param openingId - The opening ID to associate questions with
+ * @param csvData - Array of CSV row objects
+ * @param columnMappings - Mappings for reserved columns (netid, name, etc.)
+ * @returns Number of questions upserted
+ */
+export async function upsertQuestionsFromCSV(
+  supabase: SupabaseClient,
+  openingId: string,
+  csvData: any[],
+  selectedColumns?: string[]
+): Promise<number> {
+  if (!csvData || csvData.length === 0) {
+    return 0;
+  }
+
+  // Get all column headers from the first row
+  const firstRow = csvData[0];
+  const allHeaders = Object.keys(firstRow);
+  
+  // Use selectedColumns if provided, otherwise use all headers
+  const questionHeaders = selectedColumns && selectedColumns.length > 0 ? selectedColumns : allHeaders;
+
+  if (questionHeaders.length === 0) {
+    return 0;
+  }
+
+  // Delete existing questions for this opening first (RESET IT)
+  await supabase
+    .from("questions")
+    .delete()
+    .eq("opening_id", openingId);
+
+  // Build question records with sort_order
+  const questionRecords = questionHeaders.map((questionText, index) => ({
+    opening_id: openingId,
+    question_text: questionText,
+    sort_order: index,
+    is_required: null,
+  }));
+
+  // Insert new questions
+  const { error } = await supabase
+    .from("questions")
+    .insert(questionRecords);
+
+  if (error) {
+    console.error("Error inserting questions:", error);
+    throw new Error(`Failed to insert questions: ${error.message}`);
+  }
+
+  return questionRecords.length;
+}
+
+/**
  * High-level helper to process and upload CSV applications.
  */
 export async function processAndUploadApplications(
@@ -397,6 +454,15 @@ export async function processAndUploadApplications(
 ): Promise<UploadResult> {
   const { openingId, csvData, columnMappings, customQuestions, existingApplicants } = params;
   const results: UploadResult = { successCount: 0, errors: [] };
+
+  // First, upsert questions from CSV headers into the questions table
+  // Get all CSV columns that the user selected (values from columnMappings)
+  try {
+    const selectedCsvColumns = Object.values(columnMappings).filter(col => col);
+    await upsertQuestionsFromCSV(supabase, openingId, csvData, selectedCsvColumns);
+  } catch (error: any) {
+    console.error("Failed to upsert questions:", error);
+  }
 
   for (let i = 0; i < csvData.length; i++) {
     const row = csvData[i];
