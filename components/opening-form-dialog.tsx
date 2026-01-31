@@ -14,7 +14,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ChevronDown, Plus, UserPlus, X } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 
 interface EligibleReviewer {
   id: string;
@@ -88,26 +87,17 @@ export function OpeningFormDialog({
   React.useEffect(() => {
     if (open) {
       const fetchReviewers = async () => {
-        const supabase = createClient();
-        const { data, error } = await supabase
-          .from("org_members")
-          .select(
-            `
-            id,
-            user_id,
-            role,
-            users:user_id (
-              id,
-              name,
-              email
-            )
-          `,
-          )
-          .eq("org_id", orgId)
-          .in("role", ["admin", "reviewer"]);
-
-        if (!error && data) {
+        try {
+          const response = await fetch(
+            `/api/org/${orgId}/members?role=admin,reviewer`,
+          );
+          if (!response.ok) {
+            throw new Error("Failed to fetch reviewers");
+          }
+          const data = await response.json();
           setEligibleReviewers(data);
+        } catch (error) {
+          console.error("Error fetching reviewers:", error);
         }
       };
 
@@ -127,8 +117,6 @@ export function OpeningFormDialog({
     setIsSubmitting(true);
 
     try {
-      const supabase = createClient();
-
       const payload = {
         org_id: orgId,
         title: formData.title.trim(),
@@ -140,21 +128,31 @@ export function OpeningFormDialog({
         status: formData.status,
       };
 
+      let response;
+
       if (isEditing && opening) {
         // Update existing opening
-        const { error: updateError } = await supabase
-          .from("openings")
-          .update(payload)
-          .eq("id", opening.id);
-
-        if (updateError) throw updateError;
+        response = await fetch(`/api/openings/${opening.id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
       } else {
         // Create new opening
-        const { error: insertError } = await supabase
-          .from("openings")
-          .insert(payload);
+        response = await fetch("/api/openings", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+      }
 
-        if (insertError) throw insertError;
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to save opening");
       }
 
       setOpen(false);
