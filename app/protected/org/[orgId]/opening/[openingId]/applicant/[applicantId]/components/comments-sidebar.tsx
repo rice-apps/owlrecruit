@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -25,20 +25,16 @@ interface Comment {
   content: string;
   createdAt: string;
   userName?: string;
-  score?: number;
-  reviewerId?: string;
 }
 
 export function CommentsSidebar({
   applicantId,
   openingId,
 }: CommentsSidebarProps) {
-  // Rubrics State
   const [rubrics, setRubrics] = useState<Rubric[]>([]);
   const [loadingRubrics, setLoadingRubrics] = useState(true);
   const [activeTab, setActiveTab] = useState<"comments" | "skills">("comments");
 
-  // Comments State
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(false);
@@ -47,11 +43,10 @@ export function CommentsSidebar({
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
 
-  // Skills State
   const [scores, setScores] = useState<Record<string, number>>({});
   const [savingScore, setSavingScore] = useState(false);
+  const [savedTotalScore, setSavedTotalScore] = useState<number | null>(null);
 
-  // Fetch rubrics for the opening
   useEffect(() => {
     const fetchRubrics = async () => {
       setLoadingRubrics(true);
@@ -76,19 +71,25 @@ export function CommentsSidebar({
     fetchRubrics();
   }, [openingId]);
 
-  // Fetch comments when the accordion is opened or tab is active
   useEffect(() => {
     if (activeTab === "comments" && isCommentsOpen) {
       fetchComments();
     }
   }, [isCommentsOpen, activeTab, applicantId]);
 
+  useEffect(() => {
+    fetchComments();
+  }, [applicantId]);
+
   const fetchComments = async () => {
     try {
       const res = await fetch(`/api/applications/${applicantId}/reviews`);
       if (res.ok) {
         const data = await res.json();
-        setComments(data);
+        setComments(data.comments);
+        if (data.myScore !== null && data.myScore !== undefined) {
+          setSavedTotalScore(data.myScore);
+        }
       } else {
         console.warn("Failed to fetch comments, API might be missing");
       }
@@ -96,28 +97,6 @@ export function CommentsSidebar({
       console.error("Error fetching comments:", error);
     }
   };
-
-  useEffect(() => {
-    const fetchUserAndLoadScore = async () => {
-      try {
-        const res = await fetch("/api/auth/me");
-        if (res.ok) {
-            const { id } = await res.json();
-            if (id && comments.length > 0) {
-                const myReview = comments.find(c => c.reviewerId === id);
-                if (myReview && myReview.score !== undefined && myReview.score !== null) {
-                    setSavedTotalScore(myReview.score);
-                }
-            }
-        }
-      } catch (e) {
-        console.error("Error fetching user", e);
-      }
-    };
-    fetchUserAndLoadScore();
-  }, [comments]);
-
-  const [savedTotalScore, setSavedTotalScore] = useState<number | null>(null);
 
   const handlePostComment = async () => {
     if (!newComment.trim()) return;
@@ -166,7 +145,7 @@ export function CommentsSidebar({
     setSavingScore(true);
     const values = Object.values(scores);
     const total = values.reduce((a, b) => a + b, 0);
-    
+
     try {
       const res = await fetch(`/api/applications/${applicantId}/reviews`, {
         method: "POST",
@@ -184,7 +163,7 @@ export function CommentsSidebar({
         setToastMessage("Score successfully saved!");
         setToastType("success");
         setShowToast(true);
-        fetchComments(); // Re-fetch comments to update savedTotalScore
+        setSavedTotalScore(total);
         setTimeout(() => setShowToast(false), 3000);
       }
     } catch (e) {
@@ -203,7 +182,6 @@ export function CommentsSidebar({
 
   return (
     <div className="w-[350px] border-l h-full flex flex-col bg-background relative">
-      {/* Tab Toggle / Actions Header */}
       <div className="flex items-center justify-end p-2 gap-2 border-b">
         <div className="flex bg-muted/50 rounded-lg p-1">
           <button
@@ -285,6 +263,7 @@ export function CommentsSidebar({
                         >
                           <p className="text-foreground">{comment.content}</p>
                           <span className="text-xs text-muted-foreground block mt-1">
+                            {comment.userName && `${comment.userName} - `}
                             {comment.createdAt
                               ? new Date(comment.createdAt).toLocaleDateString()
                               : "Just now"}
@@ -353,9 +332,11 @@ export function CommentsSidebar({
 
               <div className="mt-8 pt-4 border-t">
                 {savedTotalScore !== null && (
-                    <div className="mb-4 p-3 bg-muted/30 rounded-lg border border-border">
-                        <p className="text-sm text-foreground font-medium">Last Saved Score: {savedTotalScore} / {maxTotalScore}</p>
-                    </div>
+                  <div className="mb-4 p-3 bg-muted/30 rounded-lg border border-border">
+                    <p className="text-sm text-foreground font-medium">
+                      Last Saved Score: {savedTotalScore} / {maxTotalScore}
+                    </p>
+                  </div>
                 )}
                 <div className="flex justify-between items-center mb-4">
                   <span className="font-semibold text-sm">Total Score:</span>
@@ -369,19 +350,19 @@ export function CommentsSidebar({
                     </span>
                   </div>
                 </div>
-                <button 
-                    onClick={handleSaveScore}
-                    disabled={savingScore}
-                    className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                <button
+                  onClick={handleSaveScore}
+                  disabled={savingScore}
+                  className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
                 >
-                    {savingScore ? (
-                        <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Saving...
-                        </>
-                    ) : (
-                        "Submit Score"
-                    )}
+                  {savingScore ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Submit Score"
+                  )}
                 </button>
               </div>
             </div>
@@ -395,7 +376,6 @@ export function CommentsSidebar({
         )}
       </div>
 
-      {/* Toast Notification */}
       {showToast && (
         <div
           className={cn(

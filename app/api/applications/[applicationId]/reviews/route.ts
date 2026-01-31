@@ -10,36 +10,52 @@ export async function GET(
     const supabase = await createClient();
     const { applicationId } = params;
 
-    const { data: reviews, error } = await supabase
-      .from("application_reviews")
+    const { data: comments, error: commentsError } = await supabase
+      .from("comments")
       .select(
         `
         id,
-        score,
-        notes,
+        content,
         created_at,
-        reviewer:users!reviewer_id(name),
-        reviewer_id
+        user:users!user_id(name)
       `,
       )
       .eq("application_id", applicationId)
       .order("created_at", { ascending: false });
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (commentsError) {
+      return NextResponse.json(
+        { error: commentsError.message },
+        { status: 500 },
+      );
     }
 
-    // Map to comment format expected by sidebar
-    const comments = reviews.map((r) => ({
-      id: r.id,
-      content: r.notes || "",
-      createdAt: r.created_at,
-      userName: (r.reviewer as any)?.name || "Unknown",
-      score: r.score,
-      reviewerId: r.reviewer_id,
+    const formattedComments = comments.map((c) => ({
+      id: c.id,
+      content: c.content,
+      createdAt: c.created_at,
+      userName: (c.user as any)?.name || "Unknown",
     }));
 
-    return NextResponse.json(comments);
+    let myScore: number | null = null;
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user) {
+      const { data: myReview } = await supabase
+        .from("application_reviews")
+        .select("score")
+        .eq("application_id", applicationId)
+        .eq("reviewer_id", user.id)
+        .single();
+
+      if (myReview?.score !== undefined) {
+        myScore = myReview.score;
+      }
+    }
+
+    return NextResponse.json({ comments: formattedComments, myScore });
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Internal Server Error" },
@@ -56,7 +72,6 @@ export async function POST(
   try {
     const { applicationId } = params;
 
-    // Parse JSON body
     let body: { score?: number | string; notes?: string; content?: string };
     try {
       body = await request.json();
@@ -64,19 +79,16 @@ export async function POST(
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
-    // Map content to notes if provided (for compatibility)
-    const notes = body.notes || body.content;
+    const commentContent = body.notes || body.content;
     const scoreVal = body.score ? Number(body.score) : undefined;
 
-    // Validate at least one of score/notes is provided
-    if (scoreVal === undefined && !notes) {
+    if (scoreVal === undefined && !commentContent) {
       return NextResponse.json(
-        { error: "At least one of score or notes must be provided" },
+        { error: "At least one of score or notes/content must be provided" },
         { status: 400 },
       );
     }
 
-    // Authenticate user
     const supabase = await createClient();
     const {
       data: { user },
@@ -86,7 +98,6 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Verify application exists and get opening_id (for org check)
     const { data: application, error: appError } = await supabase
       .from("applications")
       .select("id, openings!inner(org_id)")
@@ -94,13 +105,14 @@ export async function POST(
       .single();
 
     if (appError || !application) {
-      return NextResponse.json({ error: "Application not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Application not found" },
+        { status: 404 },
+      );
     }
 
-    // Get org_id from opening
     const orgId = (application.openings as any).org_id;
 
-    // Verify user is org member
     const { data: membership, error: memberError } = await supabase
       .from("org_members")
       .select("role")
@@ -112,53 +124,66 @@ export async function POST(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // UPSERT Review
-    // We want to merge updates. If a review exists, we update provided fields.
-    // However, Supabase upsert requires a complete record or it replaces?
-    // Actually, upsert works by Primary Key or Unique Constraint.
-    // 'application_reviews' usually doesn't have a unique constraint on (app_id, reviewer_id) unless we added one. 
-    // The previous code did a check for existence.
-    // Let's check if there is an existing review ID first to be safe and do an UPDATE, or INSERT if not.
-    
-     const { data: existingReview } = await supabase
-      .from("application_reviews")
-      .select("id")
-      .eq("application_id", applicationId)
-      .eq("reviewer_id", user.id)
-      .single();
+    const results: { comment?: any; review?: any } = {};
 
-    let result;
-    if (existingReview) {
-        // Update
-        const updates: any = {};
-        if (scoreVal !== undefined) updates.score = scoreVal;
-        if (notes !== undefined) updates.notes = notes;
-        
-        result = await supabase
-            .from("application_reviews")
-            .update(updates)
-            .eq("id", existingReview.id)
-            .select()
-            .single();
-    } else {
-        // Insert
-        result = await supabase
-            .from("application_reviews")
-            .insert({
-                application_id: applicationId,
-                reviewer_id: user.id,
-                score: scoreVal !== undefined ? scoreVal : null,
-                notes: notes || null
-            })
-            .select()
-            .single();
+    if (commentContent) {
+      const { data: comment, error: commentError } = await supabase
+        .from("comments")
+        .insert({
+          application_id: applicationId,
+          user_id: user.id,
+          content: commentContent,
+        })
+        .select()
+        .single();
+
+      if (commentError) {
+        return NextResponse.json(
+          { error: commentError.message },
+          { status: 500 },
+        );
+      }
+      results.comment = comment;
     }
 
-    if (result.error) {
-      return NextResponse.json({ error: result.error.message }, { status: 500 });
+    if (scoreVal !== undefined) {
+      const { data: existingReview } = await supabase
+        .from("application_reviews")
+        .select("id")
+        .eq("application_id", applicationId)
+        .eq("reviewer_id", user.id)
+        .single();
+
+      let reviewResult;
+      if (existingReview) {
+        reviewResult = await supabase
+          .from("application_reviews")
+          .update({ score: scoreVal })
+          .eq("id", existingReview.id)
+          .select()
+          .single();
+      } else {
+        reviewResult = await supabase
+          .from("application_reviews")
+          .insert({
+            application_id: applicationId,
+            reviewer_id: user.id,
+            score: scoreVal,
+          })
+          .select()
+          .single();
+      }
+
+      if (reviewResult.error) {
+        return NextResponse.json(
+          { error: reviewResult.error.message },
+          { status: 500 },
+        );
+      }
+      results.review = reviewResult.data;
     }
 
-    return NextResponse.json(result.data, { status: 201 });
+    return NextResponse.json(results, { status: 201 });
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Unknown error" },
