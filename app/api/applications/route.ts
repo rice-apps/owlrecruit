@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
     // ==========================================================================
     // STEP 5: Insert into Database
     // ==========================================================================
-    console.log("step 5 happening now")
+
     const { data, error } = await supabase
       .from("applications")
       .upsert(applicationRecords, { onConflict: "opening_id, applicant_id" })
