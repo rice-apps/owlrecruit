@@ -220,7 +220,10 @@ export function ApplicantsList({
               </TableRow>
             ) : (
               filteredApplicants.map((applicant) => (
-                <TableRow key={applicant.id} className="hover:bg-gray-50 border-b border-gray-100 last:border-0">
+                <TableRow
+                  key={applicant.id}
+                  className="hover:bg-gray-50 border-b border-gray-100 last:border-0"
+                >
                   <TableCell>
                     <div className="w-5 h-5 border border-gray-200 rounded-md flex items-center justify-center bg-white cursor-pointer" />
                   </TableCell>

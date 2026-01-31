@@ -104,8 +104,6 @@ export async function POST(request: NextRequest) {
       });
     }
 
-
-
     const opening = await lookupOpening(supabase, openingId);
     if (!opening) {
       return new Response(
