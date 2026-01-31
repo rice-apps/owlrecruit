@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, X, UserPlus, ChevronDown } from "lucide-react";
+import { ChevronDown, Plus, UserPlus, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 interface EligibleReviewer {
@@ -168,20 +168,6 @@ export function OpeningFormDialog({
     }
   };
 
-  const handleClose = () => {
-    setOpen(false);
-    setError(null);
-    if (!isEditing) {
-      setFormData({
-        title: "",
-        description: "",
-        application_link: "",
-        closes_at: "",
-        status: "draft",
-      });
-    }
-  };
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -270,19 +256,25 @@ export function OpeningFormDialog({
               >
                 <span className="underline decoration-gray-200">
                   {formData.closes_at
-                    ? new Date(formData.closes_at).toLocaleDateString(undefined, {
-                        weekday: "long",
-                        month: "short",
-                        day: "numeric",
-                      })
+                    ? new Date(formData.closes_at).toLocaleDateString(
+                        undefined,
+                        {
+                          weekday: "long",
+                          month: "short",
+                          day: "numeric",
+                        },
+                      )
                     : "Select date"}
                 </span>
                 <span className="underline decoration-gray-200">
                   {formData.closes_at
-                    ? new Date(formData.closes_at).toLocaleTimeString(undefined, {
-                        hour: "numeric",
-                        minute: "2-digit",
-                      })
+                    ? new Date(formData.closes_at).toLocaleTimeString(
+                        undefined,
+                        {
+                          hour: "numeric",
+                          minute: "2-digit",
+                        },
+                      )
                     : "Select time"}
                 </span>
               </div>
@@ -291,22 +283,38 @@ export function OpeningFormDialog({
                 <Input
                   id="closes_date"
                   type="date"
-                  value={formData.closes_at ? formData.closes_at.slice(0, 10) : ""}
+                  value={
+                    formData.closes_at ? formData.closes_at.slice(0, 10) : ""
+                  }
                   onChange={(e) => {
                     const date = e.target.value;
-                    const time = formData.closes_at ? formData.closes_at.slice(11, 16) : "23:59";
-                    setFormData({ ...formData, closes_at: date ? `${date}T${time}` : "" });
+                    const time = formData.closes_at
+                      ? formData.closes_at.slice(11, 16)
+                      : "23:59";
+                    setFormData({
+                      ...formData,
+                      closes_at: date ? `${date}T${time}` : "",
+                    });
                   }}
                   className="h-10 text-base w-auto"
                 />
                 <Input
                   id="closes_time"
                   type="time"
-                  value={formData.closes_at ? formData.closes_at.slice(11, 16) : "23:59"}
+                  value={
+                    formData.closes_at
+                      ? formData.closes_at.slice(11, 16)
+                      : "23:59"
+                  }
                   onChange={(e) => {
                     const time = e.target.value;
-                    const date = formData.closes_at ? formData.closes_at.slice(0, 10) : new Date().toISOString().slice(0, 10);
-                    setFormData({ ...formData, closes_at: date ? `${date}T${time}` : "" });
+                    const date = formData.closes_at
+                      ? formData.closes_at.slice(0, 10)
+                      : new Date().toISOString().slice(0, 10);
+                    setFormData({
+                      ...formData,
+                      closes_at: date ? `${date}T${time}` : "",
+                    });
                   }}
                   className="h-10 text-base w-auto"
                 />
@@ -351,7 +359,7 @@ export function OpeningFormDialog({
             <Label className="text-base font-medium uppercase text-gray-700 tracking-wide">
               Assign Reviewers
             </Label>
-            
+
             {/* Display selected reviewers as pills */}
             <div className="flex flex-wrap gap-2">
               {selectedReviewers.length > 0 ? (
@@ -372,7 +380,7 @@ export function OpeningFormDialog({
                       className="flex items-center gap-2 pl-4 pr-3 py-2 bg-white text-gray-900 rounded-full border-2 border-gray-200 hover:border-gray-300 transition-all shadow-sm hover:shadow"
                     >
                       <span className="font-medium text-sm">
-                        {Array.isArray(reviewer.users) 
+                        {Array.isArray(reviewer.users)
                           ? reviewer.users[0]?.name || reviewer.users[0]?.email
                           : reviewer.users?.name || reviewer.users?.email}
                       </span>
@@ -381,7 +389,9 @@ export function OpeningFormDialog({
                   );
                 })
               ) : (
-                <p className="text-sm text-gray-500 py-2">No reviewers assigned</p>
+                <p className="text-sm text-gray-500 py-2">
+                  No reviewers assigned
+                </p>
               )}
             </div>
 
@@ -407,7 +417,9 @@ export function OpeningFormDialog({
                     }`}
                   />
                 </Button>
-                <div className={`${isDropdownOpen ? "" : "hidden"} border rounded-lg max-h-48 overflow-y-auto`}>
+                <div
+                  className={`${isDropdownOpen ? "" : "hidden"} border rounded-lg max-h-48 overflow-y-auto`}
+                >
                   {eligibleReviewers.map((reviewer) => {
                     const isSelected = selectedReviewers.includes(
                       reviewer.user_id,

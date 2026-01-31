@@ -60,7 +60,8 @@ export function ApplicantsList({
   const [anonymousView, setAnonymousView] = React.useState(false);
   const [statusFilter, setStatusFilter] = React.useState<string>("all");
   const [sortField, setSortField] = React.useState<SortField>("name");
-  const [sortDirection, setSortDirection] = React.useState<SortDirection>("asc");
+  const [sortDirection, setSortDirection] =
+    React.useState<SortDirection>("asc");
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
