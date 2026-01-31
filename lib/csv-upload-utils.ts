@@ -383,58 +383,41 @@ export async function processCSVRows<T>(
 }
 
 /**
- * Extracts questions from CSV headers and upserts them into the questions table.
+ * Upserts questions into the questions table from form mappings.
  * 
  * @param supabase - Supabase client
  * @param openingId - The opening ID to associate questions with
- * @param csvData - Array of CSV row objects
- * @param columnMappings - Mappings for reserved columns (netid, name, etc.)
+ * @param columnMappings - Mappings for default fields (netid, name, year, major)
+ * @param customQuestions - Array of custom questions with user-specified text
  * @returns Number of questions upserted
  */
 export async function upsertQuestionsFromCSV(
   supabase: SupabaseClient,
   openingId: string,
-  csvData: any[],
-  selectedColumns?: string[]
+  columnMappings: Record<string, string>,
+  customQuestions: Array<{ id: string; text: string }>
 ): Promise<number> {
-  if (!csvData || csvData.length === 0) {
-    return 0;
-  }
+  // Delete existing questions
+  await supabase.from("questions").delete().eq("opening_id", openingId);
 
-  // Get all column headers from the first row
-  const firstRow = csvData[0];
-  const allHeaders = Object.keys(firstRow);
-  
-  // Use selectedColumns if provided, otherwise use all headers
-  const questionHeaders = selectedColumns && selectedColumns.length > 0 ? selectedColumns : allHeaders;
+  // Collect all question texts: defaults (if mapped) + custom
+  const allQuestions = [
+    ...['name', 'netid', 'year', 'major'].filter(field => columnMappings[field]),
+    ...customQuestions.map(q => q.text)
+  ];
 
-  if (questionHeaders.length === 0) {
-    return 0;
-  }
+  if (allQuestions.length === 0) return 0;
 
-  // Delete existing questions for this opening first (RESET IT)
-  await supabase
-    .from("questions")
-    .delete()
-    .eq("opening_id", openingId);
-
-  // Build question records with sort_order
-  const questionRecords = questionHeaders.map((questionText, index) => ({
+  // Build and insert question records
+  const questionRecords = allQuestions.map((text, index) => ({
     opening_id: openingId,
-    question_text: questionText,
+    question_text: text,
     sort_order: index,
     is_required: null,
   }));
 
-  // Insert new questions
-  const { error } = await supabase
-    .from("questions")
-    .insert(questionRecords);
-
-  if (error) {
-    console.error("Error inserting questions:", error);
-    throw new Error(`Failed to insert questions: ${error.message}`);
-  }
+  const { error } = await supabase.from("questions").insert(questionRecords);
+  if (error) throw new Error(`Failed to insert questions: ${error.message}`);
 
   return questionRecords.length;
 }
@@ -455,11 +438,9 @@ export async function processAndUploadApplications(
   const { openingId, csvData, columnMappings, customQuestions, existingApplicants } = params;
   const results: UploadResult = { successCount: 0, errors: [] };
 
-  // First, upsert questions from CSV headers into the questions table
-  // Get all CSV columns that the user selected (values from columnMappings)
+  // First, upsert questions into the questions table
   try {
-    const selectedCsvColumns = Object.values(columnMappings).filter(col => col);
-    await upsertQuestionsFromCSV(supabase, openingId, csvData, selectedCsvColumns);
+    await upsertQuestionsFromCSV(supabase, openingId, columnMappings, customQuestions);
   } catch (error: any) {
     console.error("Failed to upsert questions:", error);
   }
