@@ -37,7 +37,6 @@ export type Database = {
           application_id: string
           created_at: string | null
           id: string
-          notes: string | null
           reviewer_id: string
           score: Database["public"]["Enums"]["score"] | null
           updated_at: string | null
@@ -46,7 +45,6 @@ export type Database = {
           application_id: string
           created_at?: string | null
           id?: string
-          notes?: string | null
           reviewer_id: string
           score?: Database["public"]["Enums"]["score"] | null
           updated_at?: string | null
@@ -55,7 +53,6 @@ export type Database = {
           application_id?: string
           created_at?: string | null
           id?: string
-          notes?: string | null
           reviewer_id?: string
           score?: Database["public"]["Enums"]["score"] | null
           updated_at?: string | null
