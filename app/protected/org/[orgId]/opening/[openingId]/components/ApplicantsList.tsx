@@ -185,9 +185,11 @@ export function ApplicantsList({
                 className="cursor-pointer select-none hover:text-gray-900"
                 onClick={() => handleSort("email")}
               >
-                Email
+                NetID
                 <SortIcon field="email" />
               </TableHead>
+              <TableHead className="text-gray-400 font-normal">Year</TableHead>
+              <TableHead className="text-gray-400 font-normal">Major</TableHead>
               <TableHead
                 className="cursor-pointer select-none hover:text-gray-900"
                 onClick={() => handleSort("status")}
@@ -208,7 +210,7 @@ export function ApplicantsList({
             {filteredApplicants.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={7}
                   className="text-center py-8 text-gray-500"
                 >
                   {searchQuery || statusFilter !== "all"
