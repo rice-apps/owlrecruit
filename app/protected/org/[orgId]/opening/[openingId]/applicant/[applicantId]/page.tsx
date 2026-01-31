@@ -101,7 +101,6 @@ export default function ApplicantReviewPage() {
         
             {applicationData?.form_responses && typeof applicationData.form_responses === "object" && !Array.isArray(applicationData.form_responses) && (
               <div>
-                <p className="text-xl text-muted-foreground">Form Responses:</p>
                 {Object.entries(applicationData.form_responses).map(([key, value]) => (
                   <div key={key}>
                     <p>
@@ -123,7 +122,6 @@ export default function ApplicantReviewPage() {
           <div className="space-y-4">
             {applicationData?.resume_url && (
               <div>
-                <p className="text-xl text-muted-foreground">Resume:</p>
                 <ResumeViewer resumeUrl={applicationData.resume_url} />
               </div>
             )}
