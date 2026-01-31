@@ -1,5 +1,7 @@
 "use client";
 
+import { formatRelativeTime } from "@/lib/date-utils";
+
 import { useState, useEffect } from "react";
 import {
   Accordion,
@@ -244,6 +246,7 @@ export function CommentsSidebar({
               collapsible
               className="w-full"
               onValueChange={(val) => setIsCommentsOpen(val === "item-1")}
+              defaultValue="item-1"
             >
               <AccordionItem value="item-1" className="border-none">
                 <AccordionTrigger className="py-2 hover:no-underline font-semibold text-lg text-foreground">
@@ -259,15 +262,32 @@ export function CommentsSidebar({
                       comments.map((comment, i) => (
                         <div
                           key={comment.id || i}
-                          className="bg-muted/30 p-3 rounded-md text-sm border border-border"
+                          className="bg-white p-4 rounded-xl border shadow-sm"
                         >
-                          <p className="text-foreground">{comment.content}</p>
-                          <span className="text-xs text-muted-foreground block mt-1">
-                            {comment.userName && `${comment.userName} - `}
-                            {comment.createdAt
-                              ? new Date(comment.createdAt).toLocaleDateString()
-                              : "Just now"}
-                          </span>
+                          <div className="flex items-start gap-3 mb-2">
+                            {/* Avatar Placeholder */}
+                            <div className="w-8 h-8 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
+                              {/* TODO: Real avatar */}
+                              <img
+                                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                  comment.userName || "User",
+                                )}&background=random`}
+                                alt={comment.userName}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-sm text-foreground">
+                                {comment.userName || "Unknown User"}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {formatRelativeTime(comment.createdAt)}
+                              </span>
+                            </div>
+                          </div>
+                          <p className="text-sm text-foreground pl-11">
+                            {comment.content}
+                          </p>
                         </div>
                       ))
                     )}
