@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { OpeningStatusBadge } from "@/components/status-badge";
 import { OpeningTabs } from "./components/OpeningTabs";
 import { ApplicantsList } from "./components/ApplicantsList";
+import { UploadTab } from "./components/UploadTab";
 import type { ApplicationStatus } from "@/types/app";
 
 interface OpeningOverviewPageProps {
@@ -48,8 +49,9 @@ export default async function OpeningOverviewPage({
       `
       id,
       status,
+      form_responses,
       created_at,
-      users:applicant_id (
+      applicants:applicant_id (
         id,
         name,
         net_id
@@ -60,14 +62,17 @@ export default async function OpeningOverviewPage({
 
   // Transform applications to applicants list format
   const applicants = (applications || [])
-    .filter((app) => app.users !== null)
+    .filter((app) => app.applicants !== null)
     .map((app) => {
-      const user = Array.isArray(app.users) ? app.users[0] : app.users;
+      const applicant = Array.isArray(app.applicants) ? app.applicants[0] : app.applicants;
+      const responses = (app.form_responses as any) || {};
       return {
-        id: user.id,
-        name: user.name || "-",
-        email: `${user.net_id}@rice.edu`,
-        netId: user.net_id,
+        id: applicant.id,
+        name: applicant.name || "-",
+        email: `${applicant.net_id}@rice.edu`,
+        netId: applicant.net_id,
+        year: responses.year || "-",
+        major: responses.major || "-",
         status: (app.status || "No Status") as ApplicationStatus,
         applicationId: app.id,
         createdAt: app.created_at,
@@ -100,11 +105,7 @@ export default async function OpeningOverviewPage({
           </div>
         );
       case "upload":
-        return (
-          <div className="py-12 text-center text-gray-500">
-            <p>Upload functionality coming soon.</p>
-          </div>
-        );
+        return <UploadTab />;
       default:
         return null;
     }

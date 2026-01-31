@@ -40,6 +40,8 @@ interface Applicant {
   name: string;
   email: string;
   netId: string;
+  year: string;
+  major: string;
   status: ApplicationStatus;
   applicationId: string;
   createdAt: string | null;
@@ -130,7 +132,7 @@ export function ApplicantsList({
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
-            placeholder="Search applicant by name..."
+            placeholder="Search applicant by name, netid, year, major..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -170,7 +172,7 @@ export function ApplicantsList({
           <TableHeader>
             <TableRow>
               <TableHead className="w-12">
-                <input type="checkbox" className="rounded" />
+                <div className="w-5 h-5 border border-gray-200 rounded-md flex items-center justify-center bg-white cursor-pointer" />
               </TableHead>
               <TableHead
                 className="cursor-pointer select-none hover:text-gray-900"
@@ -216,22 +218,28 @@ export function ApplicantsList({
               </TableRow>
             ) : (
               filteredApplicants.map((applicant) => (
-                <TableRow key={applicant.id} className="hover:bg-gray-50">
+                <TableRow key={applicant.id} className="hover:bg-gray-50 border-b border-gray-100 last:border-0">
                   <TableCell>
-                    <input type="checkbox" className="rounded" />
+                    <div className="w-5 h-5 border border-gray-200 rounded-md flex items-center justify-center bg-white cursor-pointer" />
                   </TableCell>
                   <TableCell>
                     <Link
                       href={`/protected/org/${orgId}/opening/${openingId}/applicant/${applicant.applicationId}`}
-                      className="font-medium text-gray-900 hover:text-cyan-600"
+                      className="font-bold text-gray-900 hover:text-cyan-600"
                     >
                       {anonymousView
                         ? `Applicant ${applicant.id.slice(0, 8)}`
                         : applicant.name}
                     </Link>
                   </TableCell>
-                  <TableCell className="text-gray-500">
-                    {anonymousView ? "***@rice.edu" : applicant.email}
+                  <TableCell className="text-gray-400">
+                    {anonymousView ? "***" : applicant.netId}
+                  </TableCell>
+                  <TableCell className="text-gray-400">
+                    {applicant.year}
+                  </TableCell>
+                  <TableCell className="text-gray-400">
+                    {applicant.major}
                   </TableCell>
                   <TableCell>
                     <StatusBadge status={applicant.status} />
