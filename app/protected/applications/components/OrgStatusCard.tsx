@@ -10,7 +10,6 @@
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Enums } from "@/types/supabase";
@@ -119,117 +118,13 @@ export default function OrgStatusCard({ userId }: OrgStatusCardProps) {
         setLoading(true);
         setError(null);
 
-        const supabase = createClient();
-
-        // Fetch org memberships and applications in parallel
-        const [membershipsResult, applicationsResult] = await Promise.all([
-          supabase
-            .from("org_members")
-            .select("org_id, role, created_at")
-            .eq("user_id", userId),
-          supabase
-            .from("applications")
-            .select(
-              `
-              id,
-              opening_id,
-              status,
-              created_at,
-              openings!inner (
-                org_id,
-                title
-              )
-            `,
-            )
-            .eq("applicant_id", userId)
-            .neq("status", "Rejected"),
-        ]);
-
-        // Log the fetched data
-        console.log("Fetched org data:", {
-          membershipsResult,
-          applicationsResult,
-          userId,
-        });
-
-        if (membershipsResult.error) {
-          throw new Error(
-            `Failed to fetch memberships: ${membershipsResult.error.message}`,
-          );
-        }
-        if (applicationsResult.error) {
-          throw new Error(
-            `Failed to fetch applications: ${applicationsResult.error.message}`,
-          );
+        const response = await fetch("/api/user/org-status");
+        if (!response.ok) {
+          throw new Error("Failed to fetch organization data");
         }
 
-        const { data: memberships } = membershipsResult;
-        const { data: applications } = applicationsResult;
-
-        // Extract unique org IDs to fetch org names
-        const orgIds = new Set([
-          ...(memberships?.map((m) => m.org_id) || []),
-          // Applications get org_id from the joined openings
-          ...(applications
-            ?.map((a) => {
-              const opening = Array.isArray(a.openings)
-                ? a.openings[0]
-                : a.openings;
-              return opening?.org_id;
-            })
-            .filter(Boolean) || []),
-        ]);
-
-        // Fetch organization names
-        const orgsResult =
-          orgIds.size > 0
-            ? await supabase
-                .from("orgs")
-                .select("id, name")
-                .in("id", Array.from(orgIds))
-            : { data: [], error: null };
-
-        if (orgsResult.error) {
-          throw new Error(
-            `Failed to fetch organizations: ${orgsResult.error.message}`,
-          );
-        }
-
-        // Create lookup map for org names
-        const orgMap = new Map(
-          orgsResult.data?.map((org) => [org.id, org.name]) || [],
-        );
-
-        // Transform memberships
-        const transformedMemberships: OrgMembership[] =
-          memberships?.map((membership) => ({
-            org_id: membership.org_id,
-            role: membership.role,
-            created_at: membership.created_at,
-            org_name: orgMap.get(membership.org_id) || "Unknown Organization",
-          })) || [];
-
-        // Transform applications
-        const transformedApplications: OrgApplication[] =
-          applications?.map((application) => {
-            const opening = Array.isArray(application.openings)
-              ? application.openings[0]
-              : application.openings;
-            return {
-              org_id: opening?.org_id || "",
-              opening_id: application.opening_id,
-              status: application.status,
-              created_at: application.created_at,
-              opening_title: opening?.title || "Unknown Position",
-              org_name:
-                orgMap.get(opening?.org_id || "") || "Unknown Organization",
-            };
-          }) || [];
-
-        setOrgData({
-          memberships: transformedMemberships,
-          applications: transformedApplications,
-        });
+        const data: OrgData = await response.json();
+        setOrgData(data);
       } catch (err) {
         console.error("Error fetching org data:", err);
         setError(
