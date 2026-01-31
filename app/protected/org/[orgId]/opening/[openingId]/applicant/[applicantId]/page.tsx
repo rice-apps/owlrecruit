@@ -102,12 +102,12 @@ export default function ApplicantReviewPage() {
             {applicationData?.form_responses && typeof applicationData.form_responses === "object" && !Array.isArray(applicationData.form_responses) && (
               <div>
                 {Object.entries(applicationData.form_responses).map(([key, value]) => (
-                  <div key={key}>
+                  <div key={key} className="w-fit border-b border-gray-300">
                     <p>
                       <br/>
                       <strong>{key} </strong> 
                       <br/>
-                      <span style={{ textDecoration: 'underline', textDecorationColor: 'gray' }}>
+                      <span style={{ textDecorationColor: 'gray' }}>
                         {typeof value === "object" ? JSON.stringify(value) : String(value)}
                       </span>   
                     </p>
