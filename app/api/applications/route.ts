@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
       buildApplicationRecord,
       DEFAULT_UPLOAD_STATUS,
       "applications", // Check for duplicates in applications table
-      adminClient, // Check for users that don't exist
+      undefined, // No column mappings provided via simple API link for now
     );
 
     // Check if all rows failed
@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
 
     const { data, error } = await supabase
       .from("applications")
-      .insert(applicationRecords)
+      .upsert(applicationRecords, { onConflict: "opening_id, applicant_id" })
       .select();
 
     if (error) {

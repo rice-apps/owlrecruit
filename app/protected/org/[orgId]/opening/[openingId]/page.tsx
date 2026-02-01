@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { OpeningStatusBadge } from "@/components/status-badge";
 import { OpeningTabs } from "./components/OpeningTabs";
 import { ApplicantsList } from "./components/ApplicantsList";
+import { UploadTab } from "./components/UploadTab";
 import type { ApplicationStatus } from "@/types/app";
 
 interface OpeningOverviewPageProps {
@@ -97,6 +98,7 @@ export default async function OpeningOverviewPage({
         netId: userData.net_id || '',
         status: (app.status || "No Status") as ApplicationStatus,
         applicationId: app.id,
+        createdAt: app.created_at,
       };
     })
     .filter((app) => app !== null) as Array<{
@@ -134,11 +136,7 @@ export default async function OpeningOverviewPage({
           </div>
         );
       case "upload":
-        return (
-          <div className="py-12 text-center text-gray-500">
-            <p>Upload functionality coming soon.</p>
-          </div>
-        );
+        return <UploadTab />;
       default:
         return null;
     }

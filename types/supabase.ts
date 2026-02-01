@@ -14,32 +14,47 @@ export type Database = {
   };
   public: {
     Tables: {
+      applicants: {
+        Row: {
+          id: string;
+          name: string | null;
+          net_id: string;
+        };
+        Insert: {
+          id?: string;
+          name?: string | null;
+          net_id: string;
+        };
+        Update: {
+          id?: string;
+          name?: string | null;
+          net_id?: string;
+        };
+        Relationships: [];
+      };
       application_reviews: {
         Row: {
           application_id: string;
           created_at: string | null;
           id: string;
-          notes: string | null;
           reviewer_id: string;
-          score: Database["public"]["Enums"]["score"] | null;
+          score: number | null;
           updated_at: string | null;
         };
         Insert: {
           application_id: string;
           created_at?: string | null;
           id?: string;
-          notes?: string | null;
           reviewer_id: string;
-          score?: Database["public"]["Enums"]["score"] | null;
+          score?: number | null;
           updated_at?: string | null;
         };
         Update: {
           application_id?: string;
           created_at?: string | null;
           id?: string;
-          notes?: string | null;
           reviewer_id?: string;
-          score?: Database["public"]["Enums"]["score"] | null;
+          score?: number | null;
           updated_at?: string | null;
         };
         Relationships: [
@@ -69,6 +84,7 @@ export type Database = {
           resume_url: string | null;
           status: Database["public"]["Enums"]["status"] | null;
           updated_at: string | null;
+          users_id: string | null;
         };
         Insert: {
           applicant_id: string;
@@ -79,6 +95,7 @@ export type Database = {
           resume_url?: string | null;
           status?: Database["public"]["Enums"]["status"] | null;
           updated_at?: string | null;
+          users_id?: string | null;
         };
         Update: {
           applicant_id?: string;
@@ -89,13 +106,14 @@ export type Database = {
           resume_url?: string | null;
           status?: Database["public"]["Enums"]["status"] | null;
           updated_at?: string | null;
+          users_id?: string | null;
         };
         Relationships: [
           {
-            foreignKeyName: "applications_applicant_fkey";
+            foreignKeyName: "applications_applicant_id_fkey";
             columns: ["applicant_id"];
             isOneToOne: false;
-            referencedRelation: "users";
+            referencedRelation: "applicants";
             referencedColumns: ["id"];
           },
           {
@@ -103,6 +121,13 @@ export type Database = {
             columns: ["opening_id"];
             isOneToOne: false;
             referencedRelation: "openings";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "applications_users_id_fkey";
+            columns: ["users_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
             referencedColumns: ["id"];
           },
         ];
@@ -205,6 +230,7 @@ export type Database = {
           description: string | null;
           id: string;
           org_id: string;
+          rubric: Json[] | null;
           status: Database["public"]["Enums"]["opening_status"] | null;
           title: string;
           updated_at: string | null;
@@ -216,6 +242,7 @@ export type Database = {
           description?: string | null;
           id?: string;
           org_id: string;
+          rubric?: Json[] | null;
           status?: Database["public"]["Enums"]["opening_status"] | null;
           title: string;
           updated_at?: string | null;
@@ -227,6 +254,7 @@ export type Database = {
           description?: string | null;
           id?: string;
           org_id?: string;
+          rubric?: Json[] | null;
           status?: Database["public"]["Enums"]["opening_status"] | null;
           title?: string;
           updated_at?: string | null;
@@ -336,74 +364,6 @@ export type Database = {
           },
         ];
       };
-      review_scores: {
-        Row: {
-          id: string;
-          review_id: string;
-          rubric_id: string;
-          score: number;
-        };
-        Insert: {
-          id?: string;
-          review_id: string;
-          rubric_id: string;
-          score: number;
-        };
-        Update: {
-          id?: string;
-          review_id?: string;
-          rubric_id?: string;
-          score?: number;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "review_scores_review_fkey";
-            columns: ["review_id"];
-            isOneToOne: false;
-            referencedRelation: "application_reviews";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "review_scores_rubric_fkey";
-            columns: ["rubric_id"];
-            isOneToOne: false;
-            referencedRelation: "rubrics";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      rubrics: {
-        Row: {
-          id: string;
-          max_score: number;
-          name: string;
-          opening_id: string;
-          sort_order: number | null;
-        };
-        Insert: {
-          id?: string;
-          max_score?: number;
-          name: string;
-          opening_id: string;
-          sort_order?: number | null;
-        };
-        Update: {
-          id?: string;
-          max_score?: number;
-          name?: string;
-          opening_id?: string;
-          sort_order?: number | null;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "rubrics_opening_fkey";
-            columns: ["opening_id"];
-            isOneToOne: false;
-            referencedRelation: "openings";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
       users: {
         Row: {
           created_at: string | null;
@@ -433,10 +393,7 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      can_manage_org: { Args: { org_uuid: string }; Returns: boolean };
-      custom_access_token_hook: { Args: { event: Json }; Returns: Json };
-      is_admin_of_org: { Args: { org_uuid: string }; Returns: boolean };
-      user_is_admin_of_org: { Args: { org_uuid: string }; Returns: boolean };
+      [_ in never]: never;
     };
     Enums: {
       opening_status: "draft" | "open" | "closed";

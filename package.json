@@ -5,7 +5,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --ignore-pattern .next --ignore-pattern node_modules",
-    "format": "prettier --write '**/*.{js,ts,tsx,css,html}'"
+    "format": "prettier --write '**/*.{js,ts,tsx,css,html}'",
+    "update-types:remote": "npx supabase gen types typescript --project-id btxekxyntvyujrhtexjh > types/supabase.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -28,6 +29,7 @@
     "papaparse": "^5.5.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "supabase": "^2.74.5",
     "tailwind-merge": "^3.3.0"
   },
   "devDependencies": {
