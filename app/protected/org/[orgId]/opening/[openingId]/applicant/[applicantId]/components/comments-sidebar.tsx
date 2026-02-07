@@ -1,6 +1,7 @@
 "use client";
 
 import { formatRelativeTime } from "@/lib/date-utils";
+import { RubricEditorDialog } from "@/components/rubric-editor-dialog";
 
 import { useState, useEffect } from "react";
 import {
@@ -38,6 +39,26 @@ export function CommentsSidebar({
   const [rubrics, setRubrics] = useState<Rubric[]>([]);
   const [loadingRubrics, setLoadingRubrics] = useState(true);
   const [activeTab, setActiveTab] = useState<"comments" | "skills">("comments");
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const checkRole = async () => {
+      try {
+        const res = await fetch(`/api/org/${orgId}/my-role`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.role === "admin") {
+            setIsAdmin(true);
+          }
+        }
+      } catch (error) {
+        console.error("Error checking role:", error);
+      }
+    };
+    if (orgId) {
+      checkRole();
+    }
+  }, [orgId]);
 
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
@@ -49,7 +70,6 @@ export function CommentsSidebar({
 
   const [scores, setScores] = useState<Record<string, number>>({});
   const [savingScore, setSavingScore] = useState(false);
-  const [savedTotalScore, setSavedTotalScore] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchRubrics = async () => {
@@ -93,8 +113,8 @@ export function CommentsSidebar({
       if (res.ok) {
         const data = await res.json();
         setComments(data.comments);
-        if (data.myScore !== null && data.myScore !== undefined) {
-          setSavedTotalScore(data.myScore);
+        if (data.myScoreSkills) {
+          setScores(data.myScoreSkills);
         }
       } else {
         console.warn("Failed to fetch comments, API might be missing");
@@ -152,16 +172,13 @@ export function CommentsSidebar({
 
   const handleSaveScore = async () => {
     setSavingScore(true);
-    const values = Object.values(scores);
-    const total = values.reduce((a, b) => a + b, 0);
-
     try {
       const res = await fetch(
         `/api/org/${orgId}/applications/${applicantId}/reviews`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ score: total }),
+          body: JSON.stringify({ scoreSkills: scores }),
         },
       );
 
@@ -175,7 +192,7 @@ export function CommentsSidebar({
         setToastMessage("Score successfully saved!");
         setToastType("success");
         setShowToast(true);
-        setSavedTotalScore(total);
+        setShowToast(true);
         setTimeout(() => setShowToast(false), 3000);
       }
     } catch (e) {
@@ -361,13 +378,6 @@ export function CommentsSidebar({
               </div>
 
               <div className="mt-8 pt-4 border-t">
-                {savedTotalScore !== null && (
-                  <div className="mb-4 p-3 bg-muted/30 rounded-lg border border-border">
-                    <p className="text-sm text-foreground font-medium">
-                      Last Saved Score: {savedTotalScore} / {maxTotalScore}
-                    </p>
-                  </div>
-                )}
                 <div className="flex justify-between items-center mb-4">
                   <span className="font-semibold text-sm">Total Score:</span>
                   <div className="flex items-center gap-2">
@@ -397,11 +407,20 @@ export function CommentsSidebar({
               </div>
             </div>
 
-            <div className="mt-4 flex justify-end">
-              <button className="text-cyan-600 text-sm hover:underline">
-                Rubric Details
-              </button>
-            </div>
+            {isAdmin && (
+              <div className="mt-4 flex justify-end">
+                <RubricEditorDialog
+                  openingId={openingId}
+                  initialRubric={rubrics}
+                  onSuccess={(updatedRubric) => setRubrics(updatedRubric)}
+                  trigger={
+                    <button className="text-cyan-600 text-sm hover:underline">
+                      Rubric Details
+                    </button>
+                  }
+                />
+              </div>
+            )}
           </div>
         )}
       </div>
