@@ -410,6 +410,7 @@ export function CommentsSidebar({
             {isAdmin && (
               <div className="mt-4 flex justify-end">
                 <RubricEditorDialog
+                  orgId={orgId}
                   openingId={openingId}
                   initialRubric={rubrics}
                   onSuccess={(updatedRubric) => setRubrics(updatedRubric)}

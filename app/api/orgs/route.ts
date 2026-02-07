@@ -1,9 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
+    const adminSupabase = createAdminClient();
     const {
       data: { user },
       error: authError,
@@ -38,11 +40,13 @@ export async function POST(request: Request) {
     }
 
     // Add the creator as an admin of the organization
-    const { error: memberError } = await supabase.from("org_members").insert({
-      user_id: user.id,
-      org_id: newOrg.id,
-      role: "admin",
-    });
+    const { error: memberError } = await adminSupabase
+      .from("org_members")
+      .insert({
+        user_id: user.id,
+        org_id: newOrg.id,
+        role: "admin",
+      });
 
     if (memberError) {
       return NextResponse.json({ error: memberError.message }, { status: 500 });

@@ -19,6 +19,7 @@ interface Rubric {
 }
 
 interface RubricEditorDialogProps {
+  orgId: string;
   openingId: string;
   initialRubric: Rubric[];
   trigger: React.ReactNode;
@@ -26,6 +27,7 @@ interface RubricEditorDialogProps {
 }
 
 export function RubricEditorDialog({
+  orgId,
   openingId,
   initialRubric,
   trigger,
@@ -81,7 +83,7 @@ export function RubricEditorDialog({
 
     setIsSaving(true);
     try {
-      const res = await fetch(`/api/openings/${openingId}`, {
+      const res = await fetch(`/api/org/${orgId}/openings/${openingId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rubric }),
@@ -145,7 +147,7 @@ export function RubricEditorDialog({
                   />
                 </div>
                 <div className={index === 0 ? "pt-6" : ""}>
-                   <Button
+                  <Button
                     variant="ghost"
                     size="icon"
                     className="text-muted-foreground hover:text-destructive"

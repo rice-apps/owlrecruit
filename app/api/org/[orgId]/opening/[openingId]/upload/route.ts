@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 import {
   processAndUploadApplications,
@@ -9,8 +10,27 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ orgId: string; openingId: string }> },
 ) {
-  const { openingId } = await params;
+  const { orgId, openingId } = await params;
   const supabase = await createClient();
+  const adminSupabase = createAdminClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data: membership } = await supabase
+    .from("org_members")
+    .select("role")
+    .eq("user_id", user!.id)
+    .eq("org_id", orgId)
+    .single();
+
+  if (membership?.role !== "admin") {
+    return NextResponse.json(
+      { error: "Only admins can upload applications" },
+      { status: 403 },
+    );
+  }
 
   const body = await request.json();
   const {
@@ -40,13 +60,16 @@ export async function POST(
     );
   }
 
-  const results: UploadResult = await processAndUploadApplications(supabase, {
-    openingId,
-    csvData,
-    columnMappings,
-    customQuestions: customQuestions || [],
-    existingApplicants: existingApplicantsMap,
-  });
+  const results: UploadResult = await processAndUploadApplications(
+    adminSupabase,
+    {
+      openingId,
+      csvData,
+      columnMappings,
+      customQuestions: customQuestions || [],
+      existingApplicants: existingApplicantsMap,
+    },
+  );
 
   return NextResponse.json(results);
 }

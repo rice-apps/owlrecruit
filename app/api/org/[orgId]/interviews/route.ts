@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { NextRequest } from "next/server";
 import Papa from "papaparse";
 import { ERROR_MESSAGES } from "@/lib/csv-upload-config";
@@ -16,6 +17,26 @@ export async function POST(
   { params }: { params: Promise<{ orgId: string }> },
 ) {
   const { orgId } = await params;
+
+  const supabase = await createClient();
+  const adminSupabase = createAdminClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data: membership } = await supabase
+    .from("org_members")
+    .select("role")
+    .eq("user_id", user!.id)
+    .eq("org_id", orgId)
+    .single();
+
+  if (membership?.role !== "admin") {
+    return new Response(
+      JSON.stringify(formatErrorResponse("Only admins can upload interviews")),
+      { status: 403 },
+    );
+  }
 
   const contentType = request.headers.get("content-type");
   if (
@@ -66,8 +87,6 @@ export async function POST(
     );
   }
 
-  const supabase = await createClient();
-
   const opening = await lookupOpening(supabase, openingId);
   if (!opening) {
     return new Response(
@@ -104,7 +123,7 @@ export async function POST(
     );
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await adminSupabase
     .from("interviews")
     .insert(interviewRecords)
     .select();
