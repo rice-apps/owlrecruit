@@ -24,12 +24,14 @@ export function QuestionsTab({ openingId }: QuestionsTabProps) {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
+  const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     const fetchData = async () => {
       const supabase = createClient();
-      
+
       // Fetch questions
       const { data: questionsData, error: questionsError } = await supabase
         .from("questions")
@@ -38,19 +40,20 @@ export function QuestionsTab({ openingId }: QuestionsTabProps) {
         .order("sort_order", { ascending: true });
 
       // Fetch applications with form responses
-      const { data: applicationsData, error: applicationsError } = await supabase
-        .from("applications")
-        .select("id, form_responses")
-        .eq("opening_id", openingId);
+      const { data: applicationsData, error: applicationsError } =
+        await supabase
+          .from("applications")
+          .select("id, form_responses")
+          .eq("opening_id", openingId);
 
       if (!questionsError && questionsData) {
         setQuestions(questionsData);
       }
-      
+
       if (!applicationsError && applicationsData) {
         setApplications(applicationsData);
       }
-      
+
       setLoading(false);
     };
 
@@ -58,16 +61,21 @@ export function QuestionsTab({ openingId }: QuestionsTabProps) {
   }, [openingId]);
 
   const handleQuestionClick = (questionId: string) => {
-    setSelectedQuestionId(selectedQuestionId === questionId ? null : questionId);
+    setSelectedQuestionId(
+      selectedQuestionId === questionId ? null : questionId,
+    );
   };
 
   const getResponsesForQuestion = (questionText: string) => {
     return applications
       .map((app) => {
-        const responses = app.form_responses as Record<string, any> || {};
+        const responses = (app.form_responses as Record<string, any>) || {};
         return responses[questionText];
       })
-      .filter((response) => response !== undefined && response !== null && response !== "");
+      .filter(
+        (response) =>
+          response !== undefined && response !== null && response !== "",
+      );
   };
 
   if (loading) {
@@ -91,7 +99,7 @@ export function QuestionsTab({ openingId }: QuestionsTabProps) {
       {questions.map((question, index) => {
         const responses = getResponsesForQuestion(question.question_text);
         const isExpanded = selectedQuestionId === question.id;
-        
+
         return (
           <div key={question.id}>
             <div
@@ -117,16 +125,21 @@ export function QuestionsTab({ openingId }: QuestionsTabProps) {
                 </div>
 
                 {/* Chevron icon */}
-                <ChevronRight className={`h-5 w-5 text-gray-400 shrink-0 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                <ChevronRight
+                  className={`h-5 w-5 text-gray-400 shrink-0 transition-transform ${isExpanded ? "rotate-90" : ""}`}
+                />
               </div>
             </div>
-            
+
             {/* Responses list */}
             {isExpanded && (
               <div className="py-3 px-4 bg-gray-50/50 space-y-3">
                 {responses.length > 0 ? (
                   responses.map((response, idx) => (
-                    <div key={idx} className="py-3 px-4 bg-white/80 backdrop-blur-sm rounded-lg text-sm text-gray-800 shadow-sm hover:shadow-md transition-shadow">
+                    <div
+                      key={idx}
+                      className="py-3 px-4 bg-white/80 backdrop-blur-sm rounded-lg text-sm text-gray-800 shadow-sm hover:shadow-md transition-shadow"
+                    >
                       {response}
                     </div>
                   ))
