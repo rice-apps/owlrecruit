@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { OpeningStatusBadge } from "@/components/status-badge";
 import { OpeningTabs } from "./components/OpeningTabs";
 import { ApplicantsList } from "./components/ApplicantsList";
+import { OverviewTab } from "./components/OverviewTab";
 import { UploadTab } from "./components/UploadTab";
 import type { ApplicationStatus } from "@/types/app";
 
@@ -99,12 +100,11 @@ export default async function OpeningOverviewPage({
         );
       case "overview":
         return (
-          <div className="py-8 space-y-4">
-            <h3 className="font-semibold text-lg">Description</h3>
-            <p className="text-gray-600">
-              {openingData?.description || "No description provided."}
-            </p>
-          </div>
+          <OverviewTab
+            applicants={applicants}
+            orgId={orgId}
+            openingId={openingId}
+          />
         );
       case "upload":
         return <UploadTab />;
