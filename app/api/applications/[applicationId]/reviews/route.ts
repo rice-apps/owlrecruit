@@ -37,7 +37,7 @@ export async function GET(
       userName: (c.user as any)?.name || "Unknown",
     }));
 
-    let myScore: number | null = null;
+    let myScoreSkills: Record<string, number> | null = null;
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -45,17 +45,17 @@ export async function GET(
     if (user) {
       const { data: myReview } = await supabase
         .from("application_reviews")
-        .select("score")
+        .select("score_skills")
         .eq("application_id", applicationId)
         .eq("reviewer_id", user.id)
         .single();
 
-      if (myReview?.score !== undefined) {
-        myScore = myReview.score;
+      if (myReview?.score_skills) {
+        myScoreSkills = myReview.score_skills as Record<string, number>;
       }
     }
 
-    return NextResponse.json({ comments: formattedComments, myScore });
+    return NextResponse.json({ comments: formattedComments, myScoreSkills });
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Internal Server Error" },
@@ -72,7 +72,11 @@ export async function POST(
   try {
     const { applicationId } = params;
 
-    let body: { score?: number | string; notes?: string; content?: string };
+    let body: {
+      scoreSkills?: Record<string, number>;
+      notes?: string;
+      content?: string;
+    };
     try {
       body = await request.json();
     } catch {
@@ -80,11 +84,11 @@ export async function POST(
     }
 
     const commentContent = body.notes || body.content;
-    const scoreVal = body.score ? Number(body.score) : undefined;
+    const scoreSkills = body.scoreSkills;
 
-    if (scoreVal === undefined && !commentContent) {
+    if (!scoreSkills && !commentContent) {
       return NextResponse.json(
-        { error: "At least one of score or notes/content must be provided" },
+        { error: "At least one of scoreSkills or notes/content must be provided" },
         { status: 400 },
       );
     }
@@ -146,7 +150,7 @@ export async function POST(
       results.comment = comment;
     }
 
-    if (scoreVal !== undefined) {
+    if (scoreSkills !== undefined) {
       const { data: existingReview } = await supabase
         .from("application_reviews")
         .select("id")
@@ -158,7 +162,7 @@ export async function POST(
       if (existingReview) {
         reviewResult = await supabase
           .from("application_reviews")
-          .update({ score: scoreVal })
+          .update({ score_skills: scoreSkills })
           .eq("id", existingReview.id)
           .select()
           .single();
@@ -168,7 +172,7 @@ export async function POST(
           .insert({
             application_id: applicationId,
             reviewer_id: user.id,
-            score: scoreVal,
+            score_skills: scoreSkills,
           })
           .select()
           .single();
@@ -191,3 +195,4 @@ export async function POST(
     );
   }
 }
+
