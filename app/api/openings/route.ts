@@ -72,14 +72,8 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const {
-      org_id,
-      title,
-      description,
-      application_link,
-      closes_at,
-      status,
-    } = body;
+    const { org_id, title, description, application_link, closes_at, status } =
+      body;
 
     if (!title?.trim()) {
       return NextResponse.json(

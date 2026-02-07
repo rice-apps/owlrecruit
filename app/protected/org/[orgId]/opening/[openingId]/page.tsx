@@ -61,7 +61,7 @@ export default async function OpeningOverviewPage({
     .single();
 
   // Fetch applications with user data for this specific opening
-  const { data: applications, error: appError } = await supabase
+  const { data: applications, error: appError } = (await supabase
     .from("applications")
     .select(
       `
@@ -82,7 +82,10 @@ export default async function OpeningOverviewPage({
       )
     `,
     )
-    .eq("opening_id", openingId) as { data: ApplicationRow[] | null; error: any };
+    .eq("opening_id", openingId)) as {
+    data: ApplicationRow[] | null;
+    error: any;
+  };
 
   // Transform applications to applicants list format
   // Prefer user info if users_id is not empty, otherwise use applicant info
@@ -90,25 +93,25 @@ export default async function OpeningOverviewPage({
     .map((app) => {
       const userData = app.user || app.applicant;
       if (!userData) return null;
-      
+
       return {
         id: app.applicant_id,
-        name: userData.name || 'Unknown',
+        name: userData.name || "Unknown",
         email: app.user?.email || `${userData.net_id}@rice.edu`,
-        netId: userData.net_id || '',
+        netId: userData.net_id || "",
         status: (app.status || "No Status") as ApplicationStatus,
         applicationId: app.id,
         createdAt: app.created_at,
       };
     })
     .filter((app) => app !== null) as Array<{
-      id: any;
-      name: any;
-      email: any;
-      netId: any;
-      status: ApplicationStatus;
-      applicationId: any;
-    }>;
+    id: any;
+    name: any;
+    email: any;
+    netId: any;
+    status: ApplicationStatus;
+    applicationId: any;
+  }>;
 
   const renderTabContent = () => {
     switch (tab) {

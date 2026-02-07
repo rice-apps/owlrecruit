@@ -51,8 +51,10 @@ export async function PATCH(
 
     const updates: any = {};
     if (title !== undefined) updates.title = title.trim();
-    if (description !== undefined) updates.description = description?.trim() || null;
-    if (application_link !== undefined) updates.application_link = application_link?.trim() || null;
+    if (description !== undefined)
+      updates.description = description?.trim() || null;
+    if (application_link !== undefined)
+      updates.application_link = application_link?.trim() || null;
     if (closes_at !== undefined) updates.closes_at = closes_at || null;
     if (status !== undefined) updates.status = status;
 
