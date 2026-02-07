@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Plus, Search, Folder, Menu, ChevronRight } from "lucide-react";
+import { Plus, Search, Folder, Menu } from "lucide-react";
 import { OrgFormDialog } from "@/components/org-form-dialog";
 import type { OrgWithRole } from "@/types/app";
 import {
@@ -33,7 +33,7 @@ export function Sidebar({ orgs, user }: SidebarProps) {
       <div className="p-6 pb-8">
         <Link href="/" className="flex items-center gap-2">
           <div className="relative w-6 h-6">
-             <svg
+            <svg
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -83,7 +83,7 @@ export function Sidebar({ orgs, user }: SidebarProps) {
               : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
           )}
         >
-           {/* Using Folder/FileText as icon for Applications */}
+          {/* Using Folder/FileText as icon for Applications */}
           <Folder size={18} />
           My Applications
         </Link>
@@ -115,7 +115,7 @@ export function Sidebar({ orgs, user }: SidebarProps) {
                         : "text-gray-500 hover:text-gray-900 hover:bg-gray-50",
                     )}
                   >
-                   {/* Minimal org item - maybe just name or name + tiny icon */}
+                    {/* Minimal org item - maybe just name or name + tiny icon */}
                     <span className="truncate">{org.name}</span>
                   </Link>
                 ))}
@@ -138,16 +138,20 @@ export function Sidebar({ orgs, user }: SidebarProps) {
 
       {/* User Profile Footer */}
       <div className="p-4 border-t border-gray-100">
-         <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 overflow-hidden">
-               {/* Placeholder avatar */}
-               <span className="text-sm font-medium">{user.name.charAt(0).toUpperCase()}</span>
-            </div>
-            <div className="flex flex-col min-w-0">
-               <span className="text-sm font-medium text-gray-900 truncate">{user.name}</span>
-               <span className="text-xs text-gray-500 truncate">{user.email}</span>
-            </div>
-         </div>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 overflow-hidden">
+            {/* Placeholder avatar */}
+            <span className="text-sm font-medium">
+              {user.name.charAt(0).toUpperCase()}
+            </span>
+          </div>
+          <div className="flex flex-col min-w-0">
+            <span className="text-sm font-medium text-gray-900 truncate">
+              {user.name}
+            </span>
+            <span className="text-xs text-gray-500 truncate">{user.email}</span>
+          </div>
+        </div>
       </div>
     </aside>
   );

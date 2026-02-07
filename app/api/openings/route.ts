@@ -5,13 +5,14 @@ export async function GET() {
   try {
     const supabase = await createClient();
 
-
     const { data: openings, error: fetchError } = await supabase
       .from("openings")
-      .select(`
+      .select(
+        `
         *,
         org:orgs(name)
-      `)
+      `,
+      )
       .eq("status", "open")
       .order("created_at", { ascending: false });
 
