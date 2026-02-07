@@ -31,7 +31,8 @@ export async function GET() {
           created_at,
           openings!inner (
             org_id,
-            title
+            title,
+            closes_at
           )
         `,
         )
@@ -66,9 +67,9 @@ export async function GET() {
     const orgsResult =
       orgIds.size > 0
         ? await supabase
-            .from("orgs")
-            .select("id, name")
-            .in("id", Array.from(orgIds))
+          .from("orgs")
+          .select("id, name")
+          .in("id", Array.from(orgIds))
         : { data: [], error: null };
 
     if (orgsResult.error) {
@@ -102,6 +103,7 @@ export async function GET() {
           created_at: application.created_at,
           opening_title: opening?.title || "Unknown Position",
           org_name: orgMap.get(opening?.org_id || "") || "Unknown Organization",
+          closes_at: opening?.closes_at || null,
         };
       }) || [];
 
