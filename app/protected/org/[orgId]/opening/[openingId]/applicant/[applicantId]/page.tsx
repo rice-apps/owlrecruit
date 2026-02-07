@@ -13,6 +13,13 @@ interface ApplicationData {
   resume_url: string | null;
 }
 
+interface FormResponse {
+  Name?: string;
+  Email?: string;
+  Major?: string;
+  [key: string]: string | number | boolean | null | undefined;
+}
+
 interface ResumeViewerProps {
   resumeUrl: string | null;
 }
@@ -28,13 +35,13 @@ function ResumeViewer({ resumeUrl }: ResumeViewerProps) {
     // Format 1: https://drive.google.com/open?id=FILE_ID
     // Format 2: https://drive.google.com/file/d/FILE_ID/view
     // Format 3: https://drive.google.com/uc?id=FILE_ID
-    let fileId = '';
-    if (url.includes('/open?id=')) {
-      fileId = url.split('/open?id=')[1].split('&')[0];
-    } else if (url.includes('/file/d/')) {
-      fileId = url.split('/file/d/')[1].split('/')[0];
-    } else if (url.includes('?id=')) {
-      fileId = url.split('?id=')[1].split('&')[0];
+    let fileId = "";
+    if (url.includes("/open?id=")) {
+      fileId = url.split("/open?id=")[1].split("&")[0];
+    } else if (url.includes("/file/d/")) {
+      fileId = url.split("/file/d/")[1].split("/")[0];
+    } else if (url.includes("?id=")) {
+      fileId = url.split("?id=")[1].split("&")[0];
     }
     return `https://drive.google.com/file/d/${fileId}/preview`;
   };
@@ -62,7 +69,8 @@ export default function ApplicantReviewPage() {
   };
 
   const tab = searchParams.get("tab") || "overview";
-  const [applicationData, setApplicationData] = useState<ApplicationData | null>(null);
+  const [applicationData, setApplicationData] =
+    useState<ApplicationData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -86,9 +94,11 @@ export default function ApplicantReviewPage() {
     fetchApplicationData();
   }, [applicantId]);
 
-  const formData = typeof applicationData?.form_responses === "object" && applicationData?.form_responses 
-    ? (applicationData.form_responses as Record<string, any>) 
-    : {};
+  const formData =
+    typeof applicationData?.form_responses === "object" &&
+    applicationData?.form_responses
+      ? (applicationData.form_responses as FormResponse)
+      : {};
   const applicantName = formData["Name"] || "Unknown Applicant";
   const applicantEmail = formData["Email"] || "Unknown Email";
   const applicantMajor = formData["Major"] || "Unknown Major";
@@ -98,23 +108,28 @@ export default function ApplicantReviewPage() {
       case "submission":
         return (
           <div className="space-y-4">
-        
-            {applicationData?.form_responses && typeof applicationData.form_responses === "object" && !Array.isArray(applicationData.form_responses) && (
-              <div>
-                {Object.entries(applicationData.form_responses).map(([key, value]) => (
-                  <div key={key} className="w-fit border-b border-gray-300">
-                    <p>
-                      <br/>
-                      <strong>{key} </strong> 
-                      <br/>
-                      <span style={{ textDecorationColor: 'gray' }}>
-                        {typeof value === "object" ? JSON.stringify(value) : String(value)}
-                      </span>   
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
+            {applicationData?.form_responses &&
+              typeof applicationData.form_responses === "object" &&
+              !Array.isArray(applicationData.form_responses) && (
+                <div>
+                  {Object.entries(applicationData.form_responses).map(
+                    ([key, value]) => (
+                      <div key={key} className="w-fit border-b border-gray-300">
+                        <p>
+                          <br />
+                          <strong>{key} </strong>
+                          <br />
+                          <span style={{ textDecorationColor: "gray" }}>
+                            {typeof value === "object"
+                              ? JSON.stringify(value)
+                              : String(value)}
+                          </span>
+                        </p>
+                      </div>
+                    ),
+                  )}
+                </div>
+              )}
           </div>
         );
       case "files":
@@ -125,10 +140,14 @@ export default function ApplicantReviewPage() {
                 <ResumeViewer resumeUrl={applicationData.resume_url} />
               </div>
             )}
-          </div> 
+          </div>
         );
       case "summary":
-        return <div><p>Summary content here</p></div>;
+        return (
+          <div>
+            <p>Summary content here</p>
+          </div>
+        );
       default:
         return null;
     }
@@ -148,21 +167,21 @@ export default function ApplicantReviewPage() {
           Back to Opening
         </Button>
 
-      <h1 className="text-3xl font-bold">{applicantName}</h1>
-      <h2 className="text-xl text-muted-foreground">
-        {applicantEmail} <span className="mx-2">•</span> {applicantMajor}
-      </h2>
-      {loading ? (
-        <p>Loading application data...</p>
-      ) : (
-        <>
-          <ApplicantTabs />
-          <div className="flex gap-4">  
+        <h1 className="text-3xl font-bold">{applicantName}</h1>
+        <h2 className="text-xl text-muted-foreground">
+          {applicantEmail} <span className="mx-2">•</span> {applicantMajor}
+        </h2>
+        {loading ? (
+          <p>Loading application data...</p>
+        ) : (
+          <>
+            <ApplicantTabs />
+            <div className="flex gap-4">
               <div className="w-2/3 pr-4 w-2/3">{renderTabContent()}</div>
-          </div>
-          
-        </>
-      )}
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }

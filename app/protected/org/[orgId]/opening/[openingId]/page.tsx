@@ -24,6 +24,7 @@ interface ApplicationRow {
   id: string;
   status: string;
   applicant_id: string;
+  created_at: string | null;
   users_id: string | null;
   user: {
     id: string;
@@ -84,8 +85,12 @@ export default async function OpeningOverviewPage({
     )
     .eq("opening_id", openingId)) as {
     data: ApplicationRow[] | null;
-    error: any;
+    error: unknown;
   };
+
+  if (appError) {
+    console.error("Error fetching applications:", appError);
+  }
 
   // Transform applications to applicants list format
   // Prefer user info if users_id is not empty, otherwise use applicant info
@@ -104,14 +109,7 @@ export default async function OpeningOverviewPage({
         createdAt: app.created_at,
       };
     })
-    .filter((app) => app !== null) as Array<{
-    id: any;
-    name: any;
-    email: any;
-    netId: any;
-    status: ApplicationStatus;
-    applicationId: any;
-  }>;
+    .filter((app): app is NonNullable<typeof app> => app !== null);
 
   const renderTabContent = () => {
     switch (tab) {
