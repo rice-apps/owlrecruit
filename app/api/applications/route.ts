@@ -21,6 +21,7 @@ import {
   lookupOpening,
   formatSuccessResponse,
   formatErrorResponse,
+  upsertQuestionsFromCSV,
   type CSVRow,
 } from "@/lib/csv-upload-utils";
 
@@ -164,6 +165,14 @@ export async function POST(request: NextRequest) {
       return new Response(JSON.stringify(formatErrorResponse(error.message)), {
         status: 500,
       });
+    }
+
+    // Upsert questions from CSV headers into questions table
+    try {
+      await upsertQuestionsFromCSV(supabase, openingId, parsedData);
+    } catch (questionError) {
+      console.error("Failed to upsert questions:", questionError);
+      // Continue even if questions fail - don't block the response
     }
 
     // ==========================================================================
