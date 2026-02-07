@@ -7,6 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import { Json } from "@/types/supabase";
 import { createClient } from "@/lib/supabase/client";
 import { ApplicantTabs } from "./components/ApplicantTabs";
+import { CommentsSidebar } from "@/app/protected/org/[orgId]/opening/[openingId]/applicant/[applicantId]/components/comments-sidebar";
 
 interface ApplicationData {
   form_responses: Json;
@@ -182,6 +183,11 @@ export default function ApplicantReviewPage() {
           </>
         )}
       </div>
+      <CommentsSidebar
+        applicantId={applicantId}
+        openingId={openingId}
+        orgId={orgId}
+      />
     </div>
   );
 }

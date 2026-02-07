@@ -5,70 +5,23 @@ export async function GET() {
   try {
     const supabase = await createClient();
 
-    const { data, error } = await supabase
+    const { data: openings, error: fetchError } = await supabase
       .from("openings")
       .select(
         `
-        id,
-        title,
-        description,
-        application_link,
-        status,
-        closes_at,
-        orgs (
-          name
-        ),
-        rubric
+        *,
+        org:orgs(name)
       `,
       )
+      .eq("status", "open")
       .order("created_at", { ascending: false });
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    // Transform to flatten org name
-    const openings = data.map((opening) => {
-      // Supabase returns nested relation as object for FK, but TS infers as array
-      const org = Array.isArray(opening.orgs) ? opening.orgs[0] : opening.orgs;
-      const rubric =
-        (opening.rubric as any as Array<{ name: string; max_val: number }>) ??
-        [];
-
-      return {
-        id: opening.id,
-        org_name: org?.name ?? null,
-        title: opening.title,
-        description: opening.description,
-        application_link: opening.application_link,
-        status: opening.status,
-        closes_at: opening.closes_at,
-        rubrics: rubric.map((r) => ({
-          name: r.name,
-          max_val: r.max_val,
-        })),
-      };
-    });
-
-    return NextResponse.json(openings);
-  } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Unknown error" },
-      { status: 500 },
-    );
-  }
-}
-
-export async function POST(request: Request) {
-  try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (fetchError) {
+      console.error("Error fetching openings:", fetchError);
+      return NextResponse.json(
+        { error: "Failed to fetch openings" },
+        { status: 500 },
+      );
     }
 
     const body = await request.json();
@@ -110,13 +63,9 @@ export async function POST(request: Request) {
       .select()
       .single();
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json(data, { status: 201 });
+    return NextResponse.json(openings);
   } catch (error) {
-    console.error("Error creating opening:", error);
+    console.error("Error in openings API:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },

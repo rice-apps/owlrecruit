@@ -131,8 +131,7 @@ export function OpeningFormDialog({
       let response;
 
       if (isEditing && opening) {
-        // Update existing opening
-        response = await fetch(`/api/openings/${opening.id}`, {
+        response = await fetch(`/api/org/${orgId}/openings/${opening.id}`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
@@ -140,8 +139,7 @@ export function OpeningFormDialog({
           body: JSON.stringify(payload),
         });
       } else {
-        // Create new opening
-        response = await fetch("/api/openings", {
+        response = await fetch(`/api/org/${orgId}/openings`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
