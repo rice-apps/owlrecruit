@@ -358,11 +358,11 @@ export async function processCSVRows<T>(
           row[CSV_RESERVED_COLUMNS.NETID] as string,
           name,
         );
-      } catch (err: any) {
+      } catch (err: unknown) {
         errors.push({
           row: rowNumber,
           netid: row[CSV_RESERVED_COLUMNS.NETID] as string,
-          error: `Failed to create applicant: ${err.message}`,
+          error: `Failed to create applicant: ${err instanceof Error ? err.message : String(err)}`,
         });
         if (!VALIDATION_CONFIG.skipInvalidRows) break;
         continue;
@@ -393,7 +393,7 @@ export async function processAndUploadApplications(
   supabase: SupabaseClient,
   params: {
     openingId: string;
-    csvData: any[];
+    csvData: Record<string, unknown>[];
     columnMappings: Record<string, string>;
     customQuestions: Array<{ id: string; text: string }>;
     existingApplicants?: Map<string, { applicantId: string; name: string }>;
@@ -411,8 +411,8 @@ export async function processAndUploadApplications(
   for (let i = 0; i < csvData.length; i++) {
     const row = csvData[i];
     const rowNumber = i + 1;
-    const netid = row[columnMappings.netid];
-    let name = row[columnMappings.name];
+    const netid = row[columnMappings.netid] as string | undefined;
+    const name = row[columnMappings.name] as string | undefined;
 
     if (!netid || !name) {
       results.errors.push({
@@ -456,7 +456,7 @@ export async function processAndUploadApplications(
       }
 
       // 2. Build form_responses
-      const formResponses: Record<string, any> = {};
+      const formResponses: Record<string, unknown> = {};
       formResponses.name = name;
       formResponses.netid = netid;
       if (columnMappings.year) formResponses.year = row[columnMappings.year];
@@ -484,11 +484,11 @@ export async function processAndUploadApplications(
       } else {
         results.successCount++;
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       results.errors.push({
         row: rowNumber,
         netid,
-        error: err.message || "Unknown error occurred",
+        error: err instanceof Error ? err.message : "Unknown error occurred",
       });
     }
   }

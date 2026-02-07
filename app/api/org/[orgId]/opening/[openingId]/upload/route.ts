@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 import {
   processAndUploadApplications,
@@ -12,7 +11,6 @@ export async function POST(
 ) {
   const { orgId, openingId } = await params;
   const supabase = await createClient();
-  const adminSupabase = createAdminClient();
 
   const {
     data: { user },
@@ -60,16 +58,13 @@ export async function POST(
     );
   }
 
-  const results: UploadResult = await processAndUploadApplications(
-    adminSupabase,
-    {
-      openingId,
-      csvData,
-      columnMappings,
-      customQuestions: customQuestions || [],
-      existingApplicants: existingApplicantsMap,
-    },
-  );
+  const results: UploadResult = await processAndUploadApplications(supabase, {
+    openingId,
+    csvData,
+    columnMappings,
+    customQuestions: customQuestions || [],
+    existingApplicants: existingApplicantsMap,
+  });
 
   return NextResponse.json(results);
 }

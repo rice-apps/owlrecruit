@@ -67,7 +67,7 @@ export default async function OpeningOverviewPage({
       const applicant = Array.isArray(app.applicants)
         ? app.applicants[0]
         : app.applicants;
-      const responses = (app.form_responses as any) || {};
+      const responses = (app.form_responses as Record<string, string>) || {};
       return {
         id: applicant.id,
         name: applicant.name || "-",

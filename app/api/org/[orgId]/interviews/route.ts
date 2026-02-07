@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import type { NextRequest } from "next/server";
 import Papa from "papaparse";
 import { ERROR_MESSAGES } from "@/lib/csv-upload-config";
@@ -19,7 +18,6 @@ export async function POST(
   const { orgId } = await params;
 
   const supabase = await createClient();
-  const adminSupabase = createAdminClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -123,7 +121,7 @@ export async function POST(
     );
   }
 
-  const { data, error } = await adminSupabase
+  const { data, error } = await supabase
     .from("interviews")
     .insert(interviewRecords)
     .select();
