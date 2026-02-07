@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, SlidersHorizontal } from "lucide-react";
+import Link from "next/link";
+import { Search, SlidersHorizontal, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +16,7 @@ import {
   ApplicationCard,
   ApplicationWithDetails,
 } from "@/components/application-card";
+import { Tables } from "@/types/app";
 
 interface ApplicationsViewProps {
   initialApplications: ApplicationWithDetails[];
@@ -25,23 +27,28 @@ export function ApplicationsView({
 }: ApplicationsViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<{
-    openings: any[];
-    orgs: any[];
+    openings: (Tables<"openings"> & { org: Pick<Tables<"orgs">, "name"> })[];
+    orgs: Tables<"orgs">[];
   } | null>(null);
   const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
+    const controller = new AbortController();
     const delayDebounceFn = setTimeout(async () => {
       if (searchQuery.trim()) {
         setIsSearching(true);
         try {
           const response = await fetch(
-            `/api/search?query=${encodeURIComponent(searchQuery)}`
+            `/api/search?query=${encodeURIComponent(searchQuery)}`,
+            { signal: controller.signal }
           );
+          if (!response.ok) throw new Error("Search failed");
           const data = await response.json();
           setSearchResults(data);
-        } catch (error) {
-          console.error("Failed to fetch search results:", error);
+        } catch (error: any) {
+          if (error.name !== "AbortError") {
+            console.error("Failed to fetch search results:", error);
+          }
         } finally {
           setIsSearching(false);
         }
@@ -50,14 +57,11 @@ export function ApplicationsView({
       }
     }, 300);
 
-    return () => clearTimeout(delayDebounceFn);
+    return () => {
+      clearTimeout(delayDebounceFn);
+      controller.abort();
+    };
   }, [searchQuery]);
-
-  // Filter based on search query (local filtering of initial applications if needed, but we are switching to global search)
-  // We'll keep the local filtering for "My Applications" if the user clears the search,
-  // OR we can decide that typing in the box ALWAYS triggers global search.
-  // The prompt implies "Search organizations and all open openings", so it's a global search.
-  // We will hide "My Applications" when searching.
 
   const activeApplications = initialApplications.filter(
     (app) => app.status !== "Rejected" && app.status !== "Accepted Offer"
@@ -96,22 +100,24 @@ export function ApplicationsView({
                   <section>
                     <h2 className="text-lg font-semibold mb-4">Organizations</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                      {searchResults.orgs.map((org: any) => (
-                        <Card key={org.id} className="hover:shadow-md transition-shadow">
-                          <CardHeader className="p-4 pb-2 flex flex-row items-center gap-4 space-y-0">
-                            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-lg">
-                              {org.name.charAt(0)}
-                            </div>
-                            <div>
-                              <h3 className="font-bold text-base leading-tight">
-                                {org.name}
-                              </h3>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="p-4 pt-2">
-                             <p className="text-sm text-gray-500 line-clamp-2">{org.description || "No description provided."}</p>
-                          </CardContent>
-                        </Card>
+                      {searchResults.orgs.map((org) => (
+                        <Link href={`/protected/org/${org.id}`} key={org.id} className="block h-full"> 
+                          <Card className="hover:shadow-md transition-shadow h-full">
+                            <CardHeader className="p-4 pb-2 flex flex-row items-center gap-4 space-y-0">
+                              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-lg">
+                                {org.name.charAt(0)}
+                              </div>
+                              <div>
+                                <h3 className="font-bold text-base leading-tight">
+                                  {org.name}
+                                </h3>
+                              </div>
+                            </CardHeader>
+                            <CardContent className="p-4 pt-2">
+                              <p className="text-sm text-gray-500 line-clamp-2">{org.description || "No description provided."}</p>
+                            </CardContent>
+                          </Card>
+                        </Link>
                       ))}
                     </div>
                   </section>
@@ -122,33 +128,42 @@ export function ApplicationsView({
                   <section>
                     <h2 className="text-lg font-semibold mb-4">Openings</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                      {searchResults.openings.map((opening: any) => (
-                        <Card key={opening.id} className="flex flex-col h-full hover:shadow-md transition-shadow">
-                           <CardHeader className="p-4 pb-2 space-y-2">
-                            <div className="flex justify-between items-start">
-                                <div className="w-10 h-10 rounded-lg bg-pink-600 flex items-center justify-center text-white font-bold text-lg mb-1">
-                                {opening.org?.name?.charAt(0) || "?"}
+                      {searchResults.openings.map((opening) => (
+                         <div key={opening.id} className="h-full">
+                            <Card className="flex flex-col h-full hover:shadow-md transition-shadow">
+                              <CardHeader className="p-4 pb-2 space-y-2">
+                                <div className="flex justify-between items-start">
+                                    <div className="w-10 h-10 rounded-lg bg-pink-600 flex items-center justify-center text-white font-bold text-lg mb-1">
+                                    {opening.org?.name?.charAt(0) || "?"}
+                                    </div>
+                                    <Badge variant="secondary" className="text-xs">Open</Badge>
                                 </div>
-                                <Badge variant="secondary" className="text-xs">Open</Badge>
-                            </div>
-                            
-                            <div>
-                                <h3 className="font-bold text-base leading-tight">{opening.title}</h3>
-                                <p className="text-sm text-gray-500">{opening.org?.name}</p>
-                            </div>
-                           </CardHeader>
-                           <CardFooter className="p-4 pt-0 mt-auto border-t pt-4 text-xs text-gray-400">
-                                <span>
-                                    {opening.closes_at
-                                    ? `Due ${new Date(opening.closes_at).toLocaleDateString("en-US", {
-                                        month: "2-digit",
-                                        day: "2-digit",
-                                        year: "numeric",
-                                        })}`
-                                    : "No deadline"}
-                                </span>
-                           </CardFooter>
-                        </Card>
+                                
+                                <div>
+                                    <h3 className="font-bold text-base leading-tight">{opening.title}</h3>
+                                    <p className="text-sm text-gray-500">{opening.org?.name}</p>
+                                </div>
+                              </CardHeader>
+                              <CardFooter className="p-4 pt-0 mt-auto border-t pt-4 text-xs text-gray-400 flex justify-between items-center">
+                                    <span>
+                                        {opening.closes_at
+                                        ? `Due ${new Date(opening.closes_at).toLocaleDateString("en-US", {
+                                            month: "2-digit",
+                                            day: "2-digit",
+                                            year: "numeric",
+                                            })}`
+                                        : "No deadline"}
+                                    </span>
+                                    {opening.application_link && (
+                                      <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0 rounded-full">
+                                        <Link href={opening.application_link} target="_blank" rel="noopener noreferrer">
+                                          <ChevronRight size={16} />
+                                        </Link>
+                                      </Button>
+                                    )}
+                              </CardFooter>
+                            </Card>
+                         </div>
                       ))}
                     </div>
                   </section>
