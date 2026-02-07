@@ -39,7 +39,7 @@ export default async function OpeningOverviewPage({
   // Fetch the opening details
   const { data: openingData } = await supabase
     .from("openings")
-    .select("title, description, status, rubric")
+    .select("title, description, status")
     .eq("id", openingId)
     .single();
 
@@ -102,10 +102,8 @@ export default async function OpeningOverviewPage({
         return (
           <OverviewTab
             applicants={applicants}
+            orgId={orgId}
             openingId={openingId}
-            rubric={
-              (openingData?.rubric as { name: string; max_val: number }[]) || []
-            }
           />
         );
       case "upload":

@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { RubricEditorDialog } from "@/components/rubric-editor-dialog";
 import type { ApplicationStatus } from "@/types/app";
 
 interface Applicant {
@@ -11,15 +11,10 @@ interface Applicant {
   status: ApplicationStatus;
 }
 
-interface Rubric {
-  name: string;
-  max_val: number;
-}
-
 interface OverviewTabProps {
   applicants: Applicant[];
+  orgId: string;
   openingId: string;
-  rubric: Rubric[];
 }
 
 const STATUS_ORDER: ApplicationStatus[] = [
@@ -33,11 +28,9 @@ const STATUS_ORDER: ApplicationStatus[] = [
 
 export function OverviewTab({
   applicants,
+  orgId,
   openingId,
-  rubric: initialRubric,
 }: OverviewTabProps) {
-  const [rubric, setRubric] = useState<Rubric[]>(initialRubric);
-
   const totalSubmissions = applicants.length;
 
   const acceptedCount = useMemo(
@@ -122,16 +115,12 @@ export function OverviewTab({
       </div>
 
       {/* Rubric Settings */}
-      <RubricEditorDialog
-        openingId={openingId}
-        initialRubric={rubric}
-        onSuccess={(updatedRubric) => setRubric(updatedRubric)}
-        trigger={
-          <button className="text-cyan-600 text-sm hover:underline">
-            Rubric Settings
-          </button>
-        }
-      />
+      <Link
+        href={`/protected/org/${orgId}/opening/${openingId}/rubric`}
+        className="text-cyan-600 text-sm hover:underline inline-block"
+      >
+        Rubric Settings
+      </Link>
     </div>
   );
 }

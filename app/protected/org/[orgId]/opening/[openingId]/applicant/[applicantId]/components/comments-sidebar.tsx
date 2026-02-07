@@ -1,8 +1,7 @@
 "use client";
 
 import { formatRelativeTime } from "@/lib/date-utils";
-import { RubricEditorDialog } from "@/components/rubric-editor-dialog";
-
+import Link from "next/link";
 import { useState, useEffect } from "react";
 import {
   Accordion,
@@ -409,16 +408,12 @@ export function CommentsSidebar({
 
             {isAdmin && (
               <div className="mt-4 flex justify-end">
-                <RubricEditorDialog
-                  openingId={openingId}
-                  initialRubric={rubrics}
-                  onSuccess={(updatedRubric) => setRubrics(updatedRubric)}
-                  trigger={
-                    <button className="text-cyan-600 text-sm hover:underline">
-                      Rubric Details
-                    </button>
-                  }
-                />
+                <Link
+                  href={`/protected/org/${orgId}/opening/${openingId}/rubric`}
+                  className="text-cyan-600 text-sm hover:underline"
+                >
+                  Rubric Settings
+                </Link>
               </div>
             )}
           </div>
