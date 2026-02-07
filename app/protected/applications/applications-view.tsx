@@ -1,9 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, SlidersHorizontal } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   ApplicationCard,
   ApplicationWithDetails,
@@ -17,20 +24,47 @@ export function ApplicationsView({
   initialApplications,
 }: ApplicationsViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<{
+    openings: any[];
+    orgs: any[];
+  } | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
 
-  // Filter based on search query
-  const filteredApplications = initialApplications.filter(
-    (app) =>
-      app.opening.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      app.opening.org.name.toLowerCase().includes(searchQuery.toLowerCase()),
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (searchQuery.trim()) {
+        setIsSearching(true);
+        try {
+          const response = await fetch(
+            `/api/search?query=${encodeURIComponent(searchQuery)}`
+          );
+          const data = await response.json();
+          setSearchResults(data);
+        } catch (error) {
+          console.error("Failed to fetch search results:", error);
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setSearchResults(null);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
+  // Filter based on search query (local filtering of initial applications if needed, but we are switching to global search)
+  // We'll keep the local filtering for "My Applications" if the user clears the search,
+  // OR we can decide that typing in the box ALWAYS triggers global search.
+  // The prompt implies "Search organizations and all open openings", so it's a global search.
+  // We will hide "My Applications" when searching.
+
+  const activeApplications = initialApplications.filter(
+    (app) => app.status !== "Rejected" && app.status !== "Accepted Offer"
   );
 
-  const activeApplications = filteredApplications.filter(
-    (app) => app.status !== "Rejected" && app.status !== "Accepted Offer",
-  );
-
-  const pastApplications = filteredApplications.filter(
-    (app) => app.status === "Rejected",
+  const pastApplications = initialApplications.filter(
+    (app) => app.status === "Rejected"
   );
 
   return (
@@ -50,34 +84,117 @@ export function ApplicationsView({
       </div>
 
       <div className="space-y-8">
-        {/* My Applications Section */}
-        <section>
-          <h2 className="text-lg font-semibold mb-4">My Applications</h2>
-          {activeApplications.length === 0 ? (
-            <p className="text-gray-500">No active applications found.</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {activeApplications.map((app) => (
-                <div key={app.id} className="h-full">
-                  <ApplicationCard application={app} />
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
+        {searchQuery ? (
+          // Search Results View
+          <div className="space-y-8">
+             {isSearching ? (
+                <div className="text-center py-10 text-gray-500">Searching...</div>
+             ) : (
+               <>
+                {/* Organizations Results */}
+                {searchResults?.orgs && searchResults.orgs.length > 0 && (
+                  <section>
+                    <h2 className="text-lg font-semibold mb-4">Organizations</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      {searchResults.orgs.map((org: any) => (
+                        <Card key={org.id} className="hover:shadow-md transition-shadow">
+                          <CardHeader className="p-4 pb-2 flex flex-row items-center gap-4 space-y-0">
+                            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-lg">
+                              {org.name.charAt(0)}
+                            </div>
+                            <div>
+                              <h3 className="font-bold text-base leading-tight">
+                                {org.name}
+                              </h3>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="p-4 pt-2">
+                             <p className="text-sm text-gray-500 line-clamp-2">{org.description || "No description provided."}</p>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </section>
+                )}
 
-        {/* Past Applications Section */}
-        {pastApplications.length > 0 && (
-          <section>
-            <h2 className="text-lg font-semibold mb-4">Past Applications</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {pastApplications.map((app) => (
-                <div key={app.id} className="h-full">
-                  <ApplicationCard application={app} />
+                {/* Openings Results */}
+                {searchResults?.openings && searchResults.openings.length > 0 && (
+                  <section>
+                    <h2 className="text-lg font-semibold mb-4">Openings</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      {searchResults.openings.map((opening: any) => (
+                        <Card key={opening.id} className="flex flex-col h-full hover:shadow-md transition-shadow">
+                           <CardHeader className="p-4 pb-2 space-y-2">
+                            <div className="flex justify-between items-start">
+                                <div className="w-10 h-10 rounded-lg bg-pink-600 flex items-center justify-center text-white font-bold text-lg mb-1">
+                                {opening.org?.name?.charAt(0) || "?"}
+                                </div>
+                                <Badge variant="secondary" className="text-xs">Open</Badge>
+                            </div>
+                            
+                            <div>
+                                <h3 className="font-bold text-base leading-tight">{opening.title}</h3>
+                                <p className="text-sm text-gray-500">{opening.org?.name}</p>
+                            </div>
+                           </CardHeader>
+                           <CardFooter className="p-4 pt-0 mt-auto border-t pt-4 text-xs text-gray-400">
+                                <span>
+                                    {opening.closes_at
+                                    ? `Due ${new Date(opening.closes_at).toLocaleDateString("en-US", {
+                                        month: "2-digit",
+                                        day: "2-digit",
+                                        year: "numeric",
+                                        })}`
+                                    : "No deadline"}
+                                </span>
+                           </CardFooter>
+                        </Card>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {(!searchResults?.orgs?.length && !searchResults?.openings?.length) && (
+                    <div className="text-center py-10 text-gray-500">
+                        No results found for "{searchQuery}".
+                    </div>
+                )}
+               </>
+             )}
+          </div>
+        ) : (
+          // Default: My Applications View
+          <>
+            {/* My Applications Section */}
+            <section>
+              <h2 className="text-lg font-semibold mb-4">My Applications</h2>
+              {activeApplications.length === 0 ? (
+                <p className="text-gray-500">No active applications found.</p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {activeApplications.map((app) => (
+                    <div key={app.id} className="h-full">
+                      <ApplicationCard application={app} />
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </section>
+              )}
+            </section>
+
+            {/* Past Applications Section */}
+            {pastApplications.length > 0 && (
+              <section>
+                <h2 className="text-lg font-semibold mb-4">Past Applications</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {pastApplications.map((app) => (
+                    <div key={app.id} className="h-full">
+                      <ApplicationCard application={app} />
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+          </>
         )}
       </div>
     </div>
