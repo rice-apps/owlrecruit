@@ -26,9 +26,9 @@ export async function GET(
       .single();
 
     if (error || !membership) {
-        // User is not a member or error occurred. Return null or specific error.
-        // Returning 200 with role: null is often easier for frontend handling.
-       return NextResponse.json({ role: null });
+      // User is not a member or error occurred. Return null or specific error.
+      // Returning 200 with role: null is often easier for frontend handling.
+      return NextResponse.json({ role: null });
     }
 
     return NextResponse.json({ role: membership.role });

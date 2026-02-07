@@ -145,7 +145,7 @@ export function RubricEditorDialog({
                   />
                 </div>
                 <div className={index === 0 ? "pt-6" : ""}>
-                   <Button
+                  <Button
                     variant="ghost"
                     size="icon"
                     className="text-muted-foreground hover:text-destructive"
