@@ -2,7 +2,6 @@
 
 import { formatRelativeTime } from "@/lib/date-utils";
 import { RubricEditorDialog } from "@/components/rubric-editor-dialog";
-import { useParams } from "next/navigation";
 
 import { useState, useEffect } from "react";
 import {
@@ -17,6 +16,7 @@ import { cn } from "@/lib/utils";
 interface CommentsSidebarProps {
   applicantId: string;
   openingId: string;
+  orgId: string;
 }
 
 interface Rubric {
@@ -34,12 +34,8 @@ interface Comment {
 export function CommentsSidebar({
   applicantId,
   openingId,
+  orgId,
 }: CommentsSidebarProps) {
-  /* eslint-disable @typescript-eslint/no-unused-vars */
-  const params = useParams();
-  const orgId = params?.orgId as string;
-  /* eslint-enable @typescript-eslint/no-unused-vars */
-
   const [rubrics, setRubrics] = useState<Rubric[]>([]);
   const [loadingRubrics, setLoadingRubrics] = useState(true);
   const [activeTab, setActiveTab] = useState<"comments" | "skills">("comments");
@@ -79,7 +75,7 @@ export function CommentsSidebar({
     const fetchRubrics = async () => {
       setLoadingRubrics(true);
       try {
-        const res = await fetch("/api/openings");
+        const res = await fetch(`/api/org/${orgId}/openings`);
         if (res.ok) {
           const openings = await res.json();
           const currentOpening = openings.find(
@@ -111,7 +107,9 @@ export function CommentsSidebar({
 
   const fetchComments = async () => {
     try {
-      const res = await fetch(`/api/applications/${applicantId}/reviews`);
+      const res = await fetch(
+        `/api/org/${orgId}/applications/${applicantId}/reviews`,
+      );
       if (res.ok) {
         const data = await res.json();
         setComments(data.comments);
@@ -131,11 +129,14 @@ export function CommentsSidebar({
 
     setLoading(true);
     try {
-      const res = await fetch(`/api/applications/${applicantId}/reviews`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notes: newComment }),
-      });
+      const res = await fetch(
+        `/api/org/${orgId}/applications/${applicantId}/reviews`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ notes: newComment }),
+        },
+      );
 
       if (res.ok) {
         setNewComment("");
@@ -172,11 +173,14 @@ export function CommentsSidebar({
   const handleSaveScore = async () => {
     setSavingScore(true);
     try {
-      const res = await fetch(`/api/applications/${applicantId}/reviews`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ scoreSkills: scores }),
-      });
+      const res = await fetch(
+        `/api/org/${orgId}/applications/${applicantId}/reviews`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ scoreSkills: scores }),
+        },
+      );
 
       if (!res.ok) {
         console.warn("Failed to save score");
