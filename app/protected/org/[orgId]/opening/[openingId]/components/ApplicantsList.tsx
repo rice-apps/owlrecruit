@@ -40,8 +40,6 @@ interface Applicant {
   name: string;
   email: string;
   netId: string;
-  year: string;
-  major: string;
   status: ApplicationStatus;
   applicationId: string;
   createdAt: string | null;
@@ -239,12 +237,6 @@ export function ApplicantsList({
                   </TableCell>
                   <TableCell className="text-gray-400">
                     {anonymousView ? "***" : applicant.netId}
-                  </TableCell>
-                  <TableCell className="text-gray-400">
-                    {applicant.year}
-                  </TableCell>
-                  <TableCell className="text-gray-400">
-                    {applicant.major}
                   </TableCell>
                   <TableCell>
                     <StatusBadge status={applicant.status} />
