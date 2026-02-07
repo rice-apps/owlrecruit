@@ -99,9 +99,9 @@ export default function ApplicantReviewPage() {
     applicationData?.form_responses
       ? (applicationData.form_responses as FormResponse)
       : {};
-  const applicantName = formData["Name"] || "Unknown Applicant";
-  const applicantEmail = formData["Email"] || "Unknown Email";
-  const applicantMajor = formData["Major"] || "Unknown Major";
+  const applicantName = formData["Name"] || formData["name"] || "Unknown Applicant";
+  const applicantEmail = formData["Email"] || formData["email"] ||"Unknown Email";
+  const applicantMajor = formData["Major"] || formData["major"] || "Unknown Major";
 
   const renderTabContent = () => {
     switch (tab) {
