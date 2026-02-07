@@ -61,12 +61,11 @@ export function QuestionsTab({ openingId }: QuestionsTabProps) {
     setSelectedQuestionId(selectedQuestionId === questionId ? null : questionId);
   };
 
-  const getResponsesForQuestion = (questionIndex: number) => {
+  const getResponsesForQuestion = (questionText: string) => {
     return applications
       .map((app) => {
         const responses = app.form_responses as Record<string, any> || {};
-        const values = Object.values(responses);
-        return values[questionIndex];
+        return responses[questionText];
       })
       .filter((response) => response !== undefined && response !== null && response !== "");
   };
@@ -90,7 +89,7 @@ export function QuestionsTab({ openingId }: QuestionsTabProps) {
   return (
     <div className="py-4 space-y-1">
       {questions.map((question, index) => {
-        const responses = getResponsesForQuestion(index);
+        const responses = getResponsesForQuestion(question.question_text);
         const isExpanded = selectedQuestionId === question.id;
         
         return (
