@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, ChevronDown, UserPlus, X } from "lucide-react";
+import { ArrowLeft, ChevronDown, Trash2, UserPlus, X } from "lucide-react";
 
 interface EligibleReviewer {
   id: string;
@@ -34,6 +34,8 @@ export default function NewOpeningPage() {
   );
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
   const [editingDue, setEditingDue] = React.useState(false);
+  const [rubricOpen, setRubricOpen] = React.useState(false);
+  const [rubric, setRubric] = React.useState<{ name: string; max_val: number; description: string }[]>([]);
 
   const [formData, setFormData] = React.useState({
     title: "",
@@ -91,6 +93,7 @@ export default function NewOpeningPage() {
             ? new Date(formData.closes_at).toISOString()
             : null,
           status: formData.status,
+          rubric: rubric.filter((r) => r.name.trim()).length > 0 ? rubric : undefined,
         }),
       });
 
@@ -420,14 +423,108 @@ export default function NewOpeningPage() {
           </div>
         </div>
 
-        {/* Add Rubric */}
-        <div>
+        {/* Rubric */}
+        <div className="space-y-3">
           <button
             type="button"
+            onClick={() => {
+              setRubricOpen(!rubricOpen);
+              if (!rubricOpen && rubric.length === 0) {
+                setRubric([{ name: "", max_val: 10, description: "" }]);
+              }
+            }}
             className="text-sm font-medium text-indigo-500 hover:text-indigo-600 transition-colors"
           >
-            Add rubric +
+            {rubricOpen ? "Hide rubric −" : "Add rubric +"}
           </button>
+
+          {rubricOpen && (
+            <div className="border rounded-xl p-5 space-y-3">
+              {/* Column headers */}
+              <div className="grid grid-cols-[1fr_140px_2fr_32px] gap-3 items-end">
+                <div>
+                  <p className="text-sm font-semibold">
+                    Criteria<span className="text-red-500">*</span>
+                  </p>
+                  <p className="text-xs text-gray-400">i.e. "Experience, Teamwork"</p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">
+                    Max Score<span className="text-red-500">*</span>
+                  </p>
+                  <p className="text-xs text-gray-400">Highest rating</p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">Description</p>
+                  <p className="text-xs text-gray-400">Describe this criterion more</p>
+                </div>
+                <div />
+              </div>
+
+              {/* Rows */}
+              <div className="space-y-2">
+                {rubric.map((item, index) => (
+                  <div key={index} className="grid grid-cols-[1fr_140px_2fr_32px] gap-3 items-center">
+                    <Input
+                      value={item.name}
+                      onChange={(e) => {
+                        const updated = [...rubric];
+                        updated[index] = { ...updated[index], name: e.target.value };
+                        setRubric(updated);
+                      }}
+                      placeholder="e.g. Teamwork"
+                      className="h-9 text-sm"
+                    />
+                    <Input
+                      type="number"
+                      min="1"
+                      value={item.max_val}
+                      onChange={(e) => {
+                        const updated = [...rubric];
+                        updated[index] = { ...updated[index], max_val: Number(e.target.value) };
+                        setRubric(updated);
+                      }}
+                      className="h-9 text-sm"
+                    />
+                    <Input
+                      value={item.description}
+                      onChange={(e) => {
+                        const updated = [...rubric];
+                        updated[index] = { ...updated[index], description: e.target.value };
+                        setRubric(updated);
+                      }}
+                      placeholder="Describe this criterion..."
+                      className="h-9 text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setRubric(rubric.filter((_, i) => i !== index))}
+                      className="text-gray-300 hover:text-red-400 transition-colors"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Footer: Total Score + Add new criterion */}
+              <div className="flex items-center justify-between pt-2">
+                <span className="text-sm font-semibold text-gray-700">
+                  Total Score&nbsp;
+                  <span className="font-normal text-gray-400">
+                    {rubric.reduce((sum, r) => sum + (r.max_val || 0), 0)}
+                  </span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setRubric([...rubric, { name: "", max_val: 10, description: "" }])}
+                  className="text-sm font-medium text-indigo-500 hover:text-indigo-600 transition-colors"
+                >
+                  Add new criterion +
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Error */}
