@@ -9,8 +9,26 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ orgId: string; openingId: string }> },
 ) {
-  const { openingId } = await params;
+  const { orgId, openingId } = await params;
   const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data: membership } = await supabase
+    .from("org_members")
+    .select("role")
+    .eq("user_id", user!.id)
+    .eq("org_id", orgId)
+    .single();
+
+  if (membership?.role !== "admin") {
+    return NextResponse.json(
+      { error: "Only admins can upload applications" },
+      { status: 403 },
+    );
+  }
 
   const body = await request.json();
   const {
