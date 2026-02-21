@@ -15,6 +15,19 @@ export async function GET() {
 
     const userId = user.id;
 
+    // Get the user's net_id
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("net_id")
+      .eq("id", userId)
+      .single();
+
+    if (userError || !userData) {
+      return NextResponse.json({ error: "User not found in database" }, { status: 404 });
+    }
+
+    const netId = userData.net_id;
+
     // Fetch org memberships and applications in parallel
     const [membershipsResult, applicationsResult] = await Promise.all([
       supabase
@@ -33,10 +46,13 @@ export async function GET() {
             org_id,
             title,
             closes_at
+          ),
+          applicants!inner (
+            net_id
           )
         `,
         )
-        .eq("applicant_id", userId)
+        .eq("applicants.net_id", netId)
         .neq("status", "Rejected"),
     ]);
 
