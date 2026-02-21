@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Upload } from "lucide-react";
+import { Upload } from "lucide-react";
 
 export default function NewOrgPage() {
   const router = useRouter();
@@ -106,17 +106,6 @@ export default function NewOrgPage() {
             <Upload className="h-5 w-5 text-gray-400" />
             <span className="text-sm text-gray-400">Drag &amp; drop or click to upload</span>
           </div>
-        </div>
-
-        {/* Invite members */}
-        <div>
-          <button
-            type="button"
-            className="flex items-center gap-1 text-sm text-indigo-500 hover:text-indigo-600 font-medium transition-colors"
-            onClick={() => alert("Waiting for Leif's implementation!")}
-          >
-            Invite members <Plus className="h-4 w-4" />
-          </button>
         </div>
 
         {/* Error message */}
