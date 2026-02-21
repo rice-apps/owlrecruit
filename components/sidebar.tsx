@@ -132,7 +132,7 @@ export function Sidebar({ orgs, user }: SidebarProps) {
         </Accordion>
       </nav>
 
-      {/* User Profile Footer */}
+      {/* User Profile Footer / Profile Page link */}
       <Link 
           href="/protected/profile"
           className={cn(
@@ -142,25 +142,23 @@ export function Sidebar({ orgs, user }: SidebarProps) {
               : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
           )}
       >
-        yoo
-
-      </Link>
-      <div className="p-4 border-t border-gray-100">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 overflow-hidden">
-            {/* Placeholder avatar */}
-            <span className="text-sm font-medium">
-              {user.name.charAt(0).toUpperCase()}
-            </span>
-          </div>
-          <div className="flex flex-col min-w-0">
-            <span className="text-sm font-medium text-gray-900 truncate">
-              {user.name}
-            </span>
-            <span className="text-xs text-gray-500 truncate">{user.email}</span>
+        <div className="p-4 border-t border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 overflow-hidden">
+              {/* Placeholder avatar */}
+              <span className="text-sm font-medium">
+                {user.name.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="text-sm font-medium text-gray-900 truncate">
+                {user.name}
+              </span>
+              <span className="text-xs text-gray-500 truncate">{user.email}</span>
+            </div>
           </div>
         </div>
-      </div>
+      </Link>
     </aside>
   );
 }
