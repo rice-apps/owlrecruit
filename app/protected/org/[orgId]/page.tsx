@@ -9,7 +9,6 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { OpeningFormDialog } from "@/components/opening-form-dialog";
 import { OpeningStatusBadge } from "@/components/status-badge";
 
 interface ReviewerOrgPageProps {
@@ -71,10 +70,13 @@ export default async function ReviewerOrgPage({
           )}
         </div>
         {isAdmin && (
-          <OpeningFormDialog
-            orgId={orgId}
-            orgName={orgData?.name || "Organization"}
-          />
+          <Link
+            href={`/protected/org/${orgId}/new-opening`}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-medium transition-colors"
+          >
+            <span className="text-lg leading-none">+</span>
+            Create new opening
+          </Link>
         )}
       </div>
 
@@ -126,10 +128,13 @@ export default async function ReviewerOrgPage({
                 : "There are no openings for this organization yet."}
             </p>
             {isAdmin && (
-              <OpeningFormDialog
-                orgId={orgId}
-                orgName={orgData?.name || "Organization"}
-              />
+              <Link
+                href={`/protected/org/${orgId}/new-opening`}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-medium transition-colors"
+              >
+                <span className="text-lg leading-none">+</span>
+                Create new opening
+              </Link>
             )}
           </div>
         )}
