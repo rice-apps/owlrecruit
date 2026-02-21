@@ -59,7 +59,9 @@ export function AddMembersDialog({ orgId }: { orgId: string }) {
   const fetchMembers = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await fetch(`/api/org/${orgId}/members`);
+      const res = await fetch(`/api/org/${orgId}/members`, {
+        cache: "no-store",
+      });
       if (!res.ok) throw new Error("Failed to fetch members");
       const data = await res.json();
       setMembers(data as unknown as Member[]);
@@ -87,6 +89,7 @@ export function AddMembersDialog({ orgId }: { orgId: string }) {
           setIsSearching(true);
           const res = await fetch(
             `/api/org/${orgId}/members/search?q=${encodeURIComponent(debouncedSearch)}`,
+            { cache: "no-store" }
           );
           if (!res.ok) throw new Error("Failed to search users");
           const results = await res.json();
@@ -106,11 +109,19 @@ export function AddMembersDialog({ orgId }: { orgId: string }) {
   const handleRoleChange = async (userId: string, newRole: string) => {
     try {
       if (newRole === "Remove") {
+        setMembers((prev) => prev.filter((m) => m.user_id !== userId));
         const res = await fetch(`/api/org/${orgId}/members/${userId}`, {
           method: "DELETE",
         });
         if (!res.ok) throw new Error("Failed to remove member");
       } else {
+        setMembers((prev) =>
+          prev.map((m) =>
+            m.user_id === userId
+              ? { ...m, role: newRole as "admin" | "reviewer" }
+              : m,
+          ),
+        );
         const res = await fetch(`/api/org/${orgId}/members/${userId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -118,10 +129,12 @@ export function AddMembersDialog({ orgId }: { orgId: string }) {
         });
         if (!res.ok) throw new Error("Failed to update member role");
       }
-      // Refresh list
-      await fetchMembers();
+      // Background refresh
+      fetchMembers();
     } catch (error) {
       console.error(error);
+      // Revert optimistic update on error
+      await fetchMembers();
     }
   };
 
@@ -201,7 +214,6 @@ export function AddMembersDialog({ orgId }: { orgId: string }) {
                       </div>
                     </div>
                     <Select
-                      defaultValue="reviewer"
                       onValueChange={(val) => handleAddMember(user.id, val)}
                     >
                       <SelectTrigger className="w-[110px] h-9">
