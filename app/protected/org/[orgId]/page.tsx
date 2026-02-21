@@ -54,7 +54,7 @@ export default async function ReviewerOrgPage({
   return (
     <div className="flex-1 w-full max-w-5xl flex flex-col gap-6">
       <Link
-        href="/protected"
+        href="/protected/discover"
         className="flex items-center gap-2 w-fit text-sm text-gray-500 hover:text-gray-700 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
