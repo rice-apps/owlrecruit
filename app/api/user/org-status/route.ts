@@ -15,6 +15,19 @@ export async function GET() {
 
     const userId = user.id;
 
+    // Get the user's net_id
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("net_id")
+      .eq("id", userId)
+      .single();
+
+    if (userError || !userData) {
+      return NextResponse.json({ error: "User not found in database" }, { status: 404 });
+    }
+
+    const netId = userData.net_id;
+
     // Fetch org memberships and applications in parallel
     const [membershipsResult, applicationsResult] = await Promise.all([
       supabase
@@ -31,12 +44,16 @@ export async function GET() {
           created_at,
           openings!inner (
             org_id,
-            title
+            title,
+            closes_at,
+            status
+          ),
+          applicants!inner (
+            net_id
           )
         `,
         )
-        .eq("applicant_id", userId)
-        .neq("status", "Rejected"),
+        .eq("applicants.net_id", netId),
     ]);
 
     if (membershipsResult.error) {
@@ -66,9 +83,9 @@ export async function GET() {
     const orgsResult =
       orgIds.size > 0
         ? await supabase
-            .from("orgs")
-            .select("id, name")
-            .in("id", Array.from(orgIds))
+          .from("orgs")
+          .select("id, name")
+          .in("id", Array.from(orgIds))
         : { data: [], error: null };
 
     if (orgsResult.error) {
@@ -102,6 +119,8 @@ export async function GET() {
           created_at: application.created_at,
           opening_title: opening?.title || "Unknown Position",
           org_name: orgMap.get(opening?.org_id || "") || "Unknown Organization",
+          closes_at: opening?.closes_at || null,
+          opening_status: opening?.status || "open",
         };
       }) || [];
 

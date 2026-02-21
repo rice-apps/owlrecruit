@@ -15,10 +15,12 @@ export async function GET(request: Request) {
     const [openingsResult, orgsResult] = await Promise.all([
       supabase
         .from("openings")
-        .select(`
+        .select(
+          `
           *,
           org:orgs(name)
-        `)
+        `,
+        )
         .eq("status", "open")
         .ilike("title", `%${query}%`)
         .order("created_at", { ascending: false }),

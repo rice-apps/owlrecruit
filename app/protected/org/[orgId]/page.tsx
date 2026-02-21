@@ -10,6 +10,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OpeningStatusBadge } from "@/components/status-badge";
+import { AddMembersDialog } from "@/components/add-members-dialog";
 
 interface ReviewerOrgPageProps {
   params: Promise<{ orgId: string }>;

@@ -39,3 +39,44 @@ export async function GET(
 
   return NextResponse.json(data);
 }
+
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ orgId: string }> },
+) {
+  try {
+    const { orgId } = await params;
+    const body = await request.json();
+    const { userId, role } = body;
+
+    if (!userId || !role) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 },
+      );
+    }
+
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+      .from("org_members")
+      .insert({
+        org_id: orgId,
+        user_id: userId,
+        role: role,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json(data);
+  } catch {
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
+  }
+}
