@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { createClient } from "@/lib/supabase/client";
 import type { ApplicationStatus } from "@/types/app";
 
@@ -210,15 +211,16 @@ export function OverviewTab({
                 return (
                   <Card key={reviewer.id} className="w-fit">
                     <CardContent className="flex items-center gap-3 p-4">
-                      <div className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
-                        <img
-                          src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
-                            userName,
-                          )}&background=e5e7eb&color=6b7280`}
-                          alt={userName}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
+                      <Avatar className="h-10 w-10">
+                        <AvatarFallback className="bg-muted text-muted-foreground text-sm">
+                          {displayName
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .substring(0, 2)
+                            .toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
                       <span className="font-medium text-sm">{displayName}</span>
                     </CardContent>
                   </Card>
