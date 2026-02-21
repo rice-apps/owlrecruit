@@ -13,11 +13,31 @@ import { OpeningStatusBadge } from "@/components/status-badge";
 import { OpeningTabs } from "./components/OpeningTabs";
 import { ApplicantsList } from "./components/ApplicantsList";
 import { UploadTab } from "./components/UploadTab";
+import { QuestionsTab } from "./components/QuestionsTab";
 import type { ApplicationStatus } from "@/types/app";
 
 interface OpeningOverviewPageProps {
   params: Promise<{ orgId: string; openingId: string }>;
   searchParams: Promise<{ tab?: string }>;
+}
+
+interface ApplicationRow {
+  id: string;
+  status: string;
+  applicant_id: string;
+  created_at: string | null;
+  users_id: string | null;
+  user: {
+    id: string;
+    name: string;
+    net_id: string;
+    email: string;
+  } | null;
+  applicant: {
+    id: string;
+    net_id: string;
+    name: string;
+  } | null;
 }
 
 export default async function OpeningOverviewPage({
@@ -43,43 +63,54 @@ export default async function OpeningOverviewPage({
     .single();
 
   // Fetch applications with user data for this specific opening
-  const { data: applications } = await supabase
+  const { data: applications, error: appError } = (await supabase
     .from("applications")
     .select(
       `
       id,
       status,
-      form_responses,
-      created_at,
-      applicants:applicant_id (
+      applicant_id,
+      users_id,
+      user:users_id (
         id,
         name,
-        net_id
+        net_id,
+        email
+      ),
+      applicant:applicant_id (
+        id,
+        net_id,
+        name
       )
     `,
     )
-    .eq("opening_id", openingId);
+    .eq("opening_id", openingId)) as {
+    data: ApplicationRow[] | null;
+    error: unknown;
+  };
+
+  if (appError) {
+    console.error("Error fetching applications:", appError);
+  }
 
   // Transform applications to applicants list format
+  // Prefer user info if users_id is not empty, otherwise use applicant info
   const applicants = (applications || [])
-    .filter((app) => app.applicants !== null)
     .map((app) => {
-      const applicant = Array.isArray(app.applicants)
-        ? app.applicants[0]
-        : app.applicants;
-      const responses = (app.form_responses as Record<string, string>) || {};
+      const userData = app.user || app.applicant;
+      if (!userData) return null;
+
       return {
-        id: applicant.id,
-        name: applicant.name || "-",
-        email: `${applicant.net_id}@rice.edu`,
-        netId: applicant.net_id,
-        year: responses.year || "-",
-        major: responses.major || "-",
+        id: app.applicant_id,
+        name: userData.name || "Unknown",
+        email: app.user?.email || `${userData.net_id}@rice.edu`,
+        netId: userData.net_id || "",
         status: (app.status || "No Status") as ApplicationStatus,
         applicationId: app.id,
         createdAt: app.created_at,
       };
-    });
+    })
+    .filter((app): app is NonNullable<typeof app> => app !== null);
 
   const renderTabContent = () => {
     switch (tab) {
@@ -92,11 +123,7 @@ export default async function OpeningOverviewPage({
           />
         );
       case "questions":
-        return (
-          <div className="py-12 text-center text-gray-500">
-            <p>Question configuration coming soon.</p>
-          </div>
-        );
+        return <QuestionsTab openingId={openingId} />;
       case "overview":
         return (
           <div className="py-8 space-y-4">
