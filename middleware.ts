@@ -82,7 +82,7 @@ export async function middleware(request: NextRequest) {
         );
       }
       const url = request.nextUrl.clone();
-      url.pathname = "/protected";
+      url.pathname = "/protected/discover";
       return NextResponse.redirect(url);
     }
 
@@ -94,7 +94,7 @@ export async function middleware(request: NextRequest) {
         );
       }
       const url = request.nextUrl.clone();
-      url.pathname = "/protected";
+      url.pathname = "/protected/discover";
       return NextResponse.redirect(url);
     }
   }

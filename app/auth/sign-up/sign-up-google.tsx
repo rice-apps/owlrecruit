@@ -20,7 +20,7 @@ export default function SignUpGoogleBtn() {
         token: response.credential,
       });
       if (data?.user) {
-        router.push("/protected");
+        router.push("/protected/discover");
       }
     },
     [router],
