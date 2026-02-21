@@ -258,21 +258,19 @@ export default function NewOpeningPage() {
           <Label className="text-sm font-medium uppercase text-gray-700 tracking-wide">
             Applicant Stages
           </Label>
-          <div className="flex flex-wrap gap-2">
-            {["Accepted", "Interview", "Rejected"].map((stage) => (
-              <button
-                key={stage}
-                type="button"
-                className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
-                  stage === "Accepted"
-                    ? "bg-cyan-500 text-white shadow-md"
-                    : stage === "Interview"
-                      ? "bg-cyan-100 text-cyan-700 border border-cyan-300"
-                      : "bg-black text-white shadow-md"
-                }`}
+          <div className="flex flex-wrap items-center gap-2">
+            {[
+              { label: "Accepted", className: "bg-green-500 text-white" },
+              { label: "Rejected", className: "bg-red-400 text-white" },
+              { label: "Pending", className: "bg-white text-gray-700 border border-gray-300" },
+              { label: "Interview", className: "bg-gray-700 text-white" },
+            ].map(({ label, className }) => (
+              <span
+                key={label}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium ${className}`}
               >
-                {stage}
-              </button>
+                {label}
+              </span>
             ))}
           </div>
         </div>
@@ -422,6 +420,16 @@ export default function NewOpeningPage() {
           </div>
         </div>
 
+        {/* Add Rubric */}
+        <div>
+          <button
+            type="button"
+            className="text-sm font-medium text-indigo-500 hover:text-indigo-600 transition-colors"
+          >
+            Add rubric +
+          </button>
+        </div>
+
         {/* Error */}
         {error && (
           <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md border border-red-200">
@@ -442,7 +450,7 @@ export default function NewOpeningPage() {
           </Button>
           <Button
             type="submit"
-            className="px-8 h-11 text-sm bg-cyan-500 hover:bg-cyan-600"
+            className="px-8 h-11 text-sm bg-indigo-500 hover:bg-indigo-600"
             disabled={isSubmitting}
           >
             {isSubmitting ? "Creating..." : "Create opening"}
