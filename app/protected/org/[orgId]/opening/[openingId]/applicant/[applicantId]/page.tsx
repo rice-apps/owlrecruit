@@ -69,7 +69,7 @@ export default function ApplicantReviewPage() {
     applicantId: string;
   };
 
-  const tab = searchParams.get("tab") || "overview";
+  const tab = searchParams.get("tab") || "submission";
   const [applicationData, setApplicationData] =
     useState<ApplicationData | null>(null);
   const [loading, setLoading] = useState(true);
