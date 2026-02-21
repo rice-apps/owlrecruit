@@ -387,6 +387,46 @@ export async function processCSVRows<T>(
 }
 
 /**
+ * Upserts questions into the questions table from form mappings.
+ * 
+ * @param supabase - Supabase client
+ * @param openingId - The opening ID to associate questions with
+ * @param columnMappings - Mappings for default fields (netid, name, year, major)
+ * @param customQuestions - Array of custom questions with user-specified text
+ * @returns Number of questions upserted
+ */
+export async function upsertQuestionsFromCSV(
+  supabase: SupabaseClient,
+  openingId: string,
+  columnMappings: Record<string, string>,
+  customQuestions: Array<{ id: string; text: string }>
+): Promise<number> {
+  // Delete existing questions
+  await supabase.from("questions").delete().eq("opening_id", openingId);
+
+  // Collect all question texts: defaults (if mapped) + custom
+  const allQuestions = [
+    ...['name', 'netid', 'year', 'major'].filter(field => columnMappings[field]),
+    ...customQuestions.map(q => q.text)
+  ];
+
+  if (allQuestions.length === 0) return 0;
+
+  // Build and insert question records
+  const questionRecords = allQuestions.map((text, index) => ({
+    opening_id: openingId,
+    question_text: text,
+    sort_order: index,
+    is_required: null,
+  }));
+
+  const { error } = await supabase.from("questions").insert(questionRecords);
+  if (error) throw new Error(`Failed to insert questions: ${error.message}`);
+
+  return questionRecords.length;
+}
+
+/**
  * High-level helper to process and upload CSV applications.
  */
 export async function processAndUploadApplications(
@@ -407,6 +447,13 @@ export async function processAndUploadApplications(
     existingApplicants,
   } = params;
   const results: UploadResult = { successCount: 0, errors: [] };
+
+  // First, upsert questions into the questions table
+  try {
+    await upsertQuestionsFromCSV(supabase, openingId, columnMappings, customQuestions);
+  } catch (error: any) {
+    console.error("Failed to upsert questions:", error);
+  }
 
   for (let i = 0; i < csvData.length; i++) {
     const row = csvData[i];
