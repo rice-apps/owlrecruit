@@ -4,10 +4,15 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Menu, Plus, HelpCircle, LogOut, ChevronLeft } from "lucide-react";
+import { Plus, Search, Folder, Menu } from "lucide-react";
 import { OrgFormDialog } from "@/components/org-form-dialog";
 import type { OrgWithRole } from "@/types/app";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 interface SidebarProps {
   orgs: OrgWithRole[];
@@ -18,122 +23,135 @@ interface SidebarProps {
 }
 
 export function Sidebar({ orgs, user }: SidebarProps) {
-  const [isExpanded, setIsExpanded] = React.useState(true);
   const pathname = usePathname();
 
-  // Extract current org ID from pathname if on an org page
-  const currentOrgId = React.useMemo(() => {
-    const match = pathname.match(/\/org\/([^/]+)/);
-    return match?.[1] || null;
-  }, [pathname]);
+  const isActive = (path: string) => pathname.startsWith(path);
 
   return (
-    <aside
-      className={cn(
-        "flex flex-col h-screen bg-white border-r border-gray-200 transition-all duration-200",
-        isExpanded ? "w-64" : "w-16",
-      )}
-    >
-      {/* Header with toggle */}
-      <div className="flex items-center justify-between p-3 border-b border-gray-200">
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="p-2 hover:bg-gray-100 rounded-md transition-colors"
-          aria-label={isExpanded ? "Collapse sidebar" : "Expand sidebar"}
-        >
-          {isExpanded ? <ChevronLeft size={20} /> : <Menu size={20} />}
-        </button>
+    <aside className="flex flex-col h-screen w-64 bg-white border-r border-gray-200 shrink-0">
+      {/* Logo */}
+      <div className="p-6 pb-8">
+        <Link href="/" className="flex items-center gap-2">
+          <div className="relative w-6 h-6">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-8 h-8 text-cyan-500"
+            >
+              <path
+                d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20Z"
+                fill="currentColor"
+                opacity="0.2"
+              />
+              <path
+                d="M12 16C14 16 15.5 15 16.5 13.5"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              />
+            </svg>
+          </div>
+          <span className="font-bold text-xl text-cyan-500 tracking-tight">
+            owlrecruit
+          </span>
+        </Link>
       </div>
 
-      {/* Organizations List */}
-      <nav className="flex-1 overflow-y-auto p-2">
-        <ul className="space-y-1">
-          {orgs.map((org) => (
-            <li key={org.id}>
-              <Link
-                href={`/protected/org/${org.id}`}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                  currentOrgId === org.id
-                    ? "bg-cyan-50 text-cyan-700 border border-cyan-200"
-                    : "hover:bg-gray-100 text-gray-700",
-                )}
-              >
-                {/* Org Icon/Avatar Placeholder */}
-                <div className="w-8 h-8 rounded-md bg-gray-200 flex items-center justify-center text-sm font-semibold text-gray-600 shrink-0">
-                  {org.name.charAt(0).toUpperCase()}
-                </div>
-                {isExpanded && (
-                  <span className="truncate text-sm font-medium">
-                    {org.name}
-                  </span>
-                )}
-              </Link>
-            </li>
-          ))}
-        </ul>
-
-        {/* Add New Organization Button */}
-        {isExpanded ? (
-          <div className="mt-4">
-            <OrgFormDialog
-              trigger={
-                <Button className="w-full bg-cyan-500 hover:bg-cyan-600 text-white">
-                  <Plus size={16} className="mr-2" />
-                  Add new organization
-                </Button>
-              }
-            />
-          </div>
-        ) : (
-          <div className="mt-4">
-            <OrgFormDialog
-              trigger={
-                <button className="flex items-center justify-center w-10 h-10 mx-auto bg-cyan-500 hover:bg-cyan-600 text-white rounded-md transition-colors">
-                  <Plus size={16} />
-                </button>
-              }
-            />
-          </div>
-        )}
-      </nav>
-
-      {/* Footer */}
-      <div className="border-t border-gray-200 p-2">
-        {/* Help Link */}
+      <nav className="flex-1 px-4 space-y-1">
+        {/* Discover */}
         <Link
-          href="/help"
-          className="flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+          href="/protected/discover"
+          className={cn(
+            "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
+            isActive("/protected/discover")
+              ? "bg-gray-100 text-gray-900"
+              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
+          )}
         >
-          <HelpCircle size={20} />
-          {isExpanded && <span className="text-sm">Help</span>}
+          <Search size={18} />
+          Discover
         </Link>
 
-        {/* User Profile */}
-        <div className="flex items-center gap-3 px-3 py-2 mt-1">
-          <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-sm font-semibold text-gray-600 shrink-0">
-            {user.name.charAt(0).toUpperCase()}
-          </div>
-          {isExpanded && (
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">
-                {user.name}
-              </p>
-              <p className="text-xs text-gray-500 truncate">{user.email}</p>
-            </div>
+        {/* My Applications */}
+        <Link
+          href="/protected/applications"
+          className={cn(
+            "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
+            isActive("/protected/applications")
+              ? "bg-gray-100 text-gray-900"
+              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
           )}
-        </div>
+        >
+          {/* Using Folder/FileText as icon for Applications */}
+          <Folder size={18} />
+          My Applications
+        </Link>
 
-        {/* Logout Button */}
-        <form action="/auth/signout" method="post">
-          <button
-            type="submit"
-            className="flex items-center gap-3 px-3 py-2 w-full text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
-          >
-            <LogOut size={20} />
-            {isExpanded && <span className="text-sm">Sign out</span>}
-          </button>
-        </form>
+        {/* My Organizations Accordion */}
+        <Accordion
+          type="single"
+          collapsible
+          className="w-full"
+          value={isActive("/protected/org") ? "my-orgs" : undefined}
+        >
+          <AccordionItem value="my-orgs" className="border-none">
+            <AccordionTrigger className="w-full flex items-center justify-between px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:no-underline decoration-0">
+              <div className="flex items-center gap-3">
+                <Menu size={18} />
+                My Organizations
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pb-0 pt-1">
+              <div className="flex flex-col gap-1 pl-4 border-l ml-3.5 border-gray-200">
+                {orgs.map((org) => (
+                  <Link
+                    key={org.id}
+                    href={`/protected/org/${org.id}`}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                      isActive(`/protected/org/${org.id}`)
+                        ? "bg-gray-100 text-gray-900 font-medium"
+                        : "text-gray-500 hover:text-gray-900 hover:bg-gray-50",
+                    )}
+                  >
+                    {/* Minimal org item - maybe just name or name + tiny icon */}
+                    <span className="truncate">{org.name}</span>
+                  </Link>
+                ))}
+
+                <div className="px-1 pt-2">
+                  <OrgFormDialog
+                    trigger={
+                      <button className="flex items-center gap-2 text-cyan-600 hover:text-cyan-700 px-3 py-2 rounded-md text-sm font-medium transition-colors w-full">
+                        <Plus size={14} />
+                        Add new
+                      </button>
+                    }
+                  />
+                </div>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </nav>
+
+      {/* User Profile Footer */}
+      <div className="p-4 border-t border-gray-100">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 overflow-hidden">
+            {/* Placeholder avatar */}
+            <span className="text-sm font-medium">
+              {user.name.charAt(0).toUpperCase()}
+            </span>
+          </div>
+          <div className="flex flex-col min-w-0">
+            <span className="text-sm font-medium text-gray-900 truncate">
+              {user.name}
+            </span>
+            <span className="text-xs text-gray-500 truncate">{user.email}</span>
+          </div>
+        </div>
       </div>
     </aside>
   );

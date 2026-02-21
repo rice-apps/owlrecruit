@@ -323,7 +323,6 @@ export async function processCSVRows<T>(
   const records: T[] = [];
   const errors: ProcessingError[] = [];
 
-
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
     const rowNumber = i + 1;
@@ -351,9 +350,14 @@ export async function processCSVRows<T>(
 
     // If applicant not found, create
     if (!user) {
-      const name = (columnMappings?.name && row[columnMappings.name]) as string || "-";
+      const name =
+        ((columnMappings?.name && row[columnMappings.name]) as string) || "-";
       try {
-        user = await ensureApplicant(supabase, row[CSV_RESERVED_COLUMNS.NETID] as string, name);
+        user = await ensureApplicant(
+          supabase,
+          row[CSV_RESERVED_COLUMNS.NETID] as string,
+          name,
+        );
       } catch (err: any) {
         errors.push({
           row: rowNumber,
@@ -433,9 +437,15 @@ export async function processAndUploadApplications(
     columnMappings: Record<string, string>;
     customQuestions: Array<{ id: string; text: string }>;
     existingApplicants?: Map<string, { applicantId: string; name: string }>;
-  }
+  },
 ): Promise<UploadResult> {
-  const { openingId, csvData, columnMappings, customQuestions, existingApplicants } = params;
+  const {
+    openingId,
+    csvData,
+    columnMappings,
+    customQuestions,
+    existingApplicants,
+  } = params;
   const results: UploadResult = { successCount: 0, errors: [] };
 
   // First, upsert questions into the questions table
@@ -449,12 +459,12 @@ export async function processAndUploadApplications(
     const row = csvData[i];
     const rowNumber = i + 1;
     const netid = row[columnMappings.netid];
-    let name = row[columnMappings.name];
+    const name = row[columnMappings.name];
 
     if (!netid || !name) {
       results.errors.push({
         row: rowNumber,
-        error: "Missing required fields: NetID or Name"
+        error: "Missing required fields: NetID or Name",
       });
       continue;
     }
@@ -467,23 +477,23 @@ export async function processAndUploadApplications(
       if (existingApplicants?.has(netid)) {
         const existing = existingApplicants.get(netid)!;
         userId = existing.applicantId;
-        
+
         // Optional: If existing name is "-" and new name is real, update it?
         // logic from ensureApplicant:
         // if (existing.name === "-" && name !== "-") { update... }
-        // We'll trust ensureApplicant logic if we think we need an update, 
+        // We'll trust ensureApplicant logic if we think we need an update,
         // OR we can just skip if we don't care about name updates for existing applicants.
         // For efficiency, let's skip the DB read if name is good or we don't assume update.
         // But if we want perfection:
         if (existing.name === "-" && name !== "-") {
-             // If name needs update, we call update directly or use ensureApplicant (which does a read first)
-             // calling ensureApplicant is safer but does a read.
-             // We can just call update directly since we have the ID.
-             const { error: updateError } = await supabase
-                .from("applicants")
-                .update({ name })
-                .eq("id", userId);
-             if (updateError) console.error("Error updating name:", updateError);   
+          // If name needs update, we call update directly or use ensureApplicant (which does a read first)
+          // calling ensureApplicant is safer but does a read.
+          // We can just call update directly since we have the ID.
+          const { error: updateError } = await supabase
+            .from("applicants")
+            .update({ name })
+            .eq("id", userId);
+          if (updateError) console.error("Error updating name:", updateError);
         }
       } else {
         // Not in our cache of "applicants for this opening".
@@ -513,7 +523,7 @@ export async function processAndUploadApplications(
           form_responses: formResponses,
           status: "Applied",
         },
-        { onConflict: "opening_id, applicant_id" }
+        { onConflict: "opening_id, applicant_id" },
       );
 
       if (appError) {
@@ -525,7 +535,7 @@ export async function processAndUploadApplications(
       results.errors.push({
         row: rowNumber,
         netid,
-        error: err.message || "Unknown error occurred"
+        error: err.message || "Unknown error occurred",
       });
     }
   }

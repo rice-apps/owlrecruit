@@ -13,9 +13,10 @@ import { useState } from "react";
 
 interface UploadDialogProps {
   openingId: string;
+  orgId: string;
 }
 
-export default function UploadDialog({ openingId }: UploadDialogProps) {
+export default function UploadDialog({ openingId, orgId }: UploadDialogProps) {
   const [isUploaded, setIsUploaded] = useState(false);
   const [fileName, setFileName] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -97,7 +98,11 @@ export default function UploadDialog({ openingId }: UploadDialogProps) {
     if (file) {
       try {
         setFileName(file.name);
-        const result = await uploadCSV(file, "/api/interviews", "interview");
+        const result = await uploadCSV(
+          file,
+          `/api/org/${orgId}/interviews`,
+          "interview",
+        );
         setIsUploaded(true);
 
         // Handle partial warnings
@@ -128,7 +133,7 @@ export default function UploadDialog({ openingId }: UploadDialogProps) {
         setFileName(file.name);
         const result = await uploadCSV(
           file,
-          "/api/applications",
+          `/api/org/${orgId}/applications`,
           "application",
         );
         console.log("Upload successful! Result:", result);

@@ -1,5 +1,8 @@
 "use client";
 
+import { formatRelativeTime } from "@/lib/date-utils";
+import { RubricEditorDialog } from "@/components/rubric-editor-dialog";
+
 import { useState, useEffect } from "react";
 import {
   Accordion,
@@ -13,6 +16,7 @@ import { cn } from "@/lib/utils";
 interface CommentsSidebarProps {
   applicantId: string;
   openingId: string;
+  orgId: string;
 }
 
 interface Rubric {
@@ -30,10 +34,31 @@ interface Comment {
 export function CommentsSidebar({
   applicantId,
   openingId,
+  orgId,
 }: CommentsSidebarProps) {
   const [rubrics, setRubrics] = useState<Rubric[]>([]);
   const [loadingRubrics, setLoadingRubrics] = useState(true);
   const [activeTab, setActiveTab] = useState<"comments" | "skills">("comments");
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const checkRole = async () => {
+      try {
+        const res = await fetch(`/api/org/${orgId}/my-role`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.role === "admin") {
+            setIsAdmin(true);
+          }
+        }
+      } catch (error) {
+        console.error("Error checking role:", error);
+      }
+    };
+    if (orgId) {
+      checkRole();
+    }
+  }, [orgId]);
 
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
@@ -45,13 +70,12 @@ export function CommentsSidebar({
 
   const [scores, setScores] = useState<Record<string, number>>({});
   const [savingScore, setSavingScore] = useState(false);
-  const [savedTotalScore, setSavedTotalScore] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchRubrics = async () => {
       setLoadingRubrics(true);
       try {
-        const res = await fetch("/api/openings");
+        const res = await fetch(`/api/org/${orgId}/openings`);
         if (res.ok) {
           const openings = await res.json();
           const currentOpening = openings.find(
@@ -83,12 +107,14 @@ export function CommentsSidebar({
 
   const fetchComments = async () => {
     try {
-      const res = await fetch(`/api/applications/${applicantId}/reviews`);
+      const res = await fetch(
+        `/api/org/${orgId}/applications/${applicantId}/reviews`,
+      );
       if (res.ok) {
         const data = await res.json();
         setComments(data.comments);
-        if (data.myScore !== null && data.myScore !== undefined) {
-          setSavedTotalScore(data.myScore);
+        if (data.myScoreSkills) {
+          setScores(data.myScoreSkills);
         }
       } else {
         console.warn("Failed to fetch comments, API might be missing");
@@ -103,11 +129,14 @@ export function CommentsSidebar({
 
     setLoading(true);
     try {
-      const res = await fetch(`/api/applications/${applicantId}/reviews`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notes: newComment }),
-      });
+      const res = await fetch(
+        `/api/org/${orgId}/applications/${applicantId}/reviews`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ notes: newComment }),
+        },
+      );
 
       if (res.ok) {
         setNewComment("");
@@ -143,15 +172,15 @@ export function CommentsSidebar({
 
   const handleSaveScore = async () => {
     setSavingScore(true);
-    const values = Object.values(scores);
-    const total = values.reduce((a, b) => a + b, 0);
-
     try {
-      const res = await fetch(`/api/applications/${applicantId}/reviews`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ score: total }),
-      });
+      const res = await fetch(
+        `/api/org/${orgId}/applications/${applicantId}/reviews`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ scoreSkills: scores }),
+        },
+      );
 
       if (!res.ok) {
         console.warn("Failed to save score");
@@ -163,7 +192,7 @@ export function CommentsSidebar({
         setToastMessage("Score successfully saved!");
         setToastType("success");
         setShowToast(true);
-        setSavedTotalScore(total);
+        setShowToast(true);
         setTimeout(() => setShowToast(false), 3000);
       }
     } catch (e) {
@@ -244,6 +273,7 @@ export function CommentsSidebar({
               collapsible
               className="w-full"
               onValueChange={(val) => setIsCommentsOpen(val === "item-1")}
+              defaultValue="item-1"
             >
               <AccordionItem value="item-1" className="border-none">
                 <AccordionTrigger className="py-2 hover:no-underline font-semibold text-lg text-foreground">
@@ -259,15 +289,32 @@ export function CommentsSidebar({
                       comments.map((comment, i) => (
                         <div
                           key={comment.id || i}
-                          className="bg-muted/30 p-3 rounded-md text-sm border border-border"
+                          className="bg-white p-4 rounded-xl border shadow-sm"
                         >
-                          <p className="text-foreground">{comment.content}</p>
-                          <span className="text-xs text-muted-foreground block mt-1">
-                            {comment.userName && `${comment.userName} - `}
-                            {comment.createdAt
-                              ? new Date(comment.createdAt).toLocaleDateString()
-                              : "Just now"}
-                          </span>
+                          <div className="flex items-start gap-3 mb-2">
+                            {/* Avatar Placeholder */}
+                            <div className="w-8 h-8 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
+                              {/* TODO: Real avatar */}
+                              <img
+                                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                  comment.userName || "User",
+                                )}&background=random`}
+                                alt={comment.userName}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-sm text-foreground">
+                                {comment.userName || "Unknown User"}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {formatRelativeTime(comment.createdAt)}
+                              </span>
+                            </div>
+                          </div>
+                          <p className="text-sm text-foreground pl-11">
+                            {comment.content}
+                          </p>
                         </div>
                       ))
                     )}
@@ -331,13 +378,6 @@ export function CommentsSidebar({
               </div>
 
               <div className="mt-8 pt-4 border-t">
-                {savedTotalScore !== null && (
-                  <div className="mb-4 p-3 bg-muted/30 rounded-lg border border-border">
-                    <p className="text-sm text-foreground font-medium">
-                      Last Saved Score: {savedTotalScore} / {maxTotalScore}
-                    </p>
-                  </div>
-                )}
                 <div className="flex justify-between items-center mb-4">
                   <span className="font-semibold text-sm">Total Score:</span>
                   <div className="flex items-center gap-2">
@@ -367,11 +407,20 @@ export function CommentsSidebar({
               </div>
             </div>
 
-            <div className="mt-4 flex justify-end">
-              <button className="text-cyan-600 text-sm hover:underline">
-                Rubric Details
-              </button>
-            </div>
+            {isAdmin && (
+              <div className="mt-4 flex justify-end">
+                <RubricEditorDialog
+                  openingId={openingId}
+                  initialRubric={rubrics}
+                  onSuccess={(updatedRubric) => setRubrics(updatedRubric)}
+                  trigger={
+                    <button className="text-cyan-600 text-sm hover:underline">
+                      Rubric Details
+                    </button>
+                  }
+                />
+              </div>
+            )}
           </div>
         )}
       </div>

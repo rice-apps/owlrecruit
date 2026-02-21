@@ -13,6 +13,7 @@ import { OpeningStatusBadge } from "@/components/status-badge";
 import { OpeningTabs } from "./components/OpeningTabs";
 import { ApplicantsList } from "./components/ApplicantsList";
 import { UploadTab } from "./components/UploadTab";
+import { QuestionsTab } from "./components/QuestionsTab";
 import type { ApplicationStatus } from "@/types/app";
 
 interface OpeningOverviewPageProps {
@@ -64,7 +65,9 @@ export default async function OpeningOverviewPage({
   const applicants = (applications || [])
     .filter((app) => app.applicants !== null)
     .map((app) => {
-      const applicant = Array.isArray(app.applicants) ? app.applicants[0] : app.applicants;
+      const applicant = Array.isArray(app.applicants)
+        ? app.applicants[0]
+        : app.applicants;
       const responses = (app.form_responses as any) || {};
       return {
         id: applicant.id,
@@ -90,11 +93,7 @@ export default async function OpeningOverviewPage({
           />
         );
       case "questions":
-        return (
-          <div className="py-12 text-center text-gray-500">
-            <p>Question configuration coming soon.</p>
-          </div>
-        );
+        return <QuestionsTab openingId={openingId} />;
       case "overview":
         return (
           <div className="py-8 space-y-4">
