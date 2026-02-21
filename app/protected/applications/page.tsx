@@ -22,6 +22,7 @@ interface Application {
   opening_title?: string;
   org_name?: string;
   closes_at?: string | null;
+  opening_status?: Enums<"opening_status">;
 }
 
 interface ApplicationsData {
@@ -71,48 +72,31 @@ export default function MyApplicationsPage() {
 
   // Separate active and past applications
   const activeApplications = filteredApplications.filter((app) => {
-    // Active if not rejected and (no due date OR due date is in the future)
-    if (app.status === "Rejected") return false;
+    // Active if not rejected/accepted offer, opening is not explicitly closed, and (no due date OR due date is in the future)
+    if (app.status === "Rejected" || app.status === "Accepted Offer" || app.opening_status === "closed") return false;
     if (!app.closes_at) return true;
     return new Date(app.closes_at) >= new Date();
   });
 
   const pastApplications = filteredApplications.filter((app) => {
-    // Past if rejected OR due date has passed
-    if (app.status === "Rejected") return true;
+    // Past if rejected/accepted offer, explicitly closed opening OR due date has passed
+    if (app.status === "Rejected" || app.status === "Accepted Offer" || app.opening_status === "closed") return true;
     if (!app.closes_at) return false;
     return new Date(app.closes_at) < new Date();
   });
 
   return (
     <div className="flex-1 w-full flex flex-col gap-6">
-      {/* Back Link */}
-      <Link
-        href="/protected"
-        className="flex items-center gap-2 w-fit text-sm text-gray-500 hover:text-gray-700 transition-colors"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back
-      </Link>
-
-      {/* Page Header */}
-      <div className="flex flex-col gap-2 items-start">
-        <h1 className="font-bold text-3xl mb-4">My Applications</h1>
-        <p className="text-muted-foreground">
-          View and manage your application statuses.
-        </p>
-      </div>
-
       {/* Search Bar */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+      <div className="relative w-full">
         <input
           type="text"
-          placeholder="Search organizations, positions..."
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+          placeholder="Search..."
+          className="w-full pl-6 pr-12 py-3 bg-transparent border border-gray-300 rounded-[30px] focus:outline-none focus:border-blue-500 text-sm"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
+        <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
       </div>
 
       {/* Loading State */}

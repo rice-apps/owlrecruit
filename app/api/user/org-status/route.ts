@@ -45,15 +45,15 @@ export async function GET() {
           openings!inner (
             org_id,
             title,
-            closes_at
+            closes_at,
+            status
           ),
           applicants!inner (
             net_id
           )
         `,
         )
-        .eq("applicants.net_id", netId)
-        .neq("status", "Rejected"),
+        .eq("applicants.net_id", netId),
     ]);
 
     if (membershipsResult.error) {
@@ -120,6 +120,7 @@ export async function GET() {
           opening_title: opening?.title || "Unknown Position",
           org_name: orgMap.get(opening?.org_id || "") || "Unknown Organization",
           closes_at: opening?.closes_at || null,
+          opening_status: opening?.status || "open",
         };
       }) || [];
 
