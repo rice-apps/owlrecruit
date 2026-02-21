@@ -17,6 +17,25 @@ export async function POST(
 ) {
   const { orgId } = await params;
 
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data: membership } = await supabase
+    .from("org_members")
+    .select("role")
+    .eq("user_id", user!.id)
+    .eq("org_id", orgId)
+    .single();
+
+  if (membership?.role !== "admin") {
+    return new Response(
+      JSON.stringify(formatErrorResponse("Only admins can upload interviews")),
+      { status: 403 },
+    );
+  }
+
   const contentType = request.headers.get("content-type");
   if (
     !contentType ||
@@ -65,8 +84,6 @@ export async function POST(
       { status: 400 },
     );
   }
-
-  const supabase = await createClient();
 
   const opening = await lookupOpening(supabase, openingId);
   if (!opening) {

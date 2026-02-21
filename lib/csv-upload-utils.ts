@@ -358,11 +358,11 @@ export async function processCSVRows<T>(
           row[CSV_RESERVED_COLUMNS.NETID] as string,
           name,
         );
-      } catch (err: any) {
+      } catch (err: unknown) {
         errors.push({
           row: rowNumber,
           netid: row[CSV_RESERVED_COLUMNS.NETID] as string,
-          error: `Failed to create applicant: ${err.message}`,
+          error: `Failed to create applicant: ${err instanceof Error ? err.message : String(err)}`,
         });
         if (!VALIDATION_CONFIG.skipInvalidRows) break;
         continue;
@@ -387,13 +387,53 @@ export async function processCSVRows<T>(
 }
 
 /**
+ * Upserts questions into the questions table from form mappings.
+ * 
+ * @param supabase - Supabase client
+ * @param openingId - The opening ID to associate questions with
+ * @param columnMappings - Mappings for default fields (netid, name, year, major)
+ * @param customQuestions - Array of custom questions with user-specified text
+ * @returns Number of questions upserted
+ */
+export async function upsertQuestionsFromCSV(
+  supabase: SupabaseClient,
+  openingId: string,
+  columnMappings: Record<string, string>,
+  customQuestions: Array<{ id: string; text: string }>
+): Promise<number> {
+  // Delete existing questions
+  await supabase.from("questions").delete().eq("opening_id", openingId);
+
+  // Collect all question texts: defaults (if mapped) + custom
+  const allQuestions = [
+    ...['name', 'netid', 'year', 'major'].filter(field => columnMappings[field]),
+    ...customQuestions.map(q => q.text)
+  ];
+
+  if (allQuestions.length === 0) return 0;
+
+  // Build and insert question records
+  const questionRecords = allQuestions.map((text, index) => ({
+    opening_id: openingId,
+    question_text: text,
+    sort_order: index,
+    is_required: null,
+  }));
+
+  const { error } = await supabase.from("questions").insert(questionRecords);
+  if (error) throw new Error(`Failed to insert questions: ${error.message}`);
+
+  return questionRecords.length;
+}
+
+/**
  * High-level helper to process and upload CSV applications.
  */
 export async function processAndUploadApplications(
   supabase: SupabaseClient,
   params: {
     openingId: string;
-    csvData: any[];
+    csvData: Record<string, unknown>[];
     columnMappings: Record<string, string>;
     customQuestions: Array<{ id: string; text: string }>;
     existingApplicants?: Map<string, { applicantId: string; name: string }>;
@@ -408,11 +448,18 @@ export async function processAndUploadApplications(
   } = params;
   const results: UploadResult = { successCount: 0, errors: [] };
 
+  // First, upsert questions into the questions table
+  try {
+    await upsertQuestionsFromCSV(supabase, openingId, columnMappings, customQuestions);
+  } catch (error: any) {
+    console.error("Failed to upsert questions:", error);
+  }
+
   for (let i = 0; i < csvData.length; i++) {
     const row = csvData[i];
     const rowNumber = i + 1;
-    const netid = row[columnMappings.netid];
-    let name = row[columnMappings.name];
+    const netid = row[columnMappings.netid] as string | undefined;
+    const name = row[columnMappings.name] as string | undefined;
 
     if (!netid || !name) {
       results.errors.push({
@@ -456,7 +503,7 @@ export async function processAndUploadApplications(
       }
 
       // 2. Build form_responses
-      const formResponses: Record<string, any> = {};
+      const formResponses: Record<string, unknown> = {};
       formResponses.name = name;
       formResponses.netid = netid;
       if (columnMappings.year) formResponses.year = row[columnMappings.year];
@@ -484,11 +531,11 @@ export async function processAndUploadApplications(
       } else {
         results.successCount++;
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       results.errors.push({
         row: rowNumber,
         netid,
-        error: err.message || "Unknown error occurred",
+        error: err instanceof Error ? err.message : "Unknown error occurred",
       });
     }
   }
