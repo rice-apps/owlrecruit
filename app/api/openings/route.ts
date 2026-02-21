@@ -24,6 +24,26 @@ export async function GET() {
       );
     }
 
+    return NextResponse.json(openings);
+  } catch (error) {
+    console.error("Error in openings API GET:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const supabase = await createClient();
+
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const user = authData.user;
+
     const body = await request.json();
     const { org_id, title, description, application_link, closes_at, status } =
       body;
@@ -63,7 +83,11 @@ export async function GET() {
       .select()
       .single();
 
-    return NextResponse.json(openings);
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json(data);
   } catch (error) {
     console.error("Error in openings API:", error);
     return NextResponse.json(

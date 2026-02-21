@@ -11,6 +11,7 @@ import { ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OpeningFormDialog } from "@/components/opening-form-dialog";
 import { OpeningStatusBadge } from "@/components/status-badge";
+import { AddMembersDialog } from "@/components/add-members-dialog";
 
 interface ReviewerOrgPageProps {
   params: Promise<{ orgId: string }>;
@@ -71,10 +72,13 @@ export default async function ReviewerOrgPage({
           )}
         </div>
         {isAdmin && (
-          <OpeningFormDialog
-            orgId={orgId}
-            orgName={orgData?.name || "Organization"}
-          />
+          <div className="flex items-center gap-3">
+            <AddMembersDialog orgId={orgId} />
+            <OpeningFormDialog
+              orgId={orgId}
+              orgName={orgData?.name || "Organization"}
+            />
+          </div>
         )}
       </div>
 
