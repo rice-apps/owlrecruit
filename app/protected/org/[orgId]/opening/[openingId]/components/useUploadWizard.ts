@@ -42,6 +42,9 @@ export function useUploadWizard() {
   const [existingApplicants, setExistingApplicants] = useState<
     Map<string, { applicantId: string; name: string }>
   >(new Map());
+  const [selectedMethod, setSelectedMethod] = useState<
+    "csv" | "google_forms" | null
+  >(null);
 
   const steps = [1, 2, 3, 4];
 
@@ -240,5 +243,7 @@ export function useUploadWizard() {
     uploadErrors,
     successCount,
     handleFinishSetup,
+    selectedMethod,
+    setSelectedMethod,
   };
 }
