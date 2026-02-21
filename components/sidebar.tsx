@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Plus, Search, Folder, Menu } from "lucide-react";
-import { OrgFormDialog } from "@/components/org-form-dialog";
 import type { OrgWithRole } from "@/types/app";
 import {
   Accordion,
@@ -121,14 +120,13 @@ export function Sidebar({ orgs, user }: SidebarProps) {
                 ))}
 
                 <div className="px-1 pt-2">
-                  <OrgFormDialog
-                    trigger={
-                      <button className="flex items-center gap-2 text-cyan-600 hover:text-cyan-700 px-3 py-2 rounded-md text-sm font-medium transition-colors w-full">
-                        <Plus size={14} />
-                        Add new
-                      </button>
-                    }
-                  />
+                  <Link
+                    href="/protected/createorg"
+                    className="flex items-center gap-2 text-cyan-600 hover:text-cyan-700 px-3 py-2 rounded-md text-sm font-medium transition-colors w-full"
+                  >
+                    <Plus size={14} />
+                    Add new
+                  </Link>
                 </div>
               </div>
             </AccordionContent>
