@@ -412,7 +412,7 @@ export async function processAndUploadApplications(
     const row = csvData[i];
     const rowNumber = i + 1;
     const netid = row[columnMappings.netid];
-    let name = row[columnMappings.name];
+    const name = row[columnMappings.name];
 
     if (!netid || !name) {
       results.errors.push({
