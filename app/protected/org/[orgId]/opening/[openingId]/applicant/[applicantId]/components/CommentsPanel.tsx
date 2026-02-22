@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import Image from "next/image";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { formatRelativeTime } from "@/lib/date-utils";
 import {
   Accordion,
@@ -138,17 +138,16 @@ export function CommentsPanel({
                     className="bg-white p-4 rounded-xl border shadow-sm"
                   >
                     <div className="flex items-start gap-3 mb-2">
-                      <div className="w-8 h-8 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
-                        <Image
-                          src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
-                            comment.userName || "User",
-                          )}&background=random`}
-                          alt={comment.userName || "User"}
-                          width={32}
-                          height={32}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="bg-muted text-muted-foreground text-xs">
+                          {(comment.userName || "User")
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .substring(0, 2)
+                            .toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
                       <div className="flex flex-col">
                         <span className="font-semibold text-sm text-foreground">
                           {comment.userName || "Unknown User"}
