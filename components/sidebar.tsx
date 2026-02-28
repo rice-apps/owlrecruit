@@ -1,6 +1,4 @@
 "use client";
-
-import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -28,7 +26,7 @@ export function Sidebar({ orgs, user }: SidebarProps) {
   const isActive = (path: string) => pathname.startsWith(path);
 
   return (
-    <aside className="flex flex-col h-screen w-64 bg-white border-r border-gray-200 shrink-0">
+    <aside className="hidden md:flex md:flex-col h-screen w-64 bg-white border-r border-gray-200 shrink-0">
       {/* Logo */}
       <div className="p-6 pb-8">
         <Link href="/" className="flex items-center gap-2">
@@ -121,14 +119,13 @@ export function Sidebar({ orgs, user }: SidebarProps) {
                 ))}
 
                 <div className="px-1 pt-2">
-                  <OrgFormDialog
-                    trigger={
-                      <button className="flex items-center gap-2 text-cyan-600 hover:text-cyan-700 px-3 py-2 rounded-md text-sm font-medium transition-colors w-full">
-                        <Plus size={14} />
-                        Add new
-                      </button>
-                    }
-                  />
+                  <Link
+                    href="/protected/createorg"
+                    className="flex items-center gap-2 text-cyan-600 hover:text-cyan-700 px-3 py-2 rounded-md text-sm font-medium transition-colors w-full"
+                  >
+                    <Plus size={14} />
+                    Add new
+                  </Link>
                 </div>
               </div>
             </AccordionContent>
