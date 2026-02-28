@@ -13,16 +13,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ChevronDown, Plus, UserPlus, X } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
+import { Check, Plus } from "lucide-react";
 
 interface EligibleReviewer {
   id: string;
   user_id: string;
   role: string;
   users:
-    | { id: string; name: string | null; email: string }
-    | { id: string; name: string | null; email: string }[]
-    | null;
+  | { id: string; name: string | null; email: string }
+  | { id: string; name: string | null; email: string }[]
+  | null;
 }
 
 interface OpeningFormDialogProps {
@@ -57,7 +59,6 @@ export function OpeningFormDialog({
   const [selectedReviewers, setSelectedReviewers] = React.useState<string[]>(
     [],
   );
-  const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
 
   console.log("OpeningFormDialog opening:", opening);
 
@@ -253,24 +254,24 @@ export function OpeningFormDialog({
                 <span className="underline decoration-gray-200">
                   {formData.closes_at
                     ? new Date(formData.closes_at).toLocaleDateString(
-                        undefined,
-                        {
-                          weekday: "long",
-                          month: "short",
-                          day: "numeric",
-                        },
-                      )
+                      undefined,
+                      {
+                        weekday: "long",
+                        month: "short",
+                        day: "numeric",
+                      },
+                    )
                     : "Select date"}
                 </span>
                 <span className="underline decoration-gray-200">
                   {formData.closes_at
                     ? new Date(formData.closes_at).toLocaleTimeString(
-                        undefined,
-                        {
-                          hour: "numeric",
-                          minute: "2-digit",
-                        },
-                      )
+                      undefined,
+                      {
+                        hour: "numeric",
+                        minute: "2-digit",
+                      },
+                    )
                     : "Select time"}
                 </span>
               </div>
@@ -336,13 +337,12 @@ export function OpeningFormDialog({
                 <button
                   key={stage}
                   type="button"
-                  className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
-                    stage === "Accepted"
-                      ? "bg-cyan-500 text-white shadow-md"
-                      : stage === "Interview"
-                        ? "bg-cyan-100 text-cyan-700 border border-cyan-300"
-                        : "bg-black text-white shadow-md"
-                  }`}
+                  className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all ${stage === "Accepted"
+                    ? "bg-cyan-500 text-white shadow-md"
+                    : stage === "Interview"
+                      ? "bg-cyan-100 text-cyan-700 border border-cyan-300"
+                      : "bg-black text-white shadow-md"
+                    }`}
                 >
                   {stage}
                 </button>
@@ -356,120 +356,103 @@ export function OpeningFormDialog({
               Assign Reviewers
             </Label>
 
-            {/* Display selected reviewers as pills */}
-            <div className="flex flex-wrap gap-2">
-              {selectedReviewers.length > 0 ? (
-                selectedReviewers.map((userId) => {
-                  const reviewer = eligibleReviewers.find(
-                    (r) => r.user_id === userId,
+            {/* Grid of selectable reviewer cards */}
+            {eligibleReviewers.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {eligibleReviewers.map((reviewer) => {
+                  const user = Array.isArray(reviewer.users)
+                    ? reviewer.users[0]
+                    : reviewer.users;
+                  const displayName =
+                    user?.name || user?.email || "Unknown";
+                  const isSelected = selectedReviewers.includes(
+                    reviewer.user_id,
                   );
-                  if (!reviewer) return null;
+
+                  // Deterministic avatar colour
+                  const AVATAR_COLORS = [
+                    "bg-violet-100 text-violet-700",
+                    "bg-sky-100 text-sky-700",
+                    "bg-emerald-100 text-emerald-700",
+                    "bg-amber-100 text-amber-700",
+                    "bg-rose-100 text-rose-700",
+                    "bg-teal-100 text-teal-700",
+                    "bg-fuchsia-100 text-fuchsia-700",
+                    "bg-indigo-100 text-indigo-700",
+                  ];
+                  let hash = 0;
+                  for (let i = 0; i < reviewer.user_id.length; i++) {
+                    hash =
+                      (hash << 5) - hash + reviewer.user_id.charCodeAt(i);
+                    hash |= 0;
+                  }
+                  const avatarColor =
+                    AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+
+                  const avatarInitials = displayName
+                    .split(" ")
+                    .map((n: string) => n[0])
+                    .join("")
+                    .substring(0, 2)
+                    .toUpperCase();
+
                   return (
                     <button
-                      key={userId}
+                      key={reviewer.id}
                       type="button"
-                      onClick={() =>
-                        setSelectedReviewers(
-                          selectedReviewers.filter((id) => id !== userId),
-                        )
-                      }
-                      className="flex items-center gap-2 pl-4 pr-3 py-2 bg-white text-gray-900 rounded-full border-2 border-gray-200 hover:border-gray-300 transition-all shadow-sm hover:shadow"
+                      onClick={() => {
+                        if (isSelected) {
+                          setSelectedReviewers(
+                            selectedReviewers.filter(
+                              (id) => id !== reviewer.user_id,
+                            ),
+                          );
+                        } else {
+                          setSelectedReviewers([
+                            ...selectedReviewers,
+                            reviewer.user_id,
+                          ]);
+                        }
+                      }}
+                      className={cn(
+                        "relative flex items-center gap-3 rounded-xl border-2 p-3 text-left transition-all duration-200",
+                        "hover:shadow-md hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400",
+                        isSelected
+                          ? "border-indigo-400 bg-indigo-50/60 shadow-sm border-dashed"
+                          : "border-gray-200 bg-white hover:border-gray-300",
+                      )}
                     >
-                      <span className="font-medium text-sm">
-                        {Array.isArray(reviewer.users)
-                          ? reviewer.users[0]?.name || reviewer.users[0]?.email
-                          : reviewer.users?.name || reviewer.users?.email}
+                      {/* Selection indicator */}
+                      {isSelected && (
+                        <span className="absolute top-1.5 right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-indigo-500 text-white">
+                          <Check className="h-3 w-3" />
+                        </span>
+                      )}
+
+                      {/* Avatar */}
+                      <Avatar className="h-10 w-10 shrink-0">
+                        <AvatarFallback
+                          className={cn(
+                            "text-sm font-semibold",
+                            avatarColor,
+                          )}
+                        >
+                          {avatarInitials}
+                        </AvatarFallback>
+                      </Avatar>
+
+                      {/* Name */}
+                      <span className="text-sm font-medium text-gray-900 truncate">
+                        {displayName}
                       </span>
-                      <X className="h-3.5 w-3.5 text-gray-400" />
                     </button>
                   );
-                })
-              ) : (
-                <p className="text-sm text-gray-500 py-2">
-                  No reviewers assigned
-                </p>
-              )}
-            </div>
-
-            {/* Reviewer selection dropdown/list */}
-            {eligibleReviewers.length > 0 && (
-              <div className="space-y-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full justify-between gap-2"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setIsDropdownOpen(!isDropdownOpen);
-                  }}
-                >
-                  <div className="flex items-center gap-2">
-                    <UserPlus className="h-4 w-4" />
-                    Add Reviewer
-                  </div>
-                  <ChevronDown
-                    className={`h-4 w-4 transition-transform duration-200 ${
-                      isDropdownOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </Button>
-                <div
-                  className={`${isDropdownOpen ? "" : "hidden"} border rounded-lg max-h-48 overflow-y-auto`}
-                >
-                  {eligibleReviewers.map((reviewer) => {
-                    const isSelected = selectedReviewers.includes(
-                      reviewer.user_id,
-                    );
-                    return (
-                      <button
-                        key={reviewer.id}
-                        type="button"
-                        onClick={() => {
-                          if (isSelected) {
-                            setSelectedReviewers(
-                              selectedReviewers.filter(
-                                (id) => id !== reviewer.user_id,
-                              ),
-                            );
-                          } else {
-                            setSelectedReviewers([
-                              ...selectedReviewers,
-                              reviewer.user_id,
-                            ]);
-                          }
-                        }}
-                        className={`w-full flex items-center justify-between p-3 hover:bg-gray-50 border-b last:border-b-0 transition-colors ${
-                          isSelected ? "bg-cyan-50" : ""
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => {}}
-                            className="rounded"
-                          />
-                          <div className="text-left">
-                            <p className="font-medium text-sm">
-                              {Array.isArray(reviewer.users)
-                                ? reviewer.users[0]?.name || "Unknown User"
-                                : reviewer.users?.name || "Unknown User"}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {Array.isArray(reviewer.users)
-                                ? reviewer.users[0]?.email
-                                : reviewer.users?.email}
-                            </p>
-                          </div>
-                        </div>
-                        <span className="text-xs text-gray-500 uppercase">
-                          {reviewer.role}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
+                })}
               </div>
+            ) : (
+              <p className="text-sm text-gray-500 py-2">
+                No members available to assign
+              </p>
             )}
           </div>
 
@@ -484,15 +467,14 @@ export function OpeningFormDialog({
                   key={status}
                   type="button"
                   onClick={() => setFormData({ ...formData, status })}
-                  className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
-                    formData.status === status
-                      ? status === "open"
-                        ? "bg-cyan-500 text-white shadow-md"
-                        : status === "draft"
-                          ? "bg-cyan-100 text-cyan-700 border border-cyan-300"
-                          : "bg-black text-white shadow-md"
-                      : "bg-white text-gray-600 border border-gray-300 hover:bg-gray-50"
-                  }`}
+                  className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all ${formData.status === status
+                    ? status === "open"
+                      ? "bg-cyan-500 text-white shadow-md"
+                      : status === "draft"
+                        ? "bg-cyan-100 text-cyan-700 border border-cyan-300"
+                        : "bg-black text-white shadow-md"
+                    : "bg-white text-gray-600 border border-gray-300 hover:bg-gray-50"
+                    }`}
                 >
                   {status.charAt(0).toUpperCase() + status.slice(1)}
                 </button>

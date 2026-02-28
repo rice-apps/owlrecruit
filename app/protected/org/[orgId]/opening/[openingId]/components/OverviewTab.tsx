@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
 import type { ApplicationStatus } from "@/types/app";
+import { EditReviewersDialog } from "./EditReviewersDialog";
 
 interface Applicant {
   id: string;
@@ -39,6 +41,37 @@ const STATUS_ORDER: ApplicationStatus[] = [
   "No Status",
 ];
 
+// Avatar colours, same as in EditReviewersDialog
+const AVATAR_COLORS = [
+  "bg-violet-100 text-violet-700",
+  "bg-sky-100 text-sky-700",
+  "bg-emerald-100 text-emerald-700",
+  "bg-amber-100 text-amber-700",
+  "bg-rose-100 text-rose-700",
+  "bg-teal-100 text-teal-700",
+  "bg-fuchsia-100 text-fuchsia-700",
+  "bg-indigo-100 text-indigo-700",
+];
+
+function colorForId(id: string) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash << 5) - hash + id.charCodeAt(i);
+    hash |= 0;
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
+function initials(name: string | null | undefined) {
+  if (!name) return "?";
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .substring(0, 2)
+    .toUpperCase();
+}
+
 export function OverviewTab({
   applicants,
   orgId,
@@ -46,50 +79,58 @@ export function OverviewTab({
 }: OverviewTabProps) {
   const [reviewers, setReviewers] = useState<Reviewer[]>([]);
   const [loadingReviewers, setLoadingReviewers] = useState(true);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
-  useEffect(() => {
-    async function fetchReviewers() {
-      try {
-        const supabase = createClient();
-        const { data, error } = await supabase
-          .from("org_members")
-          .select(
-            `
+  const fetchReviewers = useCallback(async () => {
+    setLoadingReviewers(true);
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("org_members")
+        .select(
+          `
+          id,
+          user_id,
+          role,
+          users!user_id (
             id,
-            user_id,
-            role,
-            users!user_id (
-              id,
-              name,
-              email
-            )
-          `,
+            name,
+            email
           )
-          .eq("org_id", orgId)
-          .eq("role", "reviewer");
+        `,
+        )
+        .eq("org_id", orgId)
+        .eq("role", "reviewer");
 
-        if (error) {
-          console.error("Failed to fetch reviewers:", error);
-        } else if (data) {
-          // Transform data: Supabase returns users as an array, convert to single object
-          const transformedData = data.map((item: any) => ({
-            id: item.id,
-            user_id: item.user_id,
-            role: item.role,
-            user: Array.isArray(item.users) && item.users.length > 0
+      if (error) {
+        console.error("Failed to fetch reviewers:", error);
+      } else if (data) {
+        const transformedData = data.map((item: any) => ({
+          id: item.id,
+          user_id: item.user_id,
+          role: item.role,
+          user:
+            Array.isArray(item.users) && item.users.length > 0
               ? item.users[0]
               : item.users,
-          }));
-          setReviewers(transformedData);
-        }
-      } catch (error) {
-        console.error("Failed to fetch reviewers:", error);
-      } finally {
-        setLoadingReviewers(false);
+        }));
+        setReviewers(transformedData);
       }
+    } catch (error) {
+      console.error("Failed to fetch reviewers:", error);
+    } finally {
+      setLoadingReviewers(false);
     }
-    fetchReviewers();
   }, [orgId]);
+
+  useEffect(() => {
+    fetchReviewers();
+  }, [fetchReviewers]);
+
+  const reviewerUserIds = useMemo(
+    () => reviewers.map((r) => r.user_id),
+    [reviewers],
+  );
 
   const totalSubmissions = applicants.length;
 
@@ -189,7 +230,7 @@ export function OverviewTab({
             Assigned Reviewers
           </h2>
           <button
-            onClick={() => alert("Edit functionality coming later!")}
+            onClick={() => setEditDialogOpen(true)}
             className="text-cyan-600 text-sm hover:underline"
           >
             Edit
@@ -198,32 +239,37 @@ export function OverviewTab({
 
         {loadingReviewers ? (
           <div className="text-sm text-muted-foreground">
-            Loading reviewers...
+            Loading reviewers…
           </div>
         ) : reviewers.length > 0 ? (
-          <div className="flex flex-wrap gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {reviewers
               .filter((reviewer) => reviewer.user)
               .map((reviewer) => {
-                const userName = reviewer.user?.name || "Reviewer";
                 const displayName =
                   reviewer.user?.name || reviewer.user?.email || "Reviewer";
                 return (
-                  <Card key={reviewer.id} className="w-fit">
-                    <CardContent className="flex items-center gap-3 p-4">
-                      <Avatar className="h-10 w-10">
-                        <AvatarFallback className="bg-muted text-muted-foreground text-sm">
-                          {displayName
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")
-                            .substring(0, 2)
-                            .toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="font-medium text-sm">{displayName}</span>
-                    </CardContent>
-                  </Card>
+                  <div
+                    key={reviewer.id}
+                    className={cn(
+                      "flex items-center gap-3 rounded-xl border-2 border-dashed border-indigo-400 bg-indigo-50/50 p-3",
+                      "transition-all duration-200 hover:shadow-md hover:-translate-y-0.5",
+                    )}
+                  >
+                    <Avatar className="h-10 w-10 shrink-0">
+                      <AvatarFallback
+                        className={cn(
+                          "text-sm font-semibold",
+                          colorForId(reviewer.user_id),
+                        )}
+                      >
+                        {initials(displayName)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="font-medium text-sm text-gray-900 truncate">
+                      {displayName}
+                    </span>
+                  </div>
                 );
               })}
           </div>
@@ -233,6 +279,16 @@ export function OverviewTab({
           </p>
         )}
       </div>
+
+      {/* Edit Reviewers Dialog */}
+      <EditReviewersDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        orgId={orgId}
+        openingId={openingId}
+        currentReviewerUserIds={reviewerUserIds}
+        onSaved={fetchReviewers}
+      />
     </div>
   );
 }
