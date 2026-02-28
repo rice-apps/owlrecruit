@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { OpeningFormDialog } from "@/components/opening-form-dialog";
 import { OpeningStatusBadge } from "@/components/status-badge";
 import { AddMembersDialog } from "@/components/add-members-dialog";
 import {
@@ -220,21 +219,13 @@ export default async function ReviewerOrgPage({
         subtitle="Open roles for this organization"
         actions={
           isAdmin ? (
-            <OpeningFormDialog
-              orgId={orgId}
-              orgName={displayOrgName}
-              trigger={
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-rose-600 shadow-sm transition hover:border-rose-300 hover:text-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-200"
-                >
-                  <span>Add new position</span>
-                  <span aria-hidden="true" className="text-base font-bold">
-                    +
-                  </span>
-                </button>
-              }
-            />
+            <Link
+              href={`/protected/org/${orgId}/new-opening`}
+              className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-rose-600 shadow-sm transition hover:border-rose-300 hover:text-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-200"
+            >
+              <span>Add new position</span>
+              <span aria-hidden="true" className="text-base font-bold">+</span>
+            </Link>
           ) : null
         }
       >
