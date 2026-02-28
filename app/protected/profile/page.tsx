@@ -46,10 +46,7 @@ export default async function ProfilePage() {
   // fetch organization names
   const orgIds = Array.from(new Set(membershipsList.map((m) => m.org_id)));
   const { data: orgsData, error: orgsError } = orgIds.length
-    ? await supabase
-        .from("orgs")
-        .select("id, name")
-        .in("id", orgIds)
+    ? await supabase.from("orgs").select("id, name").in("id", orgIds)
     : { data: [], error: null };
 
   if (orgsError) {
@@ -63,7 +60,6 @@ export default async function ProfilePage() {
     ...m,
     org_name: orgMap.get(m.org_id) || "Unknown Organization",
   }));
-
 
   return (
     <div className="flex flex-col w-full p-8 max-w-4xl mx-auto">

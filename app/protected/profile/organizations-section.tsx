@@ -1,6 +1,5 @@
 "use client";
 
-import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import type { Enums } from "@/types/supabase";
 
@@ -20,7 +19,7 @@ export default function OrganizationsSection({
 }: OrganizationsSectionProps) {
   // component just renders passed memberships
 
-  const getRoleClasses = (role: string) => {
+  const getRoleClasses = () => {
     return "text-purple-700 border-purple-700";
   };
 
@@ -48,18 +47,18 @@ export default function OrganizationsSection({
                   {m.org_name || "Unknown Organization"}
                 </h3>
                 <Button
-                    variant="outline"
-                    size="sm"
-                    className={`${getRoleClasses(m.role)} cursor-default rounded-lg px-2 py-1 h-auto`}
-                    >
-                    {m.role.charAt(0).toUpperCase() + m.role.slice(1)}
+                  variant="outline"
+                  size="sm"
+                  className={`${getRoleClasses()} cursor-default rounded-lg px-2 py-1 h-auto`}
+                >
+                  {m.role.charAt(0).toUpperCase() + m.role.slice(1)}
                 </Button>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
                 className="text-red-600 hover:text-red-700 hover:bg-transparent border-none bg-transparent"
-                >
+              >
                 Leave organization
               </Button>
             </div>

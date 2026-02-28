@@ -388,7 +388,7 @@ export async function processCSVRows<T>(
 
 /**
  * Upserts questions into the questions table from form mappings.
- * 
+ *
  * @param supabase - Supabase client
  * @param openingId - The opening ID to associate questions with
  * @param columnMappings - Mappings for default fields (netid, name, year, major)
@@ -399,15 +399,17 @@ export async function upsertQuestionsFromCSV(
   supabase: SupabaseClient,
   openingId: string,
   columnMappings: Record<string, string>,
-  customQuestions: Array<{ id: string; text: string }>
+  customQuestions: Array<{ id: string; text: string }>,
 ): Promise<number> {
   // Delete existing questions
   await supabase.from("questions").delete().eq("opening_id", openingId);
 
   // Collect all question texts: defaults (if mapped) + custom
   const allQuestions = [
-    ...['name', 'netid', 'year', 'major'].filter(field => columnMappings[field]),
-    ...customQuestions.map(q => q.text)
+    ...["name", "netid", "year", "major"].filter(
+      (field) => columnMappings[field],
+    ),
+    ...customQuestions.map((q) => q.text),
   ];
 
   if (allQuestions.length === 0) return 0;
@@ -450,7 +452,12 @@ export async function processAndUploadApplications(
 
   // First, upsert questions into the questions table
   try {
-    await upsertQuestionsFromCSV(supabase, openingId, columnMappings, customQuestions);
+    await upsertQuestionsFromCSV(
+      supabase,
+      openingId,
+      columnMappings,
+      customQuestions,
+    );
   } catch (error: any) {
     console.error("Failed to upsert questions:", error);
   }

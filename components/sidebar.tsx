@@ -133,14 +133,14 @@ export function Sidebar({ orgs, user }: SidebarProps) {
       </nav>
 
       {/* User Profile Footer / Profile Page link */}
-      <Link 
-          href="/protected/profile"
-          className={cn(
-            "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
-            isActive("/protected/profile")
-              ? "bg-gray-100 text-gray-900"
-              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
-          )}
+      <Link
+        href="/protected/profile"
+        className={cn(
+          "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
+          isActive("/protected/profile")
+            ? "bg-gray-100 text-gray-900"
+            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
+        )}
       >
         <div className="p-4 border-t border-gray-100">
           <div className="flex items-center gap-3">
@@ -154,7 +154,9 @@ export function Sidebar({ orgs, user }: SidebarProps) {
               <span className="text-sm font-medium text-gray-900 truncate">
                 {user.name}
               </span>
-              <span className="text-xs text-gray-500 truncate">{user.email}</span>
+              <span className="text-xs text-gray-500 truncate">
+                {user.email}
+              </span>
             </div>
           </div>
         </div>
