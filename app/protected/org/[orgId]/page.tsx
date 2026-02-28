@@ -12,6 +12,7 @@ import {
   sectionShellTokens,
 } from "@/components/org/section-shell";
 import { OrgSectionNav } from "@/components/org-section-nav";
+import { LeaveOrgButton } from "@/components/leave-org-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type RawMemberUser = NonNullable<OrgMemberRecord["users"]>;
@@ -321,14 +322,7 @@ export default async function ReviewerOrgPage({
         tabIndex={-1}
         className="min-w-0 w-full pt-1 pb-8"
       >
-        <button
-          type="button"
-          disabled
-          aria-disabled="true"
-          className="text-left text-lg font-semibold tracking-tight text-red-500 transition sm:text-xl disabled:cursor-not-allowed disabled:opacity-100"
-        >
-          Leave organization
-        </button>
+        <LeaveOrgButton orgId={orgId} userId={userId!} isAdmin={isAdmin} orgName={displayOrgName} />
       </section>
     </div>
   );

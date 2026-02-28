@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -39,6 +40,7 @@ type SearchedUser = {
 };
 
 export function AddMembersDialog({ orgId }: { orgId: string }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -129,7 +131,8 @@ export function AddMembersDialog({ orgId }: { orgId: string }) {
         });
         if (!res.ok) throw new Error("Failed to update member role");
       }
-      // Background refresh
+      // Refresh server component to reflect changes on the page
+      router.refresh();
       fetchMembers();
     } catch (error) {
       console.error(error);
@@ -149,7 +152,8 @@ export function AddMembersDialog({ orgId }: { orgId: string }) {
       // Remove from search results implicitly or explicitly
       setSearchResults((prev) => prev.filter((u) => u.id !== userId));
       await fetchMembers();
-      setSearchQuery(""); // Clear search to go back to existing list maybe?
+      router.refresh();
+      setSearchQuery("");
     } catch (error) {
       console.error(error);
     }
