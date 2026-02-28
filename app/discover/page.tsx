@@ -35,7 +35,7 @@ export default function PublicDiscoverPage() {
           </Link>
           <div className="flex gap-4">
             <Link
-              href="/auth/signin"
+              href="/"
               className="text-sm font-medium text-gray-700 hover:text-gray-900"
             >
               Log in
