@@ -11,11 +11,18 @@ export interface ReviewerFeedbackPreview {
   id: string;
   author: string;
   role?: string | null;
-  summary: string;
+  summary?: string | null;
   submittedAt?: string | null;
   score?: number | null;
   maxScore?: number | null;
   scoreLabel?: string | null;
+  rubricScores?:
+    | {
+        name: string;
+        score: number;
+        maxScore: number;
+      }[]
+    | null;
 }
 
 interface SummaryTabProps {
@@ -190,16 +197,35 @@ export function SummaryTab({
                     </span>
                   </div>
                 </div>
-                <p className="mt-3 text-sm text-muted-foreground">
-                  {feedback.summary}
-                </p>
+                {(feedback.rubricScores?.length ?? 0) > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {feedback.rubricScores?.map((rubricScore) => (
+                      <span
+                        key={`${feedback.id}-${rubricScore.name}`}
+                        className="inline-flex items-center gap-1 rounded-xl border bg-muted/50 px-3 py-1 text-xs"
+                      >
+                        <span className="text-muted-foreground">
+                          {rubricScore.name}:
+                        </span>
+                        <span className="font-semibold text-foreground">
+                          {formatScoreValue(rubricScore.score)}
+                        </span>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {!feedback.rubricScores?.length && feedback.summary && (
+                  <p className="mt-3 text-sm text-muted-foreground">
+                    {feedback.summary}
+                  </p>
+                )}
               </div>
             ))}
           </div>
         ) : (
           <SummaryEmptyState
             title="No reviewer feedback yet"
-            message="Reviewer highlights will populate in this stream as soon as comments are posted."
+            message="Reviewer rubric submissions will appear here once scores are submitted."
           />
         )}
       </SummarySection>

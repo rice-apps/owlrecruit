@@ -17,10 +17,6 @@ import {
   type RubricCriterion,
   type RubricSummaryMetrics,
 } from "@/app/protected/org/[orgId]/opening/[openingId]/applicant/[applicantId]/components/summary-metrics";
-import {
-  normalizeReviewerFeedback,
-  type ReviewerComment,
-} from "@/app/protected/org/[orgId]/opening/[openingId]/applicant/[applicantId]/components/summary-feedback";
 
 interface ApplicationData {
   form_responses: Json;
@@ -28,17 +24,37 @@ interface ApplicationData {
 }
 
 interface ReviewerScoreSummary {
+  id?: string;
+  reviewerId?: string;
+  reviewerName?: string | null;
   scoreSkills?: Record<string, number> | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
 }
 
 interface ReviewsSummaryResponse {
-  comments?: ReviewerComment[];
   summary?: {
     rubric?: RubricCriterion[];
     reviewerScores?: ReviewerScoreSummary[];
     resumeUrl?: string | null;
   } | null;
 }
+
+const UNKNOWN_REVIEWER = "Unknown Reviewer";
+
+const parseScoreValue = (value: unknown, maxScore: number): number | null => {
+  const numeric = typeof value === "number" ? value : Number(value);
+
+  if (!Number.isFinite(numeric)) {
+    return null;
+  }
+
+  if (numeric < 0 || numeric > maxScore) {
+    return null;
+  }
+
+  return numeric;
+};
 
 interface SummaryTabState {
   rubricSummary: RubricSummaryMetrics | null;
@@ -102,6 +118,7 @@ export default function ApplicantReviewPage() {
   };
 
   const tab = searchParams.get("tab") || "submission";
+  const showReviewSidebar = tab !== "summary";
   const [applicationData, setApplicationData] =
     useState<ApplicationData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -147,7 +164,6 @@ export default function ApplicantReviewPage() {
     let isMounted = true;
 
     async function loadSummaryData() {
-      setSummaryFetchAttempted(true);
       setSummaryLoading(true);
       setSummaryError(null);
 
@@ -176,15 +192,63 @@ export default function ApplicantReviewPage() {
             )
           : null;
 
-        const reviewerFeedback = normalizeReviewerFeedback(
-          payload.comments ?? [],
-        ).map((feedback) => ({
-          id: feedback.id,
-          author: feedback.userName,
-          role: null,
-          summary: feedback.content,
-          submittedAt: feedback.createdAt,
-        }));
+        const rubricDefinition = payload.summary?.rubric ?? [];
+        const reviewerFeedback: ReviewerFeedbackPreview[] = (
+          payload.summary?.reviewerScores ?? []
+        ).flatMap((review) => {
+          const scoreSkills = review?.scoreSkills ?? {};
+          const rubricScores = rubricDefinition.flatMap((criterion) => {
+            const parsedValue = parseScoreValue(
+              scoreSkills[criterion.name],
+              criterion.max_val,
+            );
+
+            if (parsedValue === null) {
+              return [];
+            }
+
+            return [
+              {
+                name: criterion.name,
+                score: parsedValue,
+                maxScore: criterion.max_val,
+              },
+            ];
+          });
+
+          if (rubricScores.length === 0) {
+            return [];
+          }
+
+          const totalScore = rubricScores.reduce(
+            (sum, rubricScore) => sum + rubricScore.score,
+            0,
+          );
+          const totalMaxScore = rubricScores.reduce(
+            (sum, rubricScore) => sum + rubricScore.maxScore,
+            0,
+          );
+
+          return [
+            {
+              id:
+                review.id ??
+                review.reviewerId ??
+                `${review.reviewerName ?? UNKNOWN_REVIEWER}-${review.createdAt ?? ""}`,
+              author:
+                review.reviewerName?.trim() &&
+                review.reviewerName.trim().length > 0
+                  ? review.reviewerName.trim()
+                  : UNKNOWN_REVIEWER,
+              role: null,
+              summary: null,
+              submittedAt: review.updatedAt ?? review.createdAt ?? null,
+              score: totalScore,
+              maxScore: totalMaxScore,
+              rubricScores,
+            } satisfies ReviewerFeedbackPreview,
+          ];
+        });
 
         setSummaryData({
           rubricSummary,
@@ -203,6 +267,7 @@ export default function ApplicantReviewPage() {
         }
       } finally {
         if (isMounted) {
+          setSummaryFetchAttempted(true);
           setSummaryLoading(false);
         }
       }
@@ -362,16 +427,20 @@ export default function ApplicantReviewPage() {
           <>
             <ApplicantTabs />
             <div className="flex gap-4">
-              <div className="w-2/3 pr-4 w-2/3">{renderTabContent()}</div>
+              <div className={showReviewSidebar ? "w-2/3 pr-4" : "w-full"}>
+                {renderTabContent()}
+              </div>
             </div>
           </>
         )}
       </div>
-      <CommentsSidebar
-        applicantId={applicantId}
-        openingId={openingId}
-        orgId={orgId}
-      />
+      {showReviewSidebar ? (
+        <CommentsSidebar
+          applicantId={applicantId}
+          openingId={openingId}
+          orgId={orgId}
+        />
+      ) : null}
     </div>
   );
 }
