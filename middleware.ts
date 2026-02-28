@@ -1,7 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/", "/auth", "/login", "/discover", "/api/openings"];
+const PUBLIC_PATHS = ["/", "/auth", "/login", "/discover"];
+const PUBLIC_GET_ROUTES = ["/api/openings"];
 
 function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.some(
@@ -57,6 +58,12 @@ export async function middleware(request: NextRequest) {
 
   if (!user) {
     if (isApiRoute(pathname)) {
+      const isPublicGet =
+        request.method === "GET" &&
+        PUBLIC_GET_ROUTES.some((r) => pathname === r || pathname.startsWith(r + "/"));
+      if (isPublicGet) {
+        return supabaseResponse;
+      }
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const url = request.nextUrl.clone();
