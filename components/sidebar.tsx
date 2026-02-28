@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Plus, Search, Folder, Menu } from "lucide-react";
+import { Plus, Search, Folder, Menu, LogOut } from "lucide-react";
 import { OrgFormDialog } from "@/components/org-form-dialog";
 import type { OrgWithRole } from "@/types/app";
 import {
@@ -145,12 +145,21 @@ export function Sidebar({ orgs, user }: SidebarProps) {
               {user.name.charAt(0).toUpperCase()}
             </span>
           </div>
-          <div className="flex flex-col min-w-0">
+          <div className="flex flex-col min-w-0 flex-1">
             <span className="text-sm font-medium text-gray-900 truncate">
               {user.name}
             </span>
             <span className="text-xs text-gray-500 truncate">{user.email}</span>
           </div>
+          <form action="/auth/signout" method="post">
+            <button
+              type="submit"
+              title="Sign out"
+              className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+            >
+              <LogOut size={16} />
+            </button>
+          </form>
         </div>
       </div>
     </aside>
