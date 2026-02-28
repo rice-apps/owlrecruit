@@ -272,14 +272,16 @@ export function AddMembersDialog({ orgId }: { orgId: string }) {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="reviewer">Reviewer</SelectItem>
+                        <SelectItem value="reviewer" disabled={member.role === "admin" && members.filter((m) => m.role === "admin").length === 1}>Reviewer</SelectItem>
                         <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem
-                          value="Remove"
-                          className="text-destructive focus:text-destructive"
-                        >
-                          Remove
-                        </SelectItem>
+                        {!(member.role === "admin" && members.filter((m) => m.role === "admin").length === 1) && (
+                          <SelectItem
+                            value="Remove"
+                            className="text-destructive focus:text-destructive"
+                          >
+                            Remove
+                          </SelectItem>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
