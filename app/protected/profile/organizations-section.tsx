@@ -54,13 +54,6 @@ export default function OrganizationsSection({
                   {m.role.charAt(0).toUpperCase() + m.role.slice(1)}
                 </Button>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-red-600 hover:text-red-700 hover:bg-transparent border-none bg-transparent"
-              >
-                Leave organization
-              </Button>
             </div>
           ))}
         </div>
