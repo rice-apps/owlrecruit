@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Users, X } from "lucide-react";
+import { Users0101, X } from "@untitled-ui/icons-react";
 
 type Member = {
   id: string; // org_members.id
@@ -163,7 +163,7 @@ export function AddMembersDialog({ orgId }: { orgId: string }) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" className="gap-2">
-          <Users className="w-4 h-4" />
+          <Users01 className="w-4 h-4" />
           Add Members
         </Button>
       </DialogTrigger>

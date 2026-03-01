@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "@untitled-ui/icons-react";
 import { Json } from "@/types/supabase";
 import { createClient } from "@/lib/supabase/client";
 import { ApplicantTabs } from "./components/ApplicantTabs";

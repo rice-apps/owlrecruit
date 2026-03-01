@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight } from "@untitled-ui/icons-react";
 
 interface Question {
   id: string;

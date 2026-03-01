@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { Eye, Pencil } from "lucide-react";
+import { Eye, Pencil01 } from "@untitled-ui/icons-react";
 
 type OrgPageHeaderProps = {
   displayOrgName: string;
@@ -78,7 +78,7 @@ export function OrgPageHeader({
               }
               className={headerButtonClasses}
             >
-              <Pencil className="h-[22px] w-[22px]" />
+              <Pencil01 className="h-[22px] w-[22px]" />
               <span className="sr-only">
                 {hasRoleError
                   ? "Edit organization unavailable"

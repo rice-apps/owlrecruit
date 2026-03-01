@@ -4,11 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
   ChevronRight,
-  CloudUpload,
-  FileSpreadsheet,
+  UploadCloud01,
+  File01,
   Folder,
   File as FileIcon,
-} from "lucide-react";
+} from "@untitled-ui/icons-react";
 import { cn } from "@/lib/utils";
 import { useUploadWizard } from "./useUploadWizard";
 import { ColumnMappingStep } from "./ColumnMappingStep";
@@ -62,7 +62,7 @@ export function UploadTab() {
               <Card className="p-6 hover:border-cyan-500 hover:shadow-sm cursor-pointer transition-all group border-gray-200">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600">
-                    <FileSpreadsheet className="w-6 h-6" />
+                    <File01 className="w-6 h-6" />
                   </div>
                   <div className="flex-1">
                     <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-cyan-600 transition-colors">
@@ -130,7 +130,7 @@ export function UploadTab() {
               {!wizard.file ? (
                 <>
                   <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 mb-4">
-                    <CloudUpload className="w-6 h-6" />
+                    <UploadCloud01 className="w-6 h-6" />
                   </div>
                   <p className="text-cyan-500 font-medium mb-1">
                     Choose CSV file or drag and drop

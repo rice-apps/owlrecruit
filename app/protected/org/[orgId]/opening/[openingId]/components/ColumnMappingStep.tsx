@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChevronRight, X } from "lucide-react";
+import { ChevronRight, X } from "@untitled-ui/icons-react";
 import type { ColumnMapping, CustomQuestion } from "./useUploadWizard";
 
 interface ColumnMappingStepProps {

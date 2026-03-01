@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { RubricEditorDialog } from "@/components/rubric-editor-dialog";
-import { Loader2 } from "lucide-react";
+import { Loading01 } from "@untitled-ui/icons-react";
 
 interface Rubric {
   name: string;
@@ -126,7 +126,7 @@ export function SkillsScoringPanel({
         <div className="flex flex-col gap-6">
           {loadingRubrics ? (
             <div className="flex items-center justify-center py-4">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              <Loading01 className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
           ) : rubrics.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
@@ -179,7 +179,7 @@ export function SkillsScoringPanel({
           >
             {savingScore ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loading01 className="h-4 w-4 animate-spin" />
                 Saving...
               </>
             ) : (

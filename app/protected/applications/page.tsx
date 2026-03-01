@@ -7,8 +7,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { ArrowLeft, Search } from "lucide-react";
+import { SearchMd } from "@untitled-ui/icons-react";
 import { ApplicationCard } from "./components";
 import type { Enums } from "@/types/supabase";
 
@@ -73,14 +72,24 @@ export default function MyApplicationsPage() {
   // Separate active and past applications
   const activeApplications = filteredApplications.filter((app) => {
     // Active if not rejected/accepted offer, opening is not explicitly closed, and (no due date OR due date is in the future)
-    if (app.status === "Rejected" || app.status === "Accepted Offer" || app.opening_status === "closed") return false;
+    if (
+      app.status === "Rejected" ||
+      app.status === "Accepted Offer" ||
+      app.opening_status === "closed"
+    )
+      return false;
     if (!app.closes_at) return true;
     return new Date(app.closes_at) >= new Date();
   });
 
   const pastApplications = filteredApplications.filter((app) => {
     // Past if rejected/accepted offer, explicitly closed opening OR due date has passed
-    if (app.status === "Rejected" || app.status === "Accepted Offer" || app.opening_status === "closed") return true;
+    if (
+      app.status === "Rejected" ||
+      app.status === "Accepted Offer" ||
+      app.opening_status === "closed"
+    )
+      return true;
     if (!app.closes_at) return false;
     return new Date(app.closes_at) < new Date();
   });
@@ -96,7 +105,7 @@ export default function MyApplicationsPage() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
-        <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+        <SearchMd className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
       </div>
       {/* Loading State */}
       {loading && (

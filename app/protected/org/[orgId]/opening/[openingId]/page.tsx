@@ -7,7 +7,7 @@
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { ArrowLeft, Pencil0101 } from "@untitled-ui/icons-react";
 import { Button } from "@/components/ui/button";
 import { OpeningStatusBadge } from "@/components/status-badge";
 import { OpeningTabs } from "./components/OpeningTabs";
@@ -160,7 +160,7 @@ export default async function OpeningOverviewPage({
               {openingData?.title || "Untitled Opening"}
             </h1>
             <Button variant="ghost" size="icon" className="h-8 w-8">
-              <Pencil className="h-4 w-4" />
+              <Pencil01 className="h-4 w-4" />
             </Button>
           </div>
           <p className="text-gray-600 mt-2 max-w-2xl">

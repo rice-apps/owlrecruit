@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight } from "@untitled-ui/icons-react";
 import { createClient } from "@/lib/supabase/server";
 import { RubricSettingsForm } from "./components/RubricSettingsForm";
 

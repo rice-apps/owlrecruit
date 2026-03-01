@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loading01 } from "@untitled-ui/icons-react";
 
 interface Rubric {
   name: string;
@@ -147,7 +147,7 @@ export function RubricSettingsForm({
           disabled={isSaving}
           className="bg-cyan-600 hover:bg-cyan-700 text-white"
         >
-          {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isSaving && <Loading01 className="mr-2 h-4 w-4 animate-spin" />}
           Save
         </Button>
       </div>
