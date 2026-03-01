@@ -2,8 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Plus, Search, Folder, Menu, LogOut } from "lucide-react";
-import { OrgFormDialog } from "@/components/org-form-dialog";
+import { Folder, LogOut, Menu, Plus, Search } from "lucide-react";
 import type { OrgWithRole } from "@/types/app";
 import {
   Accordion,
@@ -136,18 +135,30 @@ export function Sidebar({ orgs, user }: SidebarProps) {
       {/* User Profile Footer */}
       <div className="p-4 border-t border-gray-100">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 overflow-hidden">
-            {/* Placeholder avatar */}
-            <span className="text-sm font-medium">
-              {user.name.charAt(0).toUpperCase()}
-            </span>
-          </div>
-          <div className="flex flex-col min-w-0 flex-1">
-            <span className="text-sm font-medium text-gray-900 truncate">
-              {user.name}
-            </span>
-            <span className="text-xs text-gray-500 truncate">{user.email}</span>
-          </div>
+          <Link
+            href="/protected/profile"
+            className={cn(
+              "flex items-center gap-3 flex-1 rounded-md transition-colors",
+              isActive("/protected/profile")
+                ? "bg-gray-100"
+                : "hover:bg-gray-50",
+            )}
+          >
+            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 overflow-hidden">
+              {/* Placeholder avatar */}
+              <span className="text-sm font-medium">
+                {user.name.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <div className="flex flex-col min-w-0 flex-1">
+              <span className="text-sm font-medium text-gray-900 truncate">
+                {user.name}
+              </span>
+              <span className="text-xs text-gray-500 truncate">
+                {user.email}
+              </span>
+            </div>
+          </Link>
           <form action="/auth/signout" method="post">
             <button
               type="submit"
