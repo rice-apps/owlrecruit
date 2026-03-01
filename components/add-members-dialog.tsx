@@ -91,7 +91,7 @@ export function AddMembersDialog({ orgId }: { orgId: string }) {
           setIsSearching(true);
           const res = await fetch(
             `/api/org/${orgId}/members/search?q=${encodeURIComponent(debouncedSearch)}`,
-            { cache: "no-store" }
+            { cache: "no-store" },
           );
           if (!res.ok) throw new Error("Failed to search users");
           const results = await res.json();
@@ -272,9 +272,21 @@ export function AddMembersDialog({ orgId }: { orgId: string }) {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="reviewer" disabled={member.role === "admin" && members.filter((m) => m.role === "admin").length === 1}>Reviewer</SelectItem>
+                        <SelectItem
+                          value="reviewer"
+                          disabled={
+                            member.role === "admin" &&
+                            members.filter((m) => m.role === "admin").length ===
+                              1
+                          }
+                        >
+                          Reviewer
+                        </SelectItem>
                         <SelectItem value="admin">Admin</SelectItem>
-                        {!(member.role === "admin" && members.filter((m) => m.role === "admin").length === 1) && (
+                        {!(
+                          member.role === "admin" &&
+                          members.filter((m) => m.role === "admin").length === 1
+                        ) && (
                           <SelectItem
                             value="Remove"
                             className="text-destructive focus:text-destructive"

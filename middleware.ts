@@ -60,7 +60,9 @@ export async function middleware(request: NextRequest) {
     if (isApiRoute(pathname)) {
       const isPublicGet =
         request.method === "GET" &&
-        PUBLIC_GET_ROUTES.some((r) => pathname === r || pathname.startsWith(r + "/"));
+        PUBLIC_GET_ROUTES.some(
+          (r) => pathname === r || pathname.startsWith(r + "/"),
+        );
       if (isPublicGet) {
         return supabaseResponse;
       }

@@ -76,7 +76,8 @@ export async function POST(
   }
 
   const body = await request.json();
-  const { title, description, application_link, closes_at, status, rubric } = body;
+  const { title, description, application_link, closes_at, status, rubric } =
+    body;
 
   if (!title?.trim()) {
     return NextResponse.json(

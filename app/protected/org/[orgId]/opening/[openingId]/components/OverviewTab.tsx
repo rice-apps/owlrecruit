@@ -76,9 +76,10 @@ export function OverviewTab({
             id: item.id,
             user_id: item.user_id,
             role: item.role,
-            user: Array.isArray(item.users) && item.users.length > 0
-              ? item.users[0]
-              : item.users,
+            user:
+              Array.isArray(item.users) && item.users.length > 0
+                ? item.users[0]
+                : item.users,
           }));
           setReviewers(transformedData);
         }
