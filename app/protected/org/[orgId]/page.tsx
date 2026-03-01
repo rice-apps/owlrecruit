@@ -225,7 +225,9 @@ export default async function ReviewerOrgPage({
               className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-rose-600 shadow-sm transition hover:border-rose-300 hover:text-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-200"
             >
               <span>Add new position</span>
-              <span aria-hidden="true" className="text-base font-bold">+</span>
+              <span aria-hidden="true" className="text-base font-bold">
+                +
+              </span>
             </Link>
           ) : null
         }
@@ -322,7 +324,12 @@ export default async function ReviewerOrgPage({
         tabIndex={-1}
         className="min-w-0 w-full pt-1 pb-8"
       >
-        <LeaveOrgButton orgId={orgId} userId={userId!} isAdmin={isAdmin} orgName={displayOrgName} />
+        <LeaveOrgButton
+          orgId={orgId}
+          userId={userId!}
+          isAdmin={isAdmin}
+          orgName={displayOrgName}
+        />
       </section>
     </div>
   );

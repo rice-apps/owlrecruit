@@ -8,7 +8,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Upload, CheckCircle, AlertCircle } from "lucide-react";
+import { Upload01, CheckCircle, AlertCircle } from "@untitled-ui/icons-react";
 import { useState } from "react";
 
 interface UploadDialogProps {
@@ -178,7 +178,7 @@ export default function UploadDialog({ openingId, orgId }: UploadDialogProps) {
     <Dialog onOpenChange={handleClose}>
       <DialogTrigger asChild>
         <Button size="lg">
-          <Upload className="mr-2 h-4 w-4" />
+          <Upload01 className="mr-2 h-4 w-4" />
           Upload CSV
         </Button>
       </DialogTrigger>

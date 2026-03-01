@@ -10,7 +10,12 @@ interface LeaveOrgButtonProps {
   orgName: string;
 }
 
-export function LeaveOrgButton({ orgId, userId, isAdmin, orgName }: LeaveOrgButtonProps) {
+export function LeaveOrgButton({
+  orgId,
+  userId,
+  isAdmin,
+  orgName,
+}: LeaveOrgButtonProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -18,7 +23,9 @@ export function LeaveOrgButton({ orgId, userId, isAdmin, orgName }: LeaveOrgButt
   const handleLeave = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/org/${orgId}/members/${userId}`, { method: "DELETE" });
+      const res = await fetch(`/api/org/${orgId}/members/${userId}`, {
+        method: "DELETE",
+      });
       if (!res.ok) throw new Error("Failed to leave organization");
       router.push("/protected/discover");
       router.refresh();

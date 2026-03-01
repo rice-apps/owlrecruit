@@ -114,7 +114,10 @@ export default async function ProfilePage() {
         />
       </div>
 
-      <OrganizationsSection memberships={orgMemberships} userId={userData.user.id} />
+      <OrganizationsSection
+        memberships={orgMemberships}
+        userId={userData.user.id}
+      />
     </div>
   );
 }

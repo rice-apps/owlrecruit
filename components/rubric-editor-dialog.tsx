@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, Loader2 } from "lucide-react";
+import { Loading01, Plus, Trash01 } from "@untitled-ui/icons-react";
 
 interface Rubric {
   name: string;
@@ -153,7 +153,7 @@ export function RubricEditorDialog({
                     className="text-muted-foreground hover:text-destructive"
                     onClick={() => handleRemoveSkill(index)}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash01 className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
@@ -177,7 +177,7 @@ export function RubricEditorDialog({
             Cancel
           </Button>
           <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isSaving && <Loading01 className="mr-2 h-4 w-4 animate-spin" />}
             Save Changes
           </Button>
         </div>

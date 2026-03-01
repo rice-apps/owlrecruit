@@ -9,7 +9,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Loader2, ArrowUp } from "lucide-react";
+import { Loading01, ArrowUp } from "@untitled-ui/icons-react";
 
 interface Comment {
   id: string;
@@ -104,7 +104,7 @@ export function CommentsPanel({
             className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-cyan-600 disabled:opacity-30 transition-colors"
           >
             {loading ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
+              <Loading01 className="h-5 w-5 animate-spin" />
             ) : (
               <div className="bg-muted rounded-full p-1">
                 <ArrowUp className="h-4 w-4" />

@@ -2,7 +2,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Folder, LogOut, Menu, Plus, Search } from "lucide-react";
+import {
+  Folder,
+  LogOut01,
+  AlignJustify,
+  Plus,
+  SearchMd,
+} from "@untitled-ui/icons-react";
 import type { OrgWithRole } from "@/types/app";
 import {
   Accordion,
@@ -66,7 +72,7 @@ export function Sidebar({ orgs, user }: SidebarProps) {
               : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
           )}
         >
-          <Search size={18} />
+          <SearchMd className="w-5 h-5" />
           Discover
         </Link>
 
@@ -80,8 +86,8 @@ export function Sidebar({ orgs, user }: SidebarProps) {
               : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
           )}
         >
-          {/* Using Folder/FileText as icon for Applications */}
-          <Folder size={18} />
+          {/* Using Folder as icon for Applications */}
+          <Folder className="w-5 h-5" />
           My Applications
         </Link>
 
@@ -95,7 +101,7 @@ export function Sidebar({ orgs, user }: SidebarProps) {
           <AccordionItem value="my-orgs" className="border-none">
             <AccordionTrigger className="w-full flex items-center justify-between px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:no-underline decoration-0">
               <div className="flex items-center gap-3">
-                <Menu size={18} />
+                <AlignJustify className="w-5 h-5" />
                 My Organizations
               </div>
             </AccordionTrigger>
@@ -122,7 +128,7 @@ export function Sidebar({ orgs, user }: SidebarProps) {
                     href="/protected/createorg"
                     className="flex items-center gap-2 text-cyan-600 hover:text-cyan-700 px-3 py-2 rounded-md text-sm font-medium transition-colors w-full"
                   >
-                    <Plus size={14} />
+                    <Plus className="w-3.5 h-3.5" />
                     Add new
                   </Link>
                 </div>
@@ -165,7 +171,7 @@ export function Sidebar({ orgs, user }: SidebarProps) {
               title="Sign out"
               className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
             >
-              <LogOut size={16} />
+              <LogOut01 className="w-4 h-4" />
             </button>
           </form>
         </div>

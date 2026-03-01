@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Search, SlidersHorizontal, ChevronRight } from "lucide-react";
+import { SearchMd, Sliders01, ChevronRight } from "@untitled-ui/icons-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -62,7 +62,7 @@ export function DiscoverFeed() {
     <div className="flex flex-col gap-6 p-6 max-w-7xl mx-auto w-full">
       {/* Search Header */}
       <div className="flex items-center gap-4 bg-white p-2 rounded-lg border shadow-sm">
-        <Search className="text-gray-400 ml-2" />
+        <SearchMd className="text-gray-400 ml-2" />
         <Input
           placeholder="Search organizations, positions..."
           className="border-0 shadow-none focus-visible:ring-0 text-base"
@@ -70,7 +70,7 @@ export function DiscoverFeed() {
           onChange={(e) => setSearchQuery(e.target.value)}
         />
         <Button variant="ghost" size="icon">
-          <SlidersHorizontal size={20} className="text-gray-500" />
+          <Sliders01 className="w-5 h-5 text-gray-500" />
         </Button>
       </div>
 
@@ -137,7 +137,7 @@ export function DiscoverFeed() {
                           : undefined
                       }
                     >
-                      <ChevronRight size={16} />
+                      <ChevronRight className="w-4 h-4" />
                     </Link>
                   </Button>
                 </CardFooter>

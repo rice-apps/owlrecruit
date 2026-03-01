@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload } from "lucide-react";
+import { Upload01 } from "@untitled-ui/icons-react";
 
 export default function NewOrgPage() {
   const router = useRouter();
@@ -65,7 +65,10 @@ export default function NewOrgPage() {
       <form onSubmit={handleSubmit} className="flex flex-col flex-1 space-y-7">
         {/* Organization Name */}
         <div className="space-y-2">
-          <Label htmlFor="org-name" className="text-sm font-medium text-gray-700">
+          <Label
+            htmlFor="org-name"
+            className="text-sm font-medium text-gray-700"
+          >
             Organization Name<span className="text-red-500">*</span>
           </Label>
           <Input
@@ -79,32 +82,45 @@ export default function NewOrgPage() {
 
         {/* Description */}
         <div className="space-y-2">
-          <Label htmlFor="org-description" className="text-sm font-medium text-gray-700">
+          <Label
+            htmlFor="org-description"
+            className="text-sm font-medium text-gray-700"
+          >
             Description<span className="text-red-500">*</span>
           </Label>
           <Input
             id="org-description"
             value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, description: e.target.value })
+            }
             className="h-11 text-sm w-full"
           />
         </div>
 
-        {/* Upload logo */}
+        {/* Upload01 logo */}
         <div className="space-y-2">
-          <Label className="text-sm font-medium text-gray-700">Upload logo</Label>
+          <Label className="text-sm font-medium text-gray-700">
+            Upload01 logo
+          </Label>
           <div className="border-2 border-dashed border-gray-300 rounded-md h-36 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-gray-400 transition-colors bg-white">
-            <Upload className="h-5 w-5 text-gray-400" />
-            <span className="text-sm text-gray-400">Drag &amp; drop or click to upload</span>
+            <Upload01 className="h-5 w-5 text-gray-400" />
+            <span className="text-sm text-gray-400">
+              Drag &amp; drop or click to upload
+            </span>
           </div>
         </div>
 
-        {/* Upload banner */}
+        {/* Upload01 banner */}
         <div className="space-y-2">
-          <Label className="text-sm font-medium text-gray-700">Upload banner</Label>
+          <Label className="text-sm font-medium text-gray-700">
+            Upload01 banner
+          </Label>
           <div className="border-2 border-dashed border-gray-300 rounded-md h-36 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-gray-400 transition-colors bg-white">
-            <Upload className="h-5 w-5 text-gray-400" />
-            <span className="text-sm text-gray-400">Drag &amp; drop or click to upload</span>
+            <Upload01 className="h-5 w-5 text-gray-400" />
+            <span className="text-sm text-gray-400">
+              Drag &amp; drop or click to upload
+            </span>
           </div>
         </div>
 

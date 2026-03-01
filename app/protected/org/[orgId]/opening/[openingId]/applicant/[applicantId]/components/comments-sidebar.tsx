@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { X, MessageSquare, Search } from "lucide-react";
+import { X, MessageChatCircle, SearchMd } from "@untitled-ui/icons-react";
 import { cn } from "@/lib/utils";
 import { CommentsPanel } from "./CommentsPanel";
 import { SkillsScoringPanel } from "./SkillsScoringPanel";
@@ -66,7 +66,7 @@ export function CommentsSidebar({
             )}
             title="Skills & Rubric"
           >
-            <Search className="w-5 h-5" />
+            <SearchMd className="w-5 h-5" />
           </button>
           <button
             onClick={() => setActiveTab("comments")}
@@ -78,7 +78,7 @@ export function CommentsSidebar({
             )}
             title="Comments"
           >
-            <MessageSquare className="w-5 h-5" />
+            <MessageChatCircle className="w-5 h-5" />
           </button>
         </div>
       </div>

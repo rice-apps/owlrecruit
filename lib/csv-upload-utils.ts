@@ -458,7 +458,7 @@ export async function processAndUploadApplications(
       columnMappings,
       customQuestions,
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to upsert questions:", error);
   }
 

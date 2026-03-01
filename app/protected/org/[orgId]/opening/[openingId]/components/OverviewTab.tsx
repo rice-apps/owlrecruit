@@ -72,14 +72,22 @@ export function OverviewTab({
           console.error("Failed to fetch reviewers:", error);
         } else if (data) {
           // Transform data: Supabase returns users as an array, convert to single object
-          const transformedData = data.map((item: any) => ({
-            id: item.id,
-            user_id: item.user_id,
-            role: item.role,
-            user: Array.isArray(item.users) && item.users.length > 0
-              ? item.users[0]
-              : item.users,
-          }));
+          const transformedData = data.map(
+            (item: {
+              id: string;
+              user_id: string;
+              role: string;
+              users: unknown;
+            }) => ({
+              id: item.id,
+              user_id: item.user_id,
+              role: item.role,
+              user:
+                Array.isArray(item.users) && item.users.length > 0
+                  ? item.users[0]
+                  : item.users,
+            }),
+          );
           setReviewers(transformedData);
         }
       } catch (error) {
@@ -205,7 +213,6 @@ export function OverviewTab({
             {reviewers
               .filter((reviewer) => reviewer.user)
               .map((reviewer) => {
-                const userName = reviewer.user?.name || "Reviewer";
                 const displayName =
                   reviewer.user?.name || reviewer.user?.email || "Reviewer";
                 return (

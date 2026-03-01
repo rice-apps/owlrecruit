@@ -6,7 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, ChevronDown, Trash2, UserPlus, X } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronDown,
+  Trash01,
+  UsersPlus,
+  X,
+} from "@untitled-ui/icons-react";
 
 interface EligibleReviewer {
   id: string;
@@ -35,7 +41,9 @@ export default function NewOpeningPage() {
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
   const [editingDue, setEditingDue] = React.useState(false);
   const [rubricOpen, setRubricOpen] = React.useState(false);
-  const [rubric, setRubric] = React.useState<{ name: string; max_val: number; description: string }[]>([]);
+  const [rubric, setRubric] = React.useState<
+    { name: string; max_val: number; description: string }[]
+  >([]);
 
   const [formData, setFormData] = React.useState({
     title: "",
@@ -55,7 +63,9 @@ export default function NewOpeningPage() {
         ]);
         if (orgsRes.ok) {
           const orgs = await orgsRes.json();
-          const org = orgs.find((o: { id: string; name: string }) => o.id === orgId);
+          const org = orgs.find(
+            (o: { id: string; name: string }) => o.id === orgId,
+          );
           if (org) setOrgName(org.name);
         }
         if (reviewersRes.ok) {
@@ -93,7 +103,8 @@ export default function NewOpeningPage() {
             ? new Date(formData.closes_at).toISOString()
             : null,
           status: formData.status,
-          rubric: rubric.filter((r) => r.name.trim()).length > 0 ? rubric : undefined,
+          rubric:
+            rubric.filter((r) => r.name.trim()).length > 0 ? rubric : undefined,
         }),
       });
 
@@ -134,7 +145,9 @@ export default function NewOpeningPage() {
           <Input
             id="title"
             value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, title: e.target.value })
+            }
             placeholder="e.g. Software Developer"
             required
             className="h-11 text-sm w-full"
@@ -143,7 +156,10 @@ export default function NewOpeningPage() {
 
         {/* Application Link */}
         <div className="space-y-2">
-          <Label htmlFor="application_link" className="text-sm font-medium text-gray-700">
+          <Label
+            htmlFor="application_link"
+            className="text-sm font-medium text-gray-700"
+          >
             Application Link
           </Label>
           <Input
@@ -160,7 +176,10 @@ export default function NewOpeningPage() {
 
         {/* Description */}
         <div className="space-y-2">
-          <Label htmlFor="description" className="text-sm font-medium text-gray-700">
+          <Label
+            htmlFor="description"
+            className="text-sm font-medium text-gray-700"
+          >
             Description
           </Label>
           <Textarea
@@ -211,7 +230,9 @@ export default function NewOpeningPage() {
               <Input
                 id="closes_date"
                 type="date"
-                value={formData.closes_at ? formData.closes_at.slice(0, 10) : ""}
+                value={
+                  formData.closes_at ? formData.closes_at.slice(0, 10) : ""
+                }
                 onChange={(e) => {
                   const date = e.target.value;
                   const time = formData.closes_at
@@ -265,7 +286,10 @@ export default function NewOpeningPage() {
             {[
               { label: "Accepted", className: "bg-green-500 text-white" },
               { label: "Rejected", className: "bg-red-400 text-white" },
-              { label: "Pending", className: "bg-white text-gray-700 border border-gray-300" },
+              {
+                label: "Pending",
+                className: "bg-white text-gray-700 border border-gray-300",
+              },
               { label: "Interview", className: "bg-gray-700 text-white" },
             ].map(({ label, className }) => (
               <span
@@ -311,7 +335,9 @@ export default function NewOpeningPage() {
                 );
               })
             ) : (
-              <p className="text-sm text-gray-500 py-2">No reviewers assigned</p>
+              <p className="text-sm text-gray-500 py-2">
+                No reviewers assigned
+              </p>
             )}
           </div>
 
@@ -327,7 +353,7 @@ export default function NewOpeningPage() {
                 }}
               >
                 <div className="flex items-center gap-2">
-                  <UserPlus className="h-4 w-4" />
+                  <UsersPlus className="h-4 w-4" />
                   Add Reviewer
                 </div>
                 <ChevronDown
@@ -446,7 +472,9 @@ export default function NewOpeningPage() {
                   <p className="text-sm font-semibold">
                     Criteria<span className="text-red-500">*</span>
                   </p>
-                  <p className="text-xs text-gray-400">i.e. "Experience, Teamwork"</p>
+                  <p className="text-xs text-gray-400">
+                    i.e. &quot;Experience, Teamwork&quot;
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm font-semibold">
@@ -456,7 +484,9 @@ export default function NewOpeningPage() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold">Description</p>
-                  <p className="text-xs text-gray-400">Describe this criterion more</p>
+                  <p className="text-xs text-gray-400">
+                    Describe this criterion more
+                  </p>
                 </div>
                 <div />
               </div>
@@ -464,12 +494,18 @@ export default function NewOpeningPage() {
               {/* Rows */}
               <div className="space-y-2">
                 {rubric.map((item, index) => (
-                  <div key={index} className="grid grid-cols-[1fr_140px_2fr_32px] gap-3 items-center">
+                  <div
+                    key={index}
+                    className="grid grid-cols-[1fr_140px_2fr_32px] gap-3 items-center"
+                  >
                     <Input
                       value={item.name}
                       onChange={(e) => {
                         const updated = [...rubric];
-                        updated[index] = { ...updated[index], name: e.target.value };
+                        updated[index] = {
+                          ...updated[index],
+                          name: e.target.value,
+                        };
                         setRubric(updated);
                       }}
                       placeholder="e.g. Teamwork"
@@ -481,7 +517,10 @@ export default function NewOpeningPage() {
                       value={item.max_val}
                       onChange={(e) => {
                         const updated = [...rubric];
-                        updated[index] = { ...updated[index], max_val: Number(e.target.value) };
+                        updated[index] = {
+                          ...updated[index],
+                          max_val: Number(e.target.value),
+                        };
                         setRubric(updated);
                       }}
                       className="h-9 text-sm"
@@ -490,7 +529,10 @@ export default function NewOpeningPage() {
                       value={item.description}
                       onChange={(e) => {
                         const updated = [...rubric];
-                        updated[index] = { ...updated[index], description: e.target.value };
+                        updated[index] = {
+                          ...updated[index],
+                          description: e.target.value,
+                        };
                         setRubric(updated);
                       }}
                       placeholder="Describe this criterion..."
@@ -498,10 +540,12 @@ export default function NewOpeningPage() {
                     />
                     <button
                       type="button"
-                      onClick={() => setRubric(rubric.filter((_, i) => i !== index))}
+                      onClick={() =>
+                        setRubric(rubric.filter((_, i) => i !== index))
+                      }
                       className="text-gray-300 hover:text-red-400 transition-colors"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash01 className="h-4 w-4" />
                     </button>
                   </div>
                 ))}
@@ -517,7 +561,12 @@ export default function NewOpeningPage() {
                 </span>
                 <button
                   type="button"
-                  onClick={() => setRubric([...rubric, { name: "", max_val: 10, description: "" }])}
+                  onClick={() =>
+                    setRubric([
+                      ...rubric,
+                      { name: "", max_val: 10, description: "" },
+                    ])
+                  }
                   className="text-sm font-medium text-indigo-500 hover:text-indigo-600 transition-colors"
                 >
                   Add new criterion +

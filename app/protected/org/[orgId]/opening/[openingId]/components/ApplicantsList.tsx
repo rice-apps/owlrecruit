@@ -20,7 +20,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { StatusBadge } from "@/components/status-badge";
-import { Search, Eye, EyeOff, ArrowUp, ArrowDown } from "lucide-react";
+import {
+  SearchMd,
+  Eye,
+  EyeOff,
+  ArrowUp,
+  ArrowDown,
+} from "@untitled-ui/icons-react";
 import type { ApplicationStatus } from "@/types/app";
 
 const ALL_STATUSES: ApplicationStatus[] = [
@@ -128,7 +134,7 @@ export function ApplicantsList({
       {/* Search and filters bar */}
       <div className="flex items-center gap-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <SearchMd className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
             placeholder="Search applicant by name, netid, year, major..."
             value={searchQuery}
