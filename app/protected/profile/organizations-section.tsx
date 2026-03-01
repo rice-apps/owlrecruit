@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { LeaveOrgButton } from "@/components/leave-org-button";
 import type { Enums } from "@/types/supabase";
 
 export interface OrgMembership {
@@ -12,10 +13,12 @@ export interface OrgMembership {
 
 interface OrganizationsSectionProps {
   memberships: OrgMembership[];
+  userId: string;
 }
 
 export default function OrganizationsSection({
   memberships,
+  userId,
 }: OrganizationsSectionProps) {
   // component just renders passed memberships
 
@@ -54,6 +57,12 @@ export default function OrganizationsSection({
                   {m.role.charAt(0).toUpperCase() + m.role.slice(1)}
                 </Button>
               </div>
+              <LeaveOrgButton
+                orgId={m.org_id}
+                userId={userId}
+                isAdmin={m.role === "admin"}
+                orgName={m.org_name}
+              />
             </div>
           ))}
         </div>
