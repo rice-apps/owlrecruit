@@ -4,10 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
   ChevronRight,
-  UploadCloud01,
   File01,
   Folder,
-  File as FileIcon,
+  UploadCloud01,
 } from "@untitled-ui/icons-react";
 import { cn } from "@/lib/utils";
 import { useUploadWizard } from "./useUploadWizard";
@@ -145,7 +144,7 @@ export function UploadTab() {
               ) : (
                 <>
                   <div className="w-12 h-12 rounded-full bg-cyan-100 flex items-center justify-center text-cyan-600 mb-4">
-                    <FileIcon className="w-6 h-6" />
+                    <File01 className="w-6 h-6" />
                   </div>
                   <p className="text-gray-900 font-medium mb-1">
                     {wizard.file.name}

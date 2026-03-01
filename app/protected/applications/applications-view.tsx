@@ -83,7 +83,7 @@ export function ApplicationsView({
           onChange={(e) => setSearchQuery(e.target.value)}
         />
         <Button variant="ghost" size="icon">
-          <Sliders01 size={20} className="text-gray-500" />
+          <Sliders01 className="w-5 h-5 text-gray-500" />
         </Button>
       </div>
 
@@ -188,7 +188,7 @@ export function ApplicationsView({
                                       target="_blank"
                                       rel="noopener noreferrer"
                                     >
-                                      <ChevronRight size={16} />
+                                      <ChevronRight className="w-4 h-4" />
                                     </Link>
                                   </Button>
                                 )}

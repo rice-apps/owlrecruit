@@ -140,7 +140,7 @@ export function QuestionsTab({ openingId }: QuestionsTabProps) {
                       key={idx}
                       className="py-3 px-4 bg-white/80 backdrop-blur-sm rounded-lg text-sm text-gray-800 shadow-sm hover:shadow-md transition-shadow"
                     >
-                      {response}
+                      {String(response)}
                     </div>
                   ))
                 ) : (
