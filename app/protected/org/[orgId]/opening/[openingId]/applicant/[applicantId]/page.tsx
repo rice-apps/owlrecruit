@@ -8,10 +8,58 @@ import { Json } from "@/types/supabase";
 import { createClient } from "@/lib/supabase/client";
 import { ApplicantTabs } from "./components/ApplicantTabs";
 import { CommentsSidebar } from "@/app/protected/org/[orgId]/opening/[openingId]/applicant/[applicantId]/components/comments-sidebar";
+import {
+  SummaryTab,
+  type ReviewerFeedbackPreview,
+} from "@/app/protected/org/[orgId]/opening/[openingId]/applicant/[applicantId]/components/SummaryTab";
+import {
+  computeRubricSummary,
+  type RubricCriterion,
+  type RubricSummaryMetrics,
+} from "@/app/protected/org/[orgId]/opening/[openingId]/applicant/[applicantId]/components/summary-metrics";
 
 interface ApplicationData {
   form_responses: Json;
   resume_url: string | null;
+}
+
+interface ReviewerScoreSummary {
+  id?: string;
+  reviewerId?: string;
+  reviewerName?: string | null;
+  scoreSkills?: Record<string, number> | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+}
+
+interface ReviewsSummaryResponse {
+  summary?: {
+    rubric?: RubricCriterion[];
+    reviewerScores?: ReviewerScoreSummary[];
+    resumeUrl?: string | null;
+  } | null;
+}
+
+const UNKNOWN_REVIEWER = "Unknown Reviewer";
+
+const parseScoreValue = (value: unknown, maxScore: number): number | null => {
+  const numeric = typeof value === "number" ? value : Number(value);
+
+  if (!Number.isFinite(numeric)) {
+    return null;
+  }
+
+  if (numeric < 0 || numeric > maxScore) {
+    return null;
+  }
+
+  return numeric;
+};
+
+interface SummaryTabState {
+  rubricSummary: RubricSummaryMetrics | null;
+  reviewerFeedback: ReviewerFeedbackPreview[];
+  resumeUrl: string | null;
 }
 
 interface FormResponse {
@@ -70,9 +118,14 @@ export default function ApplicantReviewPage() {
   };
 
   const tab = searchParams.get("tab") || "submission";
+  const showReviewSidebar = tab !== "summary";
   const [applicationData, setApplicationData] =
     useState<ApplicationData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [summaryData, setSummaryData] = useState<SummaryTabState | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
+  const [summaryFetchAttempted, setSummaryFetchAttempted] = useState(false);
 
   useEffect(() => {
     async function fetchApplicationData() {
@@ -95,17 +148,174 @@ export default function ApplicantReviewPage() {
     fetchApplicationData();
   }, [applicantId]);
 
+  useEffect(() => {
+    setSummaryData(null);
+    setSummaryError(null);
+    setSummaryFetchAttempted(false);
+    setSummaryLoading(false);
+  }, [applicantId, orgId]);
+
+  useEffect(() => {
+    if (tab !== "summary" || summaryFetchAttempted) {
+      return;
+    }
+
+    const controller = new AbortController();
+    let isMounted = true;
+
+    async function loadSummaryData() {
+      setSummaryLoading(true);
+      setSummaryError(null);
+
+      try {
+        const response = await fetch(
+          `/api/org/${orgId}/applications/${applicantId}/reviews`,
+          { signal: controller.signal },
+        );
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch summary (${response.status})`);
+        }
+
+        const payload: ReviewsSummaryResponse = await response.json();
+
+        if (!isMounted) {
+          return;
+        }
+
+        const rubricSummary = payload.summary?.rubric
+          ? computeRubricSummary(
+              payload.summary.rubric,
+              (payload.summary.reviewerScores ?? []).map(
+                (review) => review?.scoreSkills ?? {},
+              ),
+            )
+          : null;
+
+        const rubricDefinition = payload.summary?.rubric ?? [];
+        const reviewerFeedback: ReviewerFeedbackPreview[] = (
+          payload.summary?.reviewerScores ?? []
+        ).flatMap((review) => {
+          const scoreSkills = review?.scoreSkills ?? {};
+          const rubricScores = rubricDefinition.flatMap((criterion) => {
+            const parsedValue = parseScoreValue(
+              scoreSkills[criterion.name],
+              criterion.max_val,
+            );
+
+            if (parsedValue === null) {
+              return [];
+            }
+
+            return [
+              {
+                name: criterion.name,
+                score: parsedValue,
+                maxScore: criterion.max_val,
+              },
+            ];
+          });
+
+          if (rubricScores.length === 0) {
+            return [];
+          }
+
+          const totalScore = rubricScores.reduce(
+            (sum, rubricScore) => sum + rubricScore.score,
+            0,
+          );
+          const totalMaxScore = rubricScores.reduce(
+            (sum, rubricScore) => sum + rubricScore.maxScore,
+            0,
+          );
+
+          return [
+            {
+              id:
+                review.id ??
+                review.reviewerId ??
+                `${review.reviewerName ?? UNKNOWN_REVIEWER}-${review.createdAt ?? ""}`,
+              author:
+                review.reviewerName?.trim() &&
+                review.reviewerName.trim().length > 0
+                  ? review.reviewerName.trim()
+                  : UNKNOWN_REVIEWER,
+              role: null,
+              summary: null,
+              submittedAt: review.updatedAt ?? review.createdAt ?? null,
+              score: totalScore,
+              maxScore: totalMaxScore,
+              rubricScores,
+            } satisfies ReviewerFeedbackPreview,
+          ];
+        });
+
+        setSummaryData({
+          rubricSummary,
+          reviewerFeedback,
+          resumeUrl: payload.summary?.resumeUrl ?? null,
+        });
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+
+        console.error("Error fetching summary data:", error);
+
+        if (isMounted) {
+          setSummaryError("Unable to load summary data. Please try again.");
+        }
+      } finally {
+        if (isMounted) {
+          setSummaryFetchAttempted(true);
+          setSummaryLoading(false);
+        }
+      }
+    }
+
+    loadSummaryData();
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
+  }, [tab, orgId, applicantId, summaryFetchAttempted]);
+
   const formData =
     typeof applicationData?.form_responses === "object" &&
     applicationData?.form_responses
       ? (applicationData.form_responses as FormResponse)
       : {};
+  const toDisplayString = (value: unknown): string | undefined => {
+    if (value === null || value === undefined) {
+      return undefined;
+    }
+    if (typeof value === "string") {
+      return value;
+    }
+    if (typeof value === "number" || typeof value === "boolean") {
+      return String(value);
+    }
+    return undefined;
+  };
   const applicantName =
-    formData["Name"] || formData["name"] || "Unknown Applicant";
+    toDisplayString(formData["Name"]) ||
+    toDisplayString(formData["name"]) ||
+    "Unknown Applicant";
   const applicantEmail =
-    formData["Email"] || formData["email"] || "Unknown Email";
+    toDisplayString(formData["Email"]) ||
+    toDisplayString(formData["email"]) ||
+    "Unknown Email";
   const applicantMajor =
-    formData["Major"] || formData["major"] || "Unknown Major";
+    toDisplayString(formData["Major"]) ||
+    toDisplayString(formData["major"]) ||
+    "Unknown Major";
+
+  const handleSummaryRetry = () => {
+    setSummaryData(null);
+    setSummaryError(null);
+    setSummaryFetchAttempted(false);
+  };
 
   const renderTabContent = () => {
     switch (tab) {
@@ -146,12 +356,48 @@ export default function ApplicantReviewPage() {
             )}
           </div>
         );
-      case "summary":
+      case "summary": {
+        const summaryResumeUrl =
+          summaryData?.resumeUrl ?? applicationData?.resume_url ?? null;
+
+        if (summaryLoading || !summaryFetchAttempted) {
+          return (
+            <div className="rounded-2xl border border-dashed bg-muted/20 p-6 text-center text-sm text-muted-foreground">
+              Loading summary data...
+            </div>
+          );
+        }
+
+        if (summaryError) {
+          return (
+            <div className="rounded-2xl border border-destructive/40 bg-destructive/5 p-6 text-center">
+              <p className="text-sm text-destructive">{summaryError}</p>
+              <Button size="sm" className="mt-3" onClick={handleSummaryRetry}>
+                Retry
+              </Button>
+            </div>
+          );
+        }
+
+        if (!summaryData) {
+          return (
+            <div className="rounded-2xl border border-dashed bg-muted/20 p-6 text-center text-sm text-muted-foreground">
+              Summary data is not available yet.
+            </div>
+          );
+        }
+
         return (
-          <div>
-            <p>Summary content here</p>
-          </div>
+          <SummaryTab
+            applicantName={applicantName}
+            applicantEmail={applicantEmail}
+            applicantMajor={applicantMajor}
+            resumeUrl={summaryResumeUrl}
+            rubricSummary={summaryData.rubricSummary}
+            reviewerFeedback={summaryData.reviewerFeedback}
+          />
         );
+      }
       default:
         return null;
     }
@@ -181,17 +427,20 @@ export default function ApplicantReviewPage() {
           <>
             <ApplicantTabs />
             <div className="flex gap-4">
-              <div className="w-2/3 pr-4 w-2/3">{renderTabContent()}</div>
+              <div className={showReviewSidebar ? "w-2/3 pr-4" : "w-full"}>
+                {renderTabContent()}
+              </div>
             </div>
           </>
         )}
       </div>
-      <CommentsSidebar
-        applicantId={applicantId}
-        openingId={openingId}
-        orgId={orgId}
-      />
+      {showReviewSidebar ? (
+        <CommentsSidebar
+          applicantId={applicantId}
+          openingId={openingId}
+          orgId={orgId}
+        />
+      ) : null}
     </div>
   );
 }
- 
