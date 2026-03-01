@@ -7,7 +7,7 @@
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { ArrowLeft, Pencil0101 } from "@untitled-ui/icons-react";
+import { ArrowLeft, Pencil01 } from "@untitled-ui/icons-react";
 import { Button } from "@/components/ui/button";
 import { OpeningStatusBadge } from "@/components/status-badge";
 import { OpeningTabs } from "./components/OpeningTabs";

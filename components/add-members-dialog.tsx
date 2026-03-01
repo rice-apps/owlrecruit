@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Users0101, X } from "@untitled-ui/icons-react";
+import { Users01, X } from "@untitled-ui/icons-react";
 
 type Member = {
   id: string; // org_members.id

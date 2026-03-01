@@ -45,8 +45,8 @@ export function ApplicationsView({
           if (!response.ok) throw new Error("Search failed");
           const data = await response.json();
           setSearchResults(data);
-        } catch (error: any) {
-          if (error.name !== "AbortError") {
+        } catch (error: unknown) {
+          if (error instanceof Error && error.name !== "AbortError") {
             console.error("Failed to fetch search results:", error);
           }
         } finally {
@@ -203,7 +203,7 @@ export function ApplicationsView({
                 {!searchResults?.orgs?.length &&
                   !searchResults?.openings?.length && (
                     <div className="text-center py-10 text-gray-500">
-                      No results found for "{searchQuery}".
+                      No results found for &quot;{searchQuery}&quot;.
                     </div>
                   )}
               </>

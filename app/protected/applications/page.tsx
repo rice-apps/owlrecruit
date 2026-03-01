@@ -168,7 +168,7 @@ export default function MyApplicationsPage() {
             !searchQuery && (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">
-                  You haven't submitted any applications yet.
+                  You haven&apos;t submitted any applications yet.
                 </p>
               </div>
             )}

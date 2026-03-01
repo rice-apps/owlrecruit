@@ -473,7 +473,7 @@ export default function NewOpeningPage() {
                     Criteria<span className="text-red-500">*</span>
                   </p>
                   <p className="text-xs text-gray-400">
-                    i.e. "Experience, Teamwork"
+                    i.e. &quot;Experience, Teamwork&quot;
                   </p>
                 </div>
                 <div>

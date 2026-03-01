@@ -13,7 +13,7 @@ interface Question {
 
 interface Application {
   id: string;
-  form_responses: any;
+  form_responses: Record<string, unknown>;
 }
 
 interface QuestionsTabProps {
@@ -69,7 +69,7 @@ export function QuestionsTab({ openingId }: QuestionsTabProps) {
   const getResponsesForQuestion = (questionText: string) => {
     return applications
       .map((app) => {
-        const responses = (app.form_responses as Record<string, any>) || {};
+        const responses = app.form_responses || {};
         return responses[questionText];
       })
       .filter(

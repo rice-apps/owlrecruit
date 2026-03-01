@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash0101, Loading01 } from "@untitled-ui/icons-react";
+import { Loading01, Plus, Trash01 } from "@untitled-ui/icons-react";
 
 interface Rubric {
   name: string;
