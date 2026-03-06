@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronRight } from "@untitled-ui/icons-react";
+import { LinkExternal01 } from "@untitled-ui/icons-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "@/components/search-input";
@@ -108,37 +108,43 @@ export function DiscoverFeed() {
                 </div>
 
                 {/* Footer */}
-                <div className="px-4 py-3 border-t text-xs text-gray-400 flex justify-between items-center">
-                  <span>
-                    {opening.closes_at
-                      ? `Due ${new Date(opening.closes_at).toLocaleDateString(
-                          "en-US",
-                          {
-                            month: "2-digit",
-                            day: "2-digit",
-                            year: "numeric",
-                          },
-                        )}`
-                      : "No deadline"}
-                  </span>
-
-                  {isValidUrl(opening.application_link) && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      asChild
-                      className="h-8 w-8 p-0 rounded-full"
-                    >
-                      <Link
-                        href={opening.application_link!}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <ChevronRight className="w-4 h-4" />
-                      </Link>
-                    </Button>
-                  )}
-                </div>
+                {isValidUrl(opening.application_link) ? (
+                  <Link
+                    href={opening.application_link!}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-3 border-t text-xs text-gray-400 flex justify-between items-center hover:bg-gray-50 transition-colors"
+                  >
+                    <span>
+                      {opening.closes_at
+                        ? `Due ${new Date(opening.closes_at).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "2-digit",
+                              day: "2-digit",
+                              year: "numeric",
+                            },
+                          )}`
+                        : "No deadline"}
+                    </span>
+                    <LinkExternal01 className="w-4 h-4 text-gray-400" />
+                  </Link>
+                ) : (
+                  <div className="px-4 py-3 border-t text-xs text-gray-400">
+                    <span>
+                      {opening.closes_at
+                        ? `Due ${new Date(opening.closes_at).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "2-digit",
+                              day: "2-digit",
+                              year: "numeric",
+                            },
+                          )}`
+                        : "No deadline"}
+                    </span>
+                  </div>
+                )}
               </div>
             ))}
           </div>
