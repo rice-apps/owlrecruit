@@ -7,9 +7,9 @@
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { ArrowLeft, Pencil01 } from "@untitled-ui/icons-react";
-import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "@untitled-ui/icons-react";
 import { OpeningStatusBadge } from "@/components/status-badge";
+import { EditOpeningDialog } from "@/components/edit-opening-dialog";
 import { OpeningTabs } from "./components/OpeningTabs";
 import { ApplicantsList } from "./components/ApplicantsList";
 import { OverviewTab } from "./components/OverviewTab";
@@ -59,7 +59,7 @@ export default async function OpeningOverviewPage({
   // Fetch the opening details
   const { data: openingData } = await supabase
     .from("openings")
-    .select("title, description, status")
+    .select("title, description, status, application_link, closes_at")
     .eq("id", openingId)
     .single();
 
@@ -159,9 +159,17 @@ export default async function OpeningOverviewPage({
             <h1 className="text-2xl font-bold">
               {openingData?.title || "Untitled Opening"}
             </h1>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <Pencil01 className="h-4 w-4" />
-            </Button>
+            <EditOpeningDialog
+              orgId={orgId}
+              openingId={openingId}
+              initialData={{
+                title: openingData?.title || "",
+                description: openingData?.description || undefined,
+                application_link: openingData?.application_link || undefined,
+                closes_at: openingData?.closes_at || undefined,
+                status: openingData?.status || "draft",
+              }}
+            />
           </div>
           <p className="text-gray-600 mt-2 max-w-2xl">
             {openingData?.description}

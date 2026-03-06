@@ -140,7 +140,7 @@ export function OrgSectionNav({ sections }: OrgSectionNavProps) {
                 className={cn(
                   "-mb-px inline-flex items-center border-b px-0 pb-2 text-base font-semibold transition-colors sm:text-lg",
                   isActive
-                    ? "border-indigo-300 text-indigo-400"
+                    ? "border-owl-purple text-owl-purple"
                     : "border-transparent text-slate-500 hover:text-slate-700",
                 )}
               >

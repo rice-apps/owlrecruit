@@ -144,7 +144,7 @@ export default function NewOrgPage() {
           </Button>
           <Button
             type="submit"
-            className="px-8 h-11 text-sm bg-indigo-500 hover:bg-indigo-600"
+            className="px-8 h-11 text-sm"
             disabled={isSubmitting}
           >
             {isSubmitting ? "Creating..." : "Create organization"}

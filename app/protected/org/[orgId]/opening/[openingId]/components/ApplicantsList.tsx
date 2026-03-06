@@ -234,7 +234,7 @@ export function ApplicantsList({
                   <TableCell>
                     <Link
                       href={`/protected/org/${orgId}/opening/${openingId}/applicant/${applicant.applicationId}`}
-                      className="font-bold text-gray-900 hover:text-cyan-600"
+                      className="font-bold text-gray-900 hover:text-owl-purple"
                     >
                       {anonymousView
                         ? `Applicant ${applicant.id.slice(0, 8)}`
