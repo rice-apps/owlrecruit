@@ -94,14 +94,14 @@ export function CommentsPanel({
           <input
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            className="w-full pl-4 pr-10 py-3 rounded-full text-sm bg-white border border-input text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-cyan-600/50"
+            className="w-full pl-4 pr-10 py-3 rounded-full text-sm bg-white border border-input text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-owl-purple/50"
             placeholder="Add comment..."
             onKeyDown={(e) => e.key === "Enter" && handlePostComment()}
           />
           <button
             onClick={handlePostComment}
             disabled={loading || !newComment.trim()}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-cyan-600 disabled:opacity-30 transition-colors"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-owl-purple disabled:opacity-30 transition-colors"
           >
             {loading ? (
               <Loading01 className="h-5 w-5 animate-spin" />
