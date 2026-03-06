@@ -48,6 +48,13 @@ export default {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
+        owl: {
+          purple: "#8785ED",
+          "purple-light": "#C5C4F0",
+          pink: "#FA87AA",
+          green: "#589F55",
+          red: "#E71919",
+        },
         chart: {
           "1": "hsl(var(--chart-1))",
           "2": "hsl(var(--chart-2))",
