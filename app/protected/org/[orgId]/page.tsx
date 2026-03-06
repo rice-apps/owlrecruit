@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { OpeningStatusBadge } from "@/components/status-badge";
@@ -61,6 +62,21 @@ function isRawMemberResult(value: unknown): value is RawMemberResult {
   );
 }
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ orgId: string }>;
+}): Promise<Metadata> {
+  const { orgId } = await params;
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("orgs")
+    .select("name")
+    .eq("id", orgId)
+    .single();
+  return { title: data?.name ? `${data.name} | OwlRecruit` : "OwlRecruit" };
+}
+
 interface ReviewerOrgPageProps {
   params: Promise<{ orgId: string }>;
 }
@@ -77,12 +93,46 @@ export default async function ReviewerOrgPage({
   const { data: authData } = await supabase.auth.getClaims();
   const userId = authData?.claims?.sub;
 
-  const { data: membership, error: membershipError } = await supabase
-    .from("org_members")
-    .select("role")
-    .eq("user_id", userId)
-    .eq("org_id", orgId)
-    .single();
+  const [
+    { data: membership, error: membershipError },
+    { data: orgData },
+    { data: openings },
+    { data: membersData, error: membersError },
+  ] = await Promise.all([
+    supabase
+      .from("org_members")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("org_id", orgId)
+      .single(),
+    supabase
+      .from("orgs")
+      .select("name, description")
+      .eq("id", orgId)
+      .single(),
+    supabase
+      .from("openings")
+      .select("id, title, description, status, closes_at")
+      .eq("org_id", orgId)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("org_members")
+      .select(
+        `
+        id,
+        user_id,
+        role,
+        users:user_id (
+          id,
+          name,
+          email
+        )
+      `,
+      )
+      .eq("org_id", orgId)
+      .order("role", { ascending: true })
+      .order("user_id", { ascending: true }),
+  ]);
 
   if (membershipError) {
     console.error("Failed to fetch org membership", {
@@ -97,36 +147,6 @@ export default async function ReviewerOrgPage({
     ? membership.role
     : null;
   const isAdmin = membershipRole === "admin";
-
-  const { data: orgData } = await supabase
-    .from("orgs")
-    .select("name, description")
-    .eq("id", orgId)
-    .single();
-
-  const { data: openings } = await supabase
-    .from("openings")
-    .select("id, title, description, status, closes_at")
-    .eq("org_id", orgId)
-    .order("created_at", { ascending: false });
-
-  const { data: membersData, error: membersError } = await supabase
-    .from("org_members")
-    .select(
-      `
-        id,
-        user_id,
-        role,
-        users:user_id (
-          id,
-          name,
-          email
-        )
-      `,
-    )
-    .eq("org_id", orgId)
-    .order("role", { ascending: true })
-    .order("user_id", { ascending: true });
 
   if (membersError) {
     console.error("Failed to fetch org members", {

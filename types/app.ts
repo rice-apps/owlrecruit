@@ -15,9 +15,8 @@ export type Review = Tables<"application_reviews">;
 export type Comment = Tables<"comments">;
 export type Interview = Tables<"interviews">;
 export type OrgMember = Tables<"org_members">;
+export type Applicant = Tables<"applicants">;
 export type Question = Tables<"questions">;
-// export type Rubric = Tables<"rubrics">;
-// export type ReviewScore = Tables<"review_scores">;
 
 // -- Enums --
 export type ApplicationStatus = Enums<"status">;

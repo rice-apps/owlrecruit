@@ -22,10 +22,17 @@ export async function POST(
     data: { user },
   } = await supabase.auth.getUser();
 
+  if (!user) {
+    return new Response(
+      JSON.stringify(formatErrorResponse("Unauthorized")),
+      { status: 401 },
+    );
+  }
+
   const { data: membership } = await supabase
     .from("org_members")
     .select("role")
-    .eq("user_id", user!.id)
+    .eq("user_id", user.id)
     .eq("org_id", orgId)
     .single();
 

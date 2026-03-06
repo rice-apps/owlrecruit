@@ -1,9 +1,3 @@
-/**
- * My Applications Page
- *
- * Displays user's applications as cards with position, organization, status, and due date
- * Includes active applications and past applications sections
- */
 "use client";
 
 import { useEffect, useState } from "react";

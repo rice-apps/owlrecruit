@@ -1,6 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
+function escapeLikePattern(value: string): string {
+  return value.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_");
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -22,13 +26,13 @@ export async function GET(request: Request) {
         `,
         )
         .eq("status", "open")
-        .ilike("title", `%${query}%`)
+        .ilike("title", `%${escapeLikePattern(query)}%`)
         .order("created_at", { ascending: false }),
 
       supabase
         .from("orgs")
         .select("*")
-        .ilike("name", `%${query}%`)
+        .ilike("name", `%${escapeLikePattern(query)}%`)
         .order("name", { ascending: true }),
     ]);
 

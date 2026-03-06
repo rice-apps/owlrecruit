@@ -1,6 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
+function escapeLikePattern(value: string): string {
+  return value.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_");
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ orgId: string }> },
@@ -35,8 +39,9 @@ export async function GET(
     }
 
     if (searchQuery) {
+      const escaped = escapeLikePattern(searchQuery);
       query = query.or(
-        `name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`,
+        `name.ilike.%${escaped}%,email.ilike.%${escaped}%`,
       );
     }
 

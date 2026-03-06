@@ -45,6 +45,8 @@ export async function POST(request: Request) {
     });
 
     if (memberError) {
+      // Clean up orphaned org if member insert fails
+      await supabase.from("orgs").delete().eq("id", newOrg.id);
       return NextResponse.json({ error: memberError.message }, { status: 500 });
     }
 

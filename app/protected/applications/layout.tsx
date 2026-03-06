@@ -4,8 +4,13 @@
  * Server-side layout that wraps all dashboard pages with authentication checks.
  * Redirects unauthenticated users to login page before rendering dashboard content.
  */
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+
+export const metadata: Metadata = {
+  title: "My Applications | OwlRecruit",
+};
 
 export default async function DashboardLayout({
   children,

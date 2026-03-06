@@ -165,6 +165,10 @@ export async function POST(
     data: { user },
   } = await supabase.auth.getUser();
 
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { data: application } = await supabase
     .from("applications")
     .select("id, openings!inner(org_id)")
@@ -196,7 +200,7 @@ export async function POST(
       .from("comments")
       .insert({
         application_id: applicationId,
-        user_id: user!.id,
+        user_id: user.id,
         content: commentContent,
       })
       .select()
@@ -216,7 +220,7 @@ export async function POST(
       .from("application_reviews")
       .select("id")
       .eq("application_id", applicationId)
-      .eq("reviewer_id", user!.id)
+      .eq("reviewer_id", user.id)
       .single();
 
     let reviewResult;
@@ -232,7 +236,7 @@ export async function POST(
         .from("application_reviews")
         .insert({
           application_id: applicationId,
-          reviewer_id: user!.id,
+          reviewer_id: user.id,
           score_skills: scoreSkills,
         })
         .select()
