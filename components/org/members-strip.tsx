@@ -14,8 +14,8 @@ export type OrgMemberRecord = {
 };
 
 const ROLE_BADGE_STYLES: Record<OrgMemberRecord["role"], string> = {
-  admin: "border-amber-200 bg-amber-50 text-amber-900 shadow-sm",
-  reviewer: "border-slate-200 bg-slate-50 text-slate-900 shadow-sm",
+  admin: "border-purple-200 bg-white text-purple-900 shadow-sm",
+  reviewer: "border-purple-200 bg-white text-purple-900 shadow-sm",
 };
 
 type MembersStripProps = {
@@ -37,13 +37,12 @@ export function MembersStrip({ members }: MembersStripProps) {
       {members.map((member) => {
         const displayName =
           member.users?.name?.trim() || member.users?.email || "Unknown";
-        const email = member.users?.email || "No email";
         const initial = displayName.charAt(0).toUpperCase() || "U";
 
         return (
           <article
             key={member.id}
-            className="flex min-w-[200px] max-w-[240px] flex-col gap-3 rounded-2xl border border-slate-100 bg-white/90 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            className="flex min-w-[180px] max-w-[240px] flex-col gap-3 rounded-2xl border border-slate-100 bg-white/90 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
           >
             <div className="flex items-center gap-3">
               <Avatar className="h-10 w-10">
@@ -51,22 +50,21 @@ export function MembersStrip({ members }: MembersStripProps) {
                   {initial}
                 </AvatarFallback>
               </Avatar>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-slate-900 truncate">
+              <div className="min-w-0 flex flex-col gap-1">
+                <p className="text-sm font-semibold text-slate-900 truncate leading-none">
                   {displayName}
                 </p>
-                <p className="text-xs text-slate-500 truncate">{email}</p>
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "self-start text-[11px] uppercase tracking-[0.2em]",
+                    ROLE_BADGE_STYLES[member.role],
+                  )}
+                >
+                  {member.role === "admin" ? "Admin" : "Reviewer"}
+                </Badge>
               </div>
             </div>
-            <Badge
-              variant="outline"
-              className={cn(
-                "self-start text-[11px] uppercase tracking-[0.2em]",
-                ROLE_BADGE_STYLES[member.role],
-              )}
-            >
-              {member.role === "admin" ? "Admin" : "Reviewer"}
-            </Badge>
           </article>
         );
       })}
