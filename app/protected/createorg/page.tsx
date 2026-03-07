@@ -98,10 +98,10 @@ export default function NewOrgPage() {
           />
         </div>
 
-        {/* Upload01 logo */}
+        {/* Upload logo */}
         <div className="space-y-2">
           <Label className="text-sm font-medium text-gray-700">
-            Upload01 logo
+            Upload logo
           </Label>
           <div className="border-2 border-dashed border-gray-300 rounded-md h-36 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-gray-400 transition-colors bg-white">
             <Upload01 className="h-5 w-5 text-gray-400" />
@@ -111,10 +111,10 @@ export default function NewOrgPage() {
           </div>
         </div>
 
-        {/* Upload01 banner */}
+        {/* Upload banner */}
         <div className="space-y-2">
           <Label className="text-sm font-medium text-gray-700">
-            Upload01 banner
+            Upload banner
           </Label>
           <div className="border-2 border-dashed border-gray-300 rounded-md h-36 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-gray-400 transition-colors bg-white">
             <Upload01 className="h-5 w-5 text-gray-400" />
