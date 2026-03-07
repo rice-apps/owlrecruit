@@ -104,26 +104,13 @@ export default function NewOpeningPage() {
             rubric.filter((r) => r.name.trim()).length > 0
               ? rubric.map((r) => ({ ...r, max_val: Number(r.max_val) || 0 }))
               : undefined,
+          reviewer_ids: selectedReviewers,
         }),
       });
 
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error || "Failed to create opening");
-      }
-
-      const createdOpening = await response.json();
-
-      // Save reviewer assignments if any were selected
-      if (selectedReviewers.length > 0) {
-        await fetch(
-          `/api/org/${orgId}/openings/${createdOpening.id}/reviewers`,
-          {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ reviewer_user_ids: selectedReviewers }),
-          },
-        );
       }
 
       router.push(`/protected/org/${orgId}`);

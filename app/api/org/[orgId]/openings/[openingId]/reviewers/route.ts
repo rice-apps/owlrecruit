@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
  * GET /api/org/[orgId]/openings/[openingId]/reviewers
  *
  * Returns the list of reviewers assigned to this opening, with user details.
+ * Reads reviewer_ids from the openings table, then fetches user info.
  */
 export async function GET(
     _request: Request,
@@ -13,52 +14,49 @@ export async function GET(
     const { orgId, openingId } = await params;
     const supabase = await createClient();
 
-    // Verify the opening belongs to the org
-    const { data: opening } = await supabase
+    // Fetch the opening and its reviewer_ids
+    const { data: opening, error: openingError } = await supabase
         .from("openings")
-        .select("org_id")
+        .select("org_id, reviewer_ids")
         .eq("id", openingId)
         .single();
 
-    if (!opening || opening.org_id !== orgId) {
+    if (openingError || !opening) {
         return NextResponse.json(
             { error: "Opening not found" },
             { status: 404 },
         );
     }
 
-    // Fetch assigned reviewers with user details
-    const { data, error } = await supabase
-        .from("opening_reviewers")
-        .select(
-            `
-      id,
-      user_id,
-      users:user_id (
-        id,
-        name,
-        email
-      )
-    `,
-        )
-        .eq("opening_id", openingId);
-
-    if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    if (opening.org_id !== orgId) {
+        return NextResponse.json(
+            { error: "Opening does not belong to this organization" },
+            { status: 400 },
+        );
     }
 
-    // Normalise shape: flatten the nested users object
-    const reviewers = (data ?? []).map(
-        (row: { id: string; user_id: string; users: unknown }) => {
-            const u = Array.isArray(row.users) ? row.users[0] : row.users;
-            return {
-                id: row.id,
-                user_id: row.user_id,
-                name: (u as { name?: string | null })?.name ?? null,
-                email: (u as { email?: string | null })?.email ?? null,
-            };
-        },
-    );
+    const reviewerIds = (opening.reviewer_ids as string[]) ?? [];
+
+    if (reviewerIds.length === 0) {
+        return NextResponse.json([]);
+    }
+
+    // Fetch user details for the reviewer IDs
+    const { data: users, error: usersError } = await supabase
+        .from("users")
+        .select("id, name, email")
+        .in("id", reviewerIds);
+
+    if (usersError) {
+        return NextResponse.json({ error: usersError.message }, { status: 500 });
+    }
+
+    const reviewers = (users ?? []).map((u) => ({
+        id: u.id,
+        user_id: u.id,
+        name: u.name,
+        email: u.email,
+    }));
 
     return NextResponse.json(reviewers);
 }
@@ -125,33 +123,14 @@ export async function PUT(
         );
     }
 
-    // Delete all existing assignments for this opening
-    const { error: deleteError } = await supabase
-        .from("opening_reviewers")
-        .delete()
-        .eq("opening_id", openingId);
+    // Update reviewer_ids on the opening
+    const { error: updateError } = await supabase
+        .from("openings")
+        .update({ reviewer_ids: reviewer_user_ids })
+        .eq("id", openingId);
 
-    if (deleteError) {
-        return NextResponse.json({ error: deleteError.message }, { status: 500 });
-    }
-
-    // Insert new assignments
-    if (reviewer_user_ids.length > 0) {
-        const rows = reviewer_user_ids.map((userId: string) => ({
-            opening_id: openingId,
-            user_id: userId,
-        }));
-
-        const { error: insertError } = await supabase
-            .from("opening_reviewers")
-            .insert(rows);
-
-        if (insertError) {
-            return NextResponse.json(
-                { error: insertError.message },
-                { status: 500 },
-            );
-        }
+    if (updateError) {
+        return NextResponse.json({ error: updateError.message }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });

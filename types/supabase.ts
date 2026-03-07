@@ -230,6 +230,7 @@ export type Database = {
           description: string | null;
           id: string;
           org_id: string;
+          reviewer_ids: Json | null;
           rubric: Json[] | null;
           status: Database["public"]["Enums"]["opening_status"] | null;
           title: string;
@@ -242,6 +243,7 @@ export type Database = {
           description?: string | null;
           id?: string;
           org_id: string;
+          reviewer_ids?: Json | null;
           rubric?: Json[] | null;
           status?: Database["public"]["Enums"]["opening_status"] | null;
           title: string;
@@ -254,6 +256,7 @@ export type Database = {
           description?: string | null;
           id?: string;
           org_id?: string;
+          reviewer_ids?: Json | null;
           rubric?: Json[] | null;
           status?: Database["public"]["Enums"]["opening_status"] | null;
           title?: string;
@@ -265,42 +268,6 @@ export type Database = {
             columns: ["org_id"];
             isOneToOne: false;
             referencedRelation: "orgs";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      opening_reviewers: {
-        Row: {
-          id: string;
-          opening_id: string;
-          user_id: string;
-          created_at: string | null;
-        };
-        Insert: {
-          id?: string;
-          opening_id: string;
-          user_id: string;
-          created_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          opening_id?: string;
-          user_id?: string;
-          created_at?: string | null;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "opening_reviewers_opening_fkey";
-            columns: ["opening_id"];
-            isOneToOne: false;
-            referencedRelation: "openings";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "opening_reviewers_user_fkey";
-            columns: ["user_id"];
-            isOneToOne: false;
-            referencedRelation: "users";
             referencedColumns: ["id"];
           },
         ];

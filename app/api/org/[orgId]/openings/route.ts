@@ -76,8 +76,15 @@ export async function POST(
   }
 
   const body = await request.json();
-  const { title, description, application_link, closes_at, status, rubric } =
-    body;
+  const {
+    title,
+    description,
+    application_link,
+    closes_at,
+    status,
+    rubric,
+    reviewer_ids,
+  } = body;
 
   if (!title?.trim()) {
     return NextResponse.json(
@@ -96,6 +103,7 @@ export async function POST(
       closes_at: closes_at || null,
       status: status || "draft",
       rubric: rubric ?? null,
+      reviewer_ids: reviewer_ids ?? [],
     })
     .select()
     .single();
