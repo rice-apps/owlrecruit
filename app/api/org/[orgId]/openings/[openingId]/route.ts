@@ -1,29 +1,90 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
-export async function PATCH(
-  request: Request,
-  { params }: { params: Promise<{ orgId: string; openingId: string }> },
-) {
-  const { orgId, openingId } = await params;
+async function requireAdminForOrg(orgId: string) {
   const supabase = await createClient();
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
+  if (!user) {
+    return {
+      error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
+      supabase: null,
+    };
+  }
+
   const { data: membership } = await supabase
     .from("org_members")
     .select("role")
-    .eq("user_id", user!.id)
+    .eq("user_id", user.id)
     .eq("org_id", orgId)
     .single();
 
   if (membership?.role !== "admin") {
-    return NextResponse.json(
-      { error: "Only admins can update openings" },
-      { status: 403 },
-    );
+    return {
+      error: NextResponse.json(
+        { error: "Only admins can access opening configuration" },
+        { status: 403 },
+      ),
+      supabase: null,
+    };
+  }
+
+  return { error: null, supabase };
+}
+
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ orgId: string; openingId: string }> },
+) {
+  const { orgId, openingId } = await params;
+
+  const { error, supabase } = await requireAdminForOrg(orgId);
+  if (error || !supabase) {
+    return error;
+  }
+
+  const { data: openingData } = await supabase
+    .from("openings")
+    .select(
+      "id, title, description, application_link, status, closes_at, rubric",
+    )
+    .eq("id", openingId)
+    .eq("org_id", orgId)
+    .single();
+
+  if (!openingData) {
+    return NextResponse.json({ error: "Opening not found" }, { status: 404 });
+  }
+
+  return NextResponse.json({
+    opening: {
+      title: openingData.title || "",
+      description: openingData.description || "",
+      application_link: openingData.application_link || "",
+      closes_at: openingData.closes_at || "",
+      status: openingData.status || "draft",
+      rubric: Array.isArray(openingData.rubric)
+        ? openingData.rubric.map((item) => ({
+            name: item?.name || "",
+            max_val: item?.max_val || 10,
+            description: item?.description || "",
+          }))
+        : [],
+    },
+  });
+}
+
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ orgId: string; openingId: string }> },
+) {
+  const { orgId, openingId } = await params;
+  const { error, supabase } = await requireAdminForOrg(orgId);
+  if (error || !supabase) {
+    return error;
   }
 
   const { data: opening } = await supabase

@@ -182,27 +182,21 @@ export function OverviewTab({
         </Card>
       </div>
 
-      {/* Rubric Settings */}
-      <Link
-        href={`/protected/org/${orgId}/opening/${openingId}/rubric`}
-        className="text-owl-purple text-sm hover:underline inline-block"
-      >
-        Rubric Settings
-      </Link>
+      {/* Rubric */}
+      <div className="flex items-center gap-4">
+        <Link
+          href={`/protected/org/${orgId}/opening/${openingId}/rubric`}
+          className="text-owl-purple text-sm hover:underline"
+        >
+          View Rubric
+        </Link>
+      </div>
 
       {/* Assigned Reviewers */}
       <div className="space-y-4">
-        <div className="flex items-center gap-4">
-          <h2 className="text-base font-semibold uppercase tracking-wide">
-            Assigned Reviewers
-          </h2>
-          <button
-            onClick={() => alert("Edit functionality coming later!")}
-            className="text-owl-purple text-sm hover:underline"
-          >
-            Edit
-          </button>
-        </div>
+        <h2 className="text-base font-semibold uppercase tracking-wide">
+          Assigned Reviewers
+        </h2>
 
         {loadingReviewers ? (
           <div className="text-sm text-muted-foreground">
