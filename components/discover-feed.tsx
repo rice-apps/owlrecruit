@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { LinkExternal01 } from "@untitled-ui/icons-react";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "@/components/search-input";
 
@@ -103,7 +102,7 @@ export function DiscoverFeed() {
                     <p className="text-sm text-gray-500">{opening.org.name}</p>
                   </div>
                   <div className="mt-2">
-                    <Badge variant="open">Open</Badge>
+                    <Badge variant="default">Open</Badge>
                   </div>
                 </div>
 
