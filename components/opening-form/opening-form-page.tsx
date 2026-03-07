@@ -65,7 +65,7 @@ export function OpeningFormPage({
     description: initialOpening?.description || "",
     application_link: initialOpening?.application_link || "",
     closes_at: toLocalDateTimeValue(initialOpening?.closes_at),
-    status: initialOpening?.status || "draft",
+    status: initialOpening?.status === "closed" ? "closed" : "open",
   });
 
   const pageTitle = isEditMode ? "Edit Opening" : "Create New Opening";
@@ -260,7 +260,7 @@ export function OpeningFormPage({
             Opening Status
           </Label>
           <div className="flex flex-wrap gap-2">
-            {(["draft", "open", "closed"] as const).map((status) => (
+            {(["open", "closed"] as const).map((status) => (
               <button
                 key={status}
                 type="button"
@@ -269,9 +269,7 @@ export function OpeningFormPage({
                   formData.status === status
                     ? status === "open"
                       ? "bg-owl-purple text-white shadow-md"
-                      : status === "draft"
-                        ? "border border-owl-purple/30 bg-owl-purple/10 text-owl-purple"
-                        : "bg-black text-white shadow-md"
+                      : "bg-black text-white shadow-md"
                     : "border border-gray-300 bg-white text-gray-600 hover:bg-gray-50"
                 }`}
               >

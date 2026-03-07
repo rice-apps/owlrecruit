@@ -78,7 +78,7 @@ export async function POST(request: Request) {
         description: description?.trim() || null,
         application_link: application_link?.trim() || null,
         closes_at: closes_at || null,
-        status: status || "draft",
+        status: status || "open",
       })
       .select()
       .single();
