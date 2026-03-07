@@ -75,7 +75,7 @@ export default function SignUpGoogleBtn() {
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
                 </svg>
               </div>
-              <div>
+              <div className="text-left">
                 <h2 className="text-lg font-semibold text-gray-900">Failed to Sign Up</h2>
                 <p className="mt-1 text-sm text-gray-600">
                   RiceApps requires the use of your Rice email to sign up. Please use your Rice email to sign up for an account.
@@ -86,7 +86,7 @@ export default function SignUpGoogleBtn() {
             <div className="flex justify-end mt-4">
               <button
                 onClick={() => setAuthError(false)}
-className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
+                className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
               >
                 Close
               </button>
