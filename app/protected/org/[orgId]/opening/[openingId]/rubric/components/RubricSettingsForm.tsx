@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loading01 } from "@untitled-ui/icons-react";
+import { Loading01, Trash01 } from "@untitled-ui/icons-react";
 
 interface Rubric {
   name: string;
@@ -109,7 +109,7 @@ export function RubricSettingsForm({
       <Card>
         <CardContent className="p-6">
           {/* Header row */}
-          <div className="grid grid-cols-[1fr_120px_1fr] gap-4 mb-4">
+          <div className="grid grid-cols-[1fr_120px_1fr_32px] gap-4 mb-4">
             <span className="text-sm font-semibold">
               Criteria<span className="text-red-500">*</span>
             </span>
@@ -117,6 +117,7 @@ export function RubricSettingsForm({
               Max Score<span className="text-red-500">*</span>
             </span>
             <span className="text-sm font-semibold">Description</span>
+            <span />
           </div>
 
           {/* Rubric rows */}
@@ -124,7 +125,7 @@ export function RubricSettingsForm({
             {rubric.map((item, index) => (
               <div
                 key={index}
-                className="grid grid-cols-[1fr_120px_1fr] gap-4 items-center"
+                className="grid grid-cols-[1fr_120px_1fr_32px] gap-4 items-center"
               >
                 <Input
                   value={item.name}
@@ -147,6 +148,15 @@ export function RubricSettingsForm({
                   }
                   placeholder=""
                 />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setRubric(rubric.filter((_, i) => i !== index))
+                  }
+                  className="text-gray-300 hover:text-red-400 transition-colors"
+                >
+                  <Trash01 className="h-4 w-4" />
+                </button>
               </div>
             ))}
           </div>
