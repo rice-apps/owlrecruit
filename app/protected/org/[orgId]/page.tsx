@@ -100,7 +100,7 @@ export default async function ReviewerOrgPage({
 
   const { data: orgData } = await supabase
     .from("orgs")
-    .select("name, description")
+    .select("name, description, social_links")
     .eq("id", orgId)
     .single();
 
@@ -191,6 +191,14 @@ export default async function ReviewerOrgPage({
         roleLabel={roleLabel}
         isAdmin={isAdmin}
         hasRoleError={Boolean(membershipError)}
+        orgId={orgId}
+        socialLinks={
+          orgData?.social_links &&
+          typeof orgData.social_links === "object" &&
+          !Array.isArray(orgData.social_links)
+            ? (orgData.social_links as Record<string, string>)
+            : {}
+        }
       />
 
       <OrgSectionNav

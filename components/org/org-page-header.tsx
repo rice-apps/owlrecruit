@@ -1,12 +1,19 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { Eye, Pencil01 } from "@untitled-ui/icons-react";
+import {
+  SocialLinksDisplay,
+  type SocialLinks,
+} from "@/components/org/social-links";
+import { EditSocialLinksDialog } from "@/components/org/edit-social-links-dialog";
 
 type OrgPageHeaderProps = {
   displayOrgName: string;
   roleLabel: string;
   isAdmin: boolean;
   hasRoleError: boolean;
+  orgId: string;
+  socialLinks?: SocialLinks;
 };
 
 export function OrgPageHeader({
@@ -14,6 +21,8 @@ export function OrgPageHeader({
   roleLabel,
   isAdmin,
   hasRoleError,
+  orgId,
+  socialLinks = {},
 }: OrgPageHeaderProps) {
   const orgInitial = displayOrgName.charAt(0).toUpperCase();
   const headerButtonClasses =
@@ -46,6 +55,12 @@ export function OrgPageHeader({
               >
                 {roleLabel}
               </span>
+            </div>
+            <div className="mt-3 flex items-center gap-1">
+              <SocialLinksDisplay links={socialLinks} />
+              {isAdmin && (
+                <EditSocialLinksDialog orgId={orgId} initialLinks={socialLinks} />
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2 pt-3">

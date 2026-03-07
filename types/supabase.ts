@@ -314,6 +314,7 @@ export type Database = {
           description: string | null;
           id: string;
           name: string;
+          social_links: Json | null;
           updated_at: string | null;
         };
         Insert: {
@@ -321,6 +322,7 @@ export type Database = {
           description?: string | null;
           id?: string;
           name: string;
+          social_links?: Json | null;
           updated_at?: string | null;
         };
         Update: {
@@ -328,6 +330,7 @@ export type Database = {
           description?: string | null;
           id?: string;
           name?: string;
+          social_links?: Json | null;
           updated_at?: string | null;
         };
         Relationships: [];

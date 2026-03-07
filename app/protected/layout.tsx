@@ -33,6 +33,7 @@ export default async function ProtectedLayout({
         id,
         name,
         description,
+        social_links,
         created_at,
         updated_at
       )
