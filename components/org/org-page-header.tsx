@@ -40,7 +40,7 @@ export function OrgPageHeader({
                 className={cn(
                   "inline-flex items-center rounded-full border px-3 py-0.5 text-xs font-semibold",
                   isAdmin
-                    ? "border-indigo-200 bg-indigo-50/70 text-indigo-400"
+                    ? "border-owl-purple/30 bg-owl-purple/10 text-owl-purple"
                     : "border-slate-200 bg-slate-100 text-slate-500",
                 )}
               >

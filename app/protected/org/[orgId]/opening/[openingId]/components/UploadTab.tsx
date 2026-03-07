@@ -20,7 +20,7 @@ export function UploadTab() {
       <div className="relative flex items-center justify-between mb-12 px-4 max-w-3xl mx-auto">
         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-[2px] bg-gray-200 -z-10" />
         <div
-          className="absolute left-0 top-1/2 -translate-y-1/2 h-[2px] bg-cyan-500 -z-10 transition-all duration-300"
+          className="absolute left-0 top-1/2 -translate-y-1/2 h-[2px] bg-owl-purple -z-10 transition-all duration-300"
           style={{
             width: `${((wizard.currentStep - 1) / (wizard.steps.length - 1)) * 100}%`,
           }}
@@ -34,7 +34,7 @@ export function UploadTab() {
                 className={cn(
                   "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium border-2 transition-colors",
                   isActive || isCompleted
-                    ? "bg-cyan-500 border-cyan-500 text-white"
+                    ? "bg-owl-purple border-owl-purple text-white"
                     : "bg-gray-50 border-gray-300 text-gray-400",
                 )}
               >
@@ -58,25 +58,25 @@ export function UploadTab() {
             </div>
 
             <div className="space-y-4">
-              <Card className="p-6 hover:border-cyan-500 hover:shadow-sm cursor-pointer transition-all group border-gray-200">
+              <Card className="p-6 hover:border-owl-purple hover:shadow-sm cursor-pointer transition-all group border-gray-200">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600">
                     <File01 className="w-6 h-6" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-cyan-600 transition-colors">
+                    <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-owl-purple transition-colors">
                       Google Forms
                     </h3>
                     <p className="text-sm text-gray-500">
                       Import your candidates from Google Forms.
                     </p>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-cyan-500 transition-colors" />
+                  <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-owl-purple transition-colors" />
                 </div>
               </Card>
 
               <Card
-                className="p-6 hover:border-cyan-500 hover:shadow-sm cursor-pointer transition-all group border-gray-200"
+                className="p-6 hover:border-owl-purple hover:shadow-sm cursor-pointer transition-all group border-gray-200"
                 onClick={() => wizard.setCurrentStep(2)}
               >
                 <div className="flex items-center gap-4">
@@ -84,14 +84,14 @@ export function UploadTab() {
                     <Folder className="w-6 h-6" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-cyan-600 transition-colors">
+                    <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-owl-purple transition-colors">
                       CSV File
                     </h3>
                     <p className="text-sm text-gray-500">
                       Import your candidates from a CSV file.
                     </p>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-cyan-500 transition-colors" />
+                  <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-owl-purple transition-colors" />
                 </div>
               </Card>
             </div>
@@ -111,7 +111,7 @@ export function UploadTab() {
               className={cn(
                 "border-2 border-dashed rounded-lg p-12 flex flex-col items-center justify-center transition-colors",
                 wizard.isDragOver
-                  ? "border-cyan-500 bg-cyan-50"
+                  ? "border-owl-purple bg-owl-purple/10"
                   : "border-gray-200 bg-gray-50/50",
               )}
               onDragOver={wizard.handleDragOver}
@@ -131,19 +131,19 @@ export function UploadTab() {
                   <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 mb-4">
                     <UploadCloud01 className="w-6 h-6" />
                   </div>
-                  <p className="text-cyan-500 font-medium mb-1">
+                  <p className="text-owl-purple font-medium mb-1">
                     Choose CSV file or drag and drop
                   </p>
                   <Button
                     onClick={() => wizard.fileInputRef.current?.click()}
-                    className="mt-4 bg-cyan-600 hover:bg-cyan-700"
+                    className="mt-4"
                   >
                     Upload CSV
                   </Button>
                 </>
               ) : (
                 <>
-                  <div className="w-12 h-12 rounded-full bg-cyan-100 flex items-center justify-center text-cyan-600 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-owl-purple/10 flex items-center justify-center text-owl-purple mb-4">
                     <File01 className="w-6 h-6" />
                   </div>
                   <p className="text-gray-900 font-medium mb-1">
@@ -181,7 +181,7 @@ export function UploadTab() {
               </Button>
               <Button
                 onClick={wizard.handleNext}
-                className="w-24 bg-cyan-500 hover:bg-cyan-600"
+                className="w-24 bg-owl-purple hover:bg-owl-purple/90"
                 disabled={!wizard.file}
               >
                 Next <ChevronRight className="w-4 h-4 ml-1" />
@@ -316,7 +316,7 @@ export function UploadTab() {
               </Button>
               <Button
                 onClick={wizard.handleFinishSetup}
-                className="bg-cyan-500 hover:bg-cyan-600"
+                className="bg-owl-purple hover:bg-owl-purple/90"
                 disabled={wizard.isUploading}
               >
                 {wizard.isUploading ? "Uploading..." : "Finish Setup"}

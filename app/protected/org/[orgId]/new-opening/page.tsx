@@ -42,7 +42,7 @@ export default function NewOpeningPage() {
   const [editingDue, setEditingDue] = React.useState(false);
   const [rubricOpen, setRubricOpen] = React.useState(false);
   const [rubric, setRubric] = React.useState<
-    { name: string; max_val: number; description: string }[]
+    { name: string; max_val: number | string; description: string }[]
   >([]);
 
   const [formData, setFormData] = React.useState({
@@ -104,7 +104,9 @@ export default function NewOpeningPage() {
             : null,
           status: formData.status,
           rubric:
-            rubric.filter((r) => r.name.trim()).length > 0 ? rubric : undefined,
+            rubric.filter((r) => r.name.trim()).length > 0
+              ? rubric.map((r) => ({ ...r, max_val: Number(r.max_val) || 0 }))
+              : undefined,
         }),
       });
 
@@ -123,7 +125,7 @@ export default function NewOpeningPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col px-12 py-10">
+    <div className="flex flex-col">
       <button
         onClick={() => router.back()}
         className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 mb-8 transition-colors w-fit"
@@ -284,13 +286,13 @@ export default function NewOpeningPage() {
           </Label>
           <div className="flex flex-wrap items-center gap-2">
             {[
-              { label: "Accepted", className: "bg-green-500 text-white" },
-              { label: "Rejected", className: "bg-red-400 text-white" },
+              { label: "Accepted", className: "bg-owl-green text-white" },
+              { label: "Rejected", className: "bg-owl-red text-white" },
               {
                 label: "Pending",
-                className: "bg-white text-gray-700 border border-gray-300",
+                className: "bg-white text-gray-600 border border-[#C5C5C5]",
               },
-              { label: "Interview", className: "bg-gray-700 text-white" },
+              { label: "Interview", className: "bg-gray-500 text-white" },
             ].map(({ label, className }) => (
               <span
                 key={label}
@@ -388,7 +390,7 @@ export default function NewOpeningPage() {
                         }
                       }}
                       className={`w-full flex items-center justify-between p-3 hover:bg-gray-50 border-b last:border-b-0 transition-colors ${
-                        isSelected ? "bg-cyan-50" : ""
+                        isSelected ? "bg-owl-purple/5" : ""
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -436,9 +438,9 @@ export default function NewOpeningPage() {
                 className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
                   formData.status === status
                     ? status === "open"
-                      ? "bg-cyan-500 text-white shadow-md"
+                      ? "bg-owl-purple text-white shadow-md"
                       : status === "draft"
-                        ? "bg-cyan-100 text-cyan-700 border border-cyan-300"
+                        ? "bg-owl-purple/10 text-owl-purple border border-owl-purple/30"
                         : "bg-black text-white shadow-md"
                     : "bg-white text-gray-600 border border-gray-300 hover:bg-gray-50"
                 }`}
@@ -459,9 +461,9 @@ export default function NewOpeningPage() {
                 setRubric([{ name: "", max_val: 10, description: "" }]);
               }
             }}
-            className="text-sm font-medium text-indigo-500 hover:text-indigo-600 transition-colors"
+            className="text-sm font-medium text-owl-purple hover:text-owl-purple/80 transition-colors"
           >
-            {rubricOpen ? "Hide rubric −" : "Add rubric +"}
+            {rubricOpen ? "Hide Rubric" : "Add Rubric"}
           </button>
 
           {rubricOpen && (
@@ -514,12 +516,13 @@ export default function NewOpeningPage() {
                     <Input
                       type="number"
                       min="1"
+                      max="100"
                       value={item.max_val}
                       onChange={(e) => {
                         const updated = [...rubric];
                         updated[index] = {
                           ...updated[index],
-                          max_val: Number(e.target.value),
+                          max_val: e.target.value === "" ? "" : Number(e.target.value),
                         };
                         setRubric(updated);
                       }}
@@ -556,7 +559,7 @@ export default function NewOpeningPage() {
                 <span className="text-sm font-semibold text-gray-700">
                   Total Score&nbsp;
                   <span className="font-normal text-gray-400">
-                    {rubric.reduce((sum, r) => sum + (r.max_val || 0), 0)}
+                    {rubric.reduce((sum, r) => sum + (Number(r.max_val) || 0), 0)}
                   </span>
                 </span>
                 <button
@@ -567,7 +570,7 @@ export default function NewOpeningPage() {
                       { name: "", max_val: 10, description: "" },
                     ])
                   }
-                  className="text-sm font-medium text-indigo-500 hover:text-indigo-600 transition-colors"
+                  className="text-sm font-medium text-owl-purple hover:text-owl-purple/80 transition-colors"
                 >
                   Add new criterion +
                 </button>
@@ -596,7 +599,7 @@ export default function NewOpeningPage() {
           </Button>
           <Button
             type="submit"
-            className="px-8 h-11 text-sm bg-indigo-500 hover:bg-indigo-600"
+            className="px-8 h-11 text-sm"
             disabled={isSubmitting}
           >
             {isSubmitting ? "Creating..." : "Create opening"}

@@ -128,7 +128,7 @@ export function RubricSettingsForm({
           {/* Add link */}
           <button
             onClick={handleAdd}
-            className="mt-4 text-cyan-600 text-sm font-medium hover:underline"
+            className="mt-4 text-owl-purple text-sm font-medium hover:underline"
           >
             Add
           </button>
@@ -145,7 +145,7 @@ export function RubricSettingsForm({
         <Button
           onClick={handleSave}
           disabled={isSaving}
-          className="bg-cyan-600 hover:bg-cyan-700 text-white"
+          className=""
         >
           {isSaving && <Loading01 className="mr-2 h-4 w-4 animate-spin" />}
           Save

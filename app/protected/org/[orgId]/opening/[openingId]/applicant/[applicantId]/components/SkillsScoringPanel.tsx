@@ -144,7 +144,7 @@ export function SkillsScoringPanel({
                     type="number"
                     min="0"
                     max={rubric.max_val}
-                    className="w-16 h-9 border rounded-[10px] text-center text-sm focus:outline-none focus:ring-1 focus:ring-cyan-600 bg-white"
+                    className="w-16 h-9 border rounded-[10px] text-center text-sm focus:outline-none focus:ring-1 focus:ring-owl-purple bg-white"
                     value={scores[rubric.name] ?? ""}
                     onChange={(e) =>
                       updateScore(rubric.name, e.target.value, rubric.max_val)
@@ -175,7 +175,7 @@ export function SkillsScoringPanel({
           <button
             onClick={handleSaveScore}
             disabled={savingScore}
-            className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+            className="w-full bg-owl-purple hover:bg-owl-purple/90 text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
           >
             {savingScore ? (
               <>
@@ -197,7 +197,7 @@ export function SkillsScoringPanel({
             initialRubric={rubrics}
             onSuccess={(updatedRubric) => setRubrics(updatedRubric)}
             trigger={
-              <button className="text-cyan-600 text-sm hover:underline">
+              <button className="text-owl-purple text-sm hover:underline">
                 Rubric Details
               </button>
             }

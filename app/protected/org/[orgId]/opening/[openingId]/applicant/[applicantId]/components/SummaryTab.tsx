@@ -248,7 +248,7 @@ export function SummaryTab({
               href={uploadState.url}
               target="_blank"
               rel="noreferrer"
-              className="text-sm font-semibold text-cyan-600 hover:underline"
+              className="text-sm font-semibold text-owl-purple hover:underline"
             >
               Open original file
             </a>
@@ -263,7 +263,7 @@ export function SummaryTab({
               href={uploadState.url}
               target="_blank"
               rel="noreferrer"
-              className="text-sm font-semibold text-cyan-600 hover:underline"
+              className="text-sm font-semibold text-owl-purple hover:underline"
             >
               Open resume
             </a>

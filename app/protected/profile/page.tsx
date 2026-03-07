@@ -62,7 +62,7 @@ export default async function ProfilePage() {
   }));
 
   return (
-    <div className="flex flex-col w-full p-8 max-w-4xl mx-auto">
+    <div className="flex flex-col w-full max-w-5xl">
       {/* Title */}
       <h1 className="text-2xl font-semibold text-gray-900 mb-8">
         Profile Information
@@ -89,14 +89,14 @@ export default async function ProfilePage() {
             type="text"
             defaultValue={firstName}
             placeholder="John"
-            className="flex-1 px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+            className="flex-1 px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-owl-purple focus:border-transparent"
           />
           {/* Last Name Input */}
           <input
             type="text"
             defaultValue={lastName}
             placeholder="Doe"
-            className="flex-1 px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+            className="flex-1 px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-owl-purple focus:border-transparent"
           />
         </div>
       </div>
@@ -110,7 +110,7 @@ export default async function ProfilePage() {
           type="email"
           defaultValue={userData.user.email}
           placeholder="john.doe@example.com"
-          className="w-full px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+          className="w-full px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-owl-purple focus:border-transparent"
         />
       </div>
 

@@ -59,9 +59,9 @@ export function CommentsSidebar({
           <button
             onClick={() => setActiveTab("skills")}
             className={cn(
-              "p-2 rounded-md transition-all hover:text-cyan-600",
+              "p-2 rounded-md transition-all hover:text-owl-purple",
               activeTab === "skills"
-                ? "bg-white shadow text-cyan-600"
+                ? "bg-white shadow text-owl-purple"
                 : "text-muted-foreground",
             )}
             title="Skills & Rubric"
@@ -71,9 +71,9 @@ export function CommentsSidebar({
           <button
             onClick={() => setActiveTab("comments")}
             className={cn(
-              "p-2 rounded-md transition-all hover:text-cyan-600",
+              "p-2 rounded-md transition-all hover:text-owl-purple",
               activeTab === "comments"
-                ? "bg-white shadow text-cyan-600"
+                ? "bg-white shadow text-owl-purple"
                 : "text-muted-foreground",
             )}
             title="Comments"

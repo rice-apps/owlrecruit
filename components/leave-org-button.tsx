@@ -70,7 +70,7 @@ export function LeaveOrgButton({
               type="button"
               onClick={handleLeave}
               disabled={loading}
-              className="w-40 py-3 rounded-xl bg-indigo-400 hover:bg-indigo-500 text-white font-semibold text-base transition disabled:opacity-60"
+              className="w-40 py-3 rounded-xl bg-owl-purple hover:bg-owl-purple/90 text-white font-semibold text-base transition disabled:opacity-60"
             >
               {loading ? "Leaving…" : "Yes"}
             </button>

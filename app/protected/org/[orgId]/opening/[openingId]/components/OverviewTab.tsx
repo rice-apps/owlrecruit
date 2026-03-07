@@ -168,7 +168,7 @@ export function OverviewTab({
                       minHeight: "8px",
                     }}
                   >
-                    <div className="w-8 h-full rounded-md bg-cyan-400" />
+                    <div className="w-8 h-full rounded-md bg-owl-purple" />
                     <span className="absolute -top-8 left-1/2 -translate-x-1/2 hidden group-hover:block bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10">
                       {status}: {count}
                     </span>
@@ -185,7 +185,7 @@ export function OverviewTab({
       {/* Rubric Settings */}
       <Link
         href={`/protected/org/${orgId}/opening/${openingId}/rubric`}
-        className="text-cyan-600 text-sm hover:underline inline-block"
+        className="text-owl-purple text-sm hover:underline inline-block"
       >
         Rubric Settings
       </Link>
@@ -198,7 +198,7 @@ export function OverviewTab({
           </h2>
           <button
             onClick={() => alert("Edit functionality coming later!")}
-            className="text-cyan-600 text-sm hover:underline"
+            className="text-owl-purple text-sm hover:underline"
           >
             Edit
           </button>

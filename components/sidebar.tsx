@@ -34,13 +34,13 @@ export function Sidebar({ orgs, user }: SidebarProps) {
     <aside className="hidden md:flex md:flex-col h-screen w-64 bg-white border-r border-gray-200 shrink-0">
       {/* Logo */}
       <div className="p-6 pb-8">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/protected/discover" className="flex items-center gap-2">
           <div className="relative w-6 h-6">
             <svg
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
-              className="w-8 h-8 text-cyan-500"
+              className="w-8 h-8 text-owl-purple"
             >
               <path
                 d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20Z"
@@ -55,7 +55,7 @@ export function Sidebar({ orgs, user }: SidebarProps) {
               />
             </svg>
           </div>
-          <span className="font-bold text-xl text-cyan-500 tracking-tight">
+          <span className="font-bold text-xl text-owl-purple tracking-tight">
             owlrecruit
           </span>
         </Link>
@@ -123,10 +123,10 @@ export function Sidebar({ orgs, user }: SidebarProps) {
                   </Link>
                 ))}
 
-                <div className="px-1 pt-2">
+                <div className="px-1 pt-3">
                   <Link
                     href="/protected/createorg"
-                    className="flex items-center gap-2 text-cyan-600 hover:text-cyan-700 px-3 py-2 rounded-md text-sm font-medium transition-colors w-full"
+                    className="flex items-center gap-2 text-owl-purple hover:text-owl-purple/80 px-3 py-2 rounded-md text-sm font-medium transition-colors w-full"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     Add new
