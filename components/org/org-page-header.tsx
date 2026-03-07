@@ -59,7 +59,10 @@ export function OrgPageHeader({
             <div className="mt-3 flex items-center gap-1">
               <SocialLinksDisplay links={socialLinks} />
               {isAdmin && (
-                <EditSocialLinksDialog orgId={orgId} initialLinks={socialLinks} />
+                <EditSocialLinksDialog
+                  orgId={orgId}
+                  initialLinks={socialLinks}
+                />
               )}
             </div>
           </div>
