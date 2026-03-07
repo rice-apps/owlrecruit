@@ -27,7 +27,7 @@ export default function SignUpGoogleBtn() {
     }
 
             if (data?.user) {
-              router.push('/protected');
+              router.push('/protected/discover');
             }
           }, [router]);
     
