@@ -36,9 +36,7 @@ export function EditOpeningDialog({
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [title, setTitle] = useState(initialData.title);
-  const [description, setDescription] = useState(
-    initialData.description || "",
-  );
+  const [description, setDescription] = useState(initialData.description || "");
   const [applicationLink, setApplicationLink] = useState(
     initialData.application_link || "",
   );

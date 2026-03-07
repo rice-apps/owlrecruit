@@ -123,10 +123,7 @@ export function OrgSectionNav({ sections }: OrgSectionNavProps) {
   }
 
   return (
-    <nav
-      aria-label="On this page"
-      className="border-b border-gray-200"
-    >
+    <nav aria-label="On this page" className="border-b border-gray-200">
       <div className="flex w-full overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         <div className="flex w-max items-center gap-8">
           {sections.map((section) => {

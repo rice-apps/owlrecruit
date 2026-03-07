@@ -188,10 +188,7 @@ export function ColumnMappingStep({
                   >
                     Cancel
                   </Button>
-                  <Button
-                    onClick={handleAdd}
-                    className=""
-                  >
+                  <Button onClick={handleAdd} className="">
                     Add Question
                   </Button>
                 </DialogFooter>
@@ -242,11 +239,7 @@ export function ColumnMappingStep({
         <Button variant="outline" onClick={onBack} className="w-24">
           Back
         </Button>
-        <Button
-          onClick={onNext}
-          className="w-24"
-          disabled={!isStep3Valid}
-        >
+        <Button onClick={onNext} className="w-24" disabled={!isStep3Valid}>
           Next <ChevronRight className="w-4 h-4 ml-1" />
         </Button>
       </div>

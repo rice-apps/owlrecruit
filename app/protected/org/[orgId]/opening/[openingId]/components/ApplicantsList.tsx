@@ -20,12 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { StatusBadge } from "@/components/status-badge";
-import {
-  Eye,
-  EyeOff,
-  ArrowUp,
-  ArrowDown,
-} from "@untitled-ui/icons-react";
+import { Eye, EyeOff, ArrowUp, ArrowDown } from "@untitled-ui/icons-react";
 import type { ApplicationStatus } from "@/types/app";
 
 const ALL_STATUSES: ApplicationStatus[] = [

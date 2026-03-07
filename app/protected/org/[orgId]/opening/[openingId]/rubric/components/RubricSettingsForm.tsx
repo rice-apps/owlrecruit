@@ -142,11 +142,7 @@ export function RubricSettingsForm({
         <Button variant="outline" onClick={() => router.back()}>
           Cancel
         </Button>
-        <Button
-          onClick={handleSave}
-          disabled={isSaving}
-          className=""
-        >
+        <Button onClick={handleSave} disabled={isSaving} className="">
           {isSaving && <Loading01 className="mr-2 h-4 w-4 animate-spin" />}
           Save
         </Button>

@@ -522,7 +522,8 @@ export default function NewOpeningPage() {
                         const updated = [...rubric];
                         updated[index] = {
                           ...updated[index],
-                          max_val: e.target.value === "" ? "" : Number(e.target.value),
+                          max_val:
+                            e.target.value === "" ? "" : Number(e.target.value),
                         };
                         setRubric(updated);
                       }}
@@ -559,7 +560,10 @@ export default function NewOpeningPage() {
                 <span className="text-sm font-semibold text-gray-700">
                   Total Score&nbsp;
                   <span className="font-normal text-gray-400">
-                    {rubric.reduce((sum, r) => sum + (Number(r.max_val) || 0), 0)}
+                    {rubric.reduce(
+                      (sum, r) => sum + (Number(r.max_val) || 0),
+                      0,
+                    )}
                   </span>
                 </span>
                 <button
