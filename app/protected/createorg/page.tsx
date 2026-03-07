@@ -59,7 +59,7 @@ export default function NewOrgPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col px-12 py-10">
+    <div className="flex flex-col">
       <h1 className="text-3xl font-semibold mb-10">Create new organization</h1>
 
       <form onSubmit={handleSubmit} className="flex flex-col flex-1 space-y-7">

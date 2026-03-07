@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { SearchInput } from "@/components/search-input";
 import {
   Table,
   TableBody,
@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/select";
 import { StatusBadge } from "@/components/status-badge";
 import {
-  SearchMd,
   Eye,
   EyeOff,
   ArrowUp,
@@ -133,15 +132,11 @@ export function ApplicantsList({
     <div className="space-y-4">
       {/* Search and filters bar */}
       <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-md">
-          <SearchMd className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Search applicant by name, netid, year, major..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
+        <SearchInput
+          placeholder="Search applicant by name, netid, year, major..."
+          value={searchQuery}
+          onChange={setSearchQuery}
+        />
         <Button
           variant="outline"
           size="sm"

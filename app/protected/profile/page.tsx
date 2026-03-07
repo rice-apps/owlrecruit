@@ -62,7 +62,7 @@ export default async function ProfilePage() {
   }));
 
   return (
-    <div className="flex flex-col w-full p-8 max-w-4xl mx-auto">
+    <div className="flex flex-col w-full max-w-5xl">
       {/* Title */}
       <h1 className="text-2xl font-semibold text-gray-900 mb-8">
         Profile Information

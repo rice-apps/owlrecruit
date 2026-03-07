@@ -125,7 +125,7 @@ export default function NewOpeningPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col px-12 py-10">
+    <div className="flex flex-col">
       <button
         onClick={() => router.back()}
         className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 mb-8 transition-colors w-fit"
