@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight } from "@untitled-ui/icons-react";
 import { createClient } from "@/lib/supabase/server";
 import { RubricSettingsForm } from "./components/RubricSettingsForm";
 
@@ -42,14 +42,14 @@ export default async function RubricPage({ params }: RubricPageProps) {
       <nav className="flex items-center gap-1 text-sm">
         <Link
           href={`/protected/org/${orgId}`}
-          className="text-cyan-600 hover:underline"
+          className="text-owl-purple hover:underline"
         >
           {orgData?.name || "Organization"}
         </Link>
         <ChevronRight className="h-4 w-4 text-gray-400" />
         <Link
           href={`/protected/org/${orgId}/opening/${openingId}?tab=overview`}
-          className="text-cyan-600 hover:underline"
+          className="text-owl-purple hover:underline"
         >
           {openingData?.title || "Opening"}
         </Link>

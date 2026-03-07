@@ -14,14 +14,11 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { Check, Loader2 } from "lucide-react";
 
-interface OrgMember {
+interface OrgReviewer {
     id: string;
     user_id: string;
-    role: "admin" | "reviewer";
-    users:
-    | { id: string; name: string | null; email: string | null }
-    | { id: string; name: string | null; email: string | null }[]
-    | null;
+    name: string | null;
+    email: string | null;
 }
 
 interface EditReviewersDialogProps {
@@ -29,13 +26,13 @@ interface EditReviewersDialogProps {
     onOpenChange: (open: boolean) => void;
     orgId: string;
     openingId: string;
-    /** user_ids of currently-assigned reviewers (role=reviewer) */
+    /** user_ids of reviewers currently assigned to this opening */
     currentReviewerUserIds: string[];
     /** Called after save so the parent can refresh its list */
     onSaved?: () => void;
 }
 
-// Deterministic avatar background colours based on a user id / name hash
+// Deterministic avatar background colours based on user id hash
 const AVATAR_COLORS = [
     "bg-violet-100 text-violet-700",
     "bg-sky-100 text-sky-700",
@@ -56,14 +53,6 @@ function colorForId(id: string) {
     return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
-function getUser(member: OrgMember) {
-    if (!member.users) return { name: "Unknown", email: "", id: "" };
-    if (Array.isArray(member.users)) {
-        return member.users[0] ?? { name: "Unknown", email: "", id: "" };
-    }
-    return member.users;
-}
-
 function initials(name: string | null | undefined) {
     if (!name) return "?";
     return name
@@ -78,40 +67,61 @@ export function EditReviewersDialog({
     open,
     onOpenChange,
     orgId,
+    openingId,
     currentReviewerUserIds,
     onSaved,
 }: EditReviewersDialogProps) {
-    const [allMembers, setAllMembers] = useState<OrgMember[]>([]);
+    const [allReviewers, setAllReviewers] = useState<OrgReviewer[]>([]);
     const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(
-        new Set()
+        new Set(),
     );
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
-    // Fetch all org members (admins + reviewers)
-    const fetchMembers = useCallback(async () => {
+    // Fetch all org members with role=reviewer (eligible reviewers)
+    const fetchEligibleReviewers = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await fetch(`/api/org/${orgId}/members`, {
-                cache: "no-store",
-            });
-            if (!res.ok) throw new Error("Failed to fetch members");
-            const data: OrgMember[] = await res.json();
-            setAllMembers(data);
+            const res = await fetch(
+                `/api/org/${orgId}/members?role=reviewer`,
+                { cache: "no-store" },
+            );
+            if (!res.ok) throw new Error("Failed to fetch reviewers");
+            const data = await res.json();
+            // Normalise the shape: the API returns users as a nested object or array
+            const reviewers: OrgReviewer[] = data.map(
+                (m: {
+                    id: string;
+                    user_id: string;
+                    users:
+                    | { name: string | null; email: string | null }
+                    | { name: string | null; email: string | null }[]
+                    | null;
+                }) => {
+                    const u = Array.isArray(m.users) ? m.users[0] : m.users;
+                    return {
+                        id: m.id,
+                        user_id: m.user_id,
+                        name: u?.name ?? null,
+                        email: u?.email ?? null,
+                    };
+                },
+            );
+            setAllReviewers(reviewers);
         } catch (err) {
-            console.error("Failed to load org members:", err);
+            console.error("Failed to load eligible reviewers:", err);
         } finally {
             setLoading(false);
         }
     }, [orgId]);
 
-    // When the dialog opens, load members and seed selection from current reviewers
+    // When the dialog opens, load available reviewers and seed selection
     useEffect(() => {
         if (open) {
-            fetchMembers();
+            fetchEligibleReviewers();
             setSelectedUserIds(new Set(currentReviewerUserIds));
         }
-    }, [open, fetchMembers, currentReviewerUserIds]);
+    }, [open, fetchEligibleReviewers, currentReviewerUserIds]);
 
     const toggleMember = (userId: string) => {
         setSelectedUserIds((prev) => {
@@ -125,15 +135,14 @@ export function EditReviewersDialog({
         });
     };
 
-    // Compute which reviewers were added / removed so we can patch
-    const diff = useMemo(() => {
+    const hasChanges = useMemo(() => {
         const currentSet = new Set(currentReviewerUserIds);
-        const toAdd = [...selectedUserIds].filter((id) => !currentSet.has(id));
-        const toRemove = [...currentSet].filter((id) => !selectedUserIds.has(id));
-        return { toAdd, toRemove };
+        if (currentSet.size !== selectedUserIds.size) return true;
+        for (const id of selectedUserIds) {
+            if (!currentSet.has(id)) return true;
+        }
+        return false;
     }, [selectedUserIds, currentReviewerUserIds]);
-
-    const hasChanges = diff.toAdd.length > 0 || diff.toRemove.length > 0;
 
     const handleSave = async () => {
         if (!hasChanges) {
@@ -142,34 +151,15 @@ export function EditReviewersDialog({
         }
         setSaving(true);
         try {
-            // For members being promoted to reviewer: update their role
-            const promises: Promise<Response>[] = [];
-
-            for (const userId of diff.toAdd) {
-                promises.push(
-                    fetch(`/api/org/${orgId}/members/${userId}`, {
-                        method: "PUT",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ role: "reviewer" }),
-                    })
-                );
-            }
-
-            // For members being un-assigned as reviewer: set role back to admin
-            // (they stay in the org, just lose reviewer role)
-            // Since org_role is either admin or reviewer, removing the
-            // reviewer assignment means reverting to admin.
-            for (const userId of diff.toRemove) {
-                promises.push(
-                    fetch(`/api/org/${orgId}/members/${userId}`, {
-                        method: "PUT",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ role: "admin" }),
-                    })
-                );
-            }
-
-            await Promise.all(promises);
+            const res = await fetch(
+                `/api/org/${orgId}/openings/${openingId}/reviewers`,
+                {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ reviewer_user_ids: [...selectedUserIds] }),
+                },
+            );
+            if (!res.ok) throw new Error("Failed to save reviewer assignments");
             onSaved?.();
             onOpenChange(false);
         } catch (err) {
@@ -187,38 +177,39 @@ export function EditReviewersDialog({
                         Assign Reviewers
                     </DialogTitle>
                     <DialogDescription className="text-sm text-muted-foreground">
-                        Select organization members to assign as reviewers for this opening.
+                        Select reviewers to assign to this opening.
                     </DialogDescription>
                 </DialogHeader>
 
-                {/* Grid of members */}
+                {/* Grid of reviewers */}
                 <div className="flex-1 overflow-y-auto py-4">
                     {loading ? (
                         <div className="flex items-center justify-center py-12">
                             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                         </div>
-                    ) : allMembers.length === 0 ? (
+                    ) : allReviewers.length === 0 ? (
                         <p className="text-center text-sm text-muted-foreground py-12">
-                            No members in this organization.
+                            No reviewers in this organization. Add members with the reviewer
+                            role first.
                         </p>
                     ) : (
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                            {allMembers.map((member) => {
-                                const user = getUser(member);
-                                const displayName = user.name || user.email || "Unknown";
-                                const isSelected = selectedUserIds.has(member.user_id);
+                            {allReviewers.map((reviewer) => {
+                                const displayName =
+                                    reviewer.name || reviewer.email || "Unknown";
+                                const isSelected = selectedUserIds.has(reviewer.user_id);
 
                                 return (
                                     <button
-                                        key={member.id}
+                                        key={reviewer.id}
                                         type="button"
-                                        onClick={() => toggleMember(member.user_id)}
+                                        onClick={() => toggleMember(reviewer.user_id)}
                                         className={cn(
                                             "relative flex items-center gap-3 rounded-xl border-2 p-3 text-left transition-all duration-200",
-                                            "hover:shadow-md hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400",
+                                            "hover:shadow-md hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-owl-purple/40",
                                             isSelected
                                                 ? "border-indigo-400 bg-indigo-50/60 shadow-sm border-dashed"
-                                                : "border-gray-200 bg-white hover:border-gray-300"
+                                                : "border-gray-200 bg-white hover:border-gray-300",
                                         )}
                                     >
                                         {/* Selection indicator */}
@@ -233,7 +224,7 @@ export function EditReviewersDialog({
                                             <AvatarFallback
                                                 className={cn(
                                                     "text-sm font-semibold",
-                                                    colorForId(member.user_id)
+                                                    colorForId(reviewer.user_id),
                                                 )}
                                             >
                                                 {initials(displayName)}
@@ -262,7 +253,7 @@ export function EditReviewersDialog({
                     <Button
                         onClick={handleSave}
                         disabled={saving || !hasChanges}
-                        className="bg-cyan-500 hover:bg-cyan-600 text-white"
+                        className="bg-owl-purple hover:bg-owl-purple/90 text-white"
                     >
                         {saving ? (
                             <>

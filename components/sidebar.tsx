@@ -2,8 +2,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Plus, Search, Folder, Menu } from "lucide-react";
-import { OrgFormDialog } from "@/components/org-form-dialog";
+import {
+  Folder,
+  LogOut01,
+  AlignJustify,
+  Plus,
+  SearchMd,
+} from "@untitled-ui/icons-react";
 import type { OrgWithRole } from "@/types/app";
 import {
   Accordion,
@@ -29,13 +34,13 @@ export function Sidebar({ orgs, user }: SidebarProps) {
     <aside className="hidden md:flex md:flex-col h-screen w-64 bg-white border-r border-gray-200 shrink-0">
       {/* Logo */}
       <div className="p-6 pb-8">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/protected/discover" className="flex items-center gap-2">
           <div className="relative w-6 h-6">
             <svg
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
-              className="w-8 h-8 text-cyan-500"
+              className="w-8 h-8 text-owl-purple"
             >
               <path
                 d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20Z"
@@ -50,7 +55,7 @@ export function Sidebar({ orgs, user }: SidebarProps) {
               />
             </svg>
           </div>
-          <span className="font-bold text-xl text-cyan-500 tracking-tight">
+          <span className="font-bold text-xl text-owl-purple tracking-tight">
             owlrecruit
           </span>
         </Link>
@@ -67,7 +72,7 @@ export function Sidebar({ orgs, user }: SidebarProps) {
               : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
           )}
         >
-          <Search size={18} />
+          <SearchMd className="w-5 h-5" />
           Discover
         </Link>
 
@@ -81,8 +86,8 @@ export function Sidebar({ orgs, user }: SidebarProps) {
               : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
           )}
         >
-          {/* Using Folder/FileText as icon for Applications */}
-          <Folder size={18} />
+          {/* Using Folder as icon for Applications */}
+          <Folder className="w-5 h-5" />
           My Applications
         </Link>
 
@@ -96,7 +101,7 @@ export function Sidebar({ orgs, user }: SidebarProps) {
           <AccordionItem value="my-orgs" className="border-none">
             <AccordionTrigger className="w-full flex items-center justify-between px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:no-underline decoration-0">
               <div className="flex items-center gap-3">
-                <Menu size={18} />
+                <AlignJustify className="w-5 h-5" />
                 My Organizations
               </div>
             </AccordionTrigger>
@@ -118,15 +123,14 @@ export function Sidebar({ orgs, user }: SidebarProps) {
                   </Link>
                 ))}
 
-                <div className="px-1 pt-2">
-                  <OrgFormDialog
-                    trigger={
-                      <button className="flex items-center gap-2 text-cyan-600 hover:text-cyan-700 px-3 py-2 rounded-md text-sm font-medium transition-colors w-full">
-                        <Plus size={14} />
-                        Add new
-                      </button>
-                    }
-                  />
+                <div className="px-1 pt-3">
+                  <Link
+                    href="/protected/createorg"
+                    className="flex items-center gap-2 text-owl-purple hover:text-owl-purple/80 px-3 py-2 rounded-md text-sm font-medium transition-colors w-full"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Add new
+                  </Link>
                 </div>
               </div>
             </AccordionContent>
@@ -137,18 +141,39 @@ export function Sidebar({ orgs, user }: SidebarProps) {
       {/* User Profile Footer */}
       <div className="p-4 border-t border-gray-100">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 overflow-hidden">
-            {/* Placeholder avatar */}
-            <span className="text-sm font-medium">
-              {user.name.charAt(0).toUpperCase()}
-            </span>
-          </div>
-          <div className="flex flex-col min-w-0">
-            <span className="text-sm font-medium text-gray-900 truncate">
-              {user.name}
-            </span>
-            <span className="text-xs text-gray-500 truncate">{user.email}</span>
-          </div>
+          <Link
+            href="/protected/profile"
+            className={cn(
+              "flex items-center gap-3 flex-1 rounded-md transition-colors",
+              isActive("/protected/profile")
+                ? "bg-gray-100"
+                : "hover:bg-gray-50",
+            )}
+          >
+            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 overflow-hidden">
+              {/* Placeholder avatar */}
+              <span className="text-sm font-medium">
+                {user.name.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <div className="flex flex-col min-w-0 flex-1">
+              <span className="text-sm font-medium text-gray-900 truncate">
+                {user.name}
+              </span>
+              <span className="text-xs text-gray-500 truncate">
+                {user.email}
+              </span>
+            </div>
+          </Link>
+          <form action="/auth/signout" method="post">
+            <button
+              type="submit"
+              title="Sign out"
+              className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+            >
+              <LogOut01 className="w-4 h-4" />
+            </button>
+          </form>
         </div>
       </div>
     </aside>

@@ -10,7 +10,7 @@ export async function GET(
 
   const { data: application } = await supabase
     .from("applications")
-    .select("openings!inner(org_id)")
+    .select("resume_url, openings!inner(org_id, rubric)")
     .eq("id", applicationId)
     .single();
 
@@ -21,9 +21,10 @@ export async function GET(
     );
   }
 
-  const appOrgId = Array.isArray(application.openings)
-    ? application.openings[0]?.org_id
-    : (application.openings as { org_id: string }).org_id;
+  const opening = Array.isArray(application.openings)
+    ? application.openings[0]
+    : (application.openings as { org_id: string; rubric: unknown[] | null });
+  const appOrgId = opening?.org_id;
 
   if (appOrgId !== orgId) {
     return NextResponse.json(
@@ -61,6 +62,46 @@ export async function GET(
       "Unknown",
   }));
 
+  const rubric = (
+    (opening?.rubric as Array<{ name: string; max_val: number }> | null) ?? []
+  ).map((item) => ({
+    name: item.name,
+    max_val: item.max_val,
+  }));
+
+  const { data: allReviews, error: reviewsError } = await supabase
+    .from("application_reviews")
+    .select(
+      `
+      id,
+      reviewer_id,
+      score_skills,
+      created_at,
+      updated_at,
+      reviewer:users!reviewer_id(name)
+    `,
+    )
+    .eq("application_id", applicationId)
+    .order("created_at", { ascending: false });
+
+  if (reviewsError) {
+    return NextResponse.json({ error: reviewsError.message }, { status: 500 });
+  }
+
+  const reviewerScores = (allReviews ?? []).map((review) => ({
+    id: review.id,
+    reviewerId: review.reviewer_id,
+    reviewerName:
+      ((review.reviewer as { name: string } | { name: string }[] | null) &&
+        (Array.isArray(review.reviewer)
+          ? review.reviewer[0]?.name
+          : (review.reviewer as { name: string })?.name)) ||
+      "Unknown",
+    scoreSkills: review.score_skills as Record<string, number> | null,
+    createdAt: review.created_at,
+    updatedAt: review.updated_at,
+  }));
+
   let myScoreSkills: Record<string, number> | null = null;
   const {
     data: { user },
@@ -79,7 +120,15 @@ export async function GET(
     }
   }
 
-  return NextResponse.json({ comments: formattedComments, myScoreSkills });
+  return NextResponse.json({
+    comments: formattedComments,
+    myScoreSkills,
+    summary: {
+      rubric,
+      reviewerScores,
+      resumeUrl: application.resume_url,
+    },
+  });
 }
 
 export async function POST(

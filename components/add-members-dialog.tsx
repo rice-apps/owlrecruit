@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -19,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Users, X } from "lucide-react";
+import { Users01, X } from "@untitled-ui/icons-react";
 
 type Member = {
   id: string; // org_members.id
@@ -39,6 +40,7 @@ type SearchedUser = {
 };
 
 export function AddMembersDialog({ orgId }: { orgId: string }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -89,7 +91,7 @@ export function AddMembersDialog({ orgId }: { orgId: string }) {
           setIsSearching(true);
           const res = await fetch(
             `/api/org/${orgId}/members/search?q=${encodeURIComponent(debouncedSearch)}`,
-            { cache: "no-store" }
+            { cache: "no-store" },
           );
           if (!res.ok) throw new Error("Failed to search users");
           const results = await res.json();
@@ -129,7 +131,8 @@ export function AddMembersDialog({ orgId }: { orgId: string }) {
         });
         if (!res.ok) throw new Error("Failed to update member role");
       }
-      // Background refresh
+      // Refresh server component to reflect changes on the page
+      router.refresh();
       fetchMembers();
     } catch (error) {
       console.error(error);
@@ -149,7 +152,8 @@ export function AddMembersDialog({ orgId }: { orgId: string }) {
       // Remove from search results implicitly or explicitly
       setSearchResults((prev) => prev.filter((u) => u.id !== userId));
       await fetchMembers();
-      setSearchQuery(""); // Clear search to go back to existing list maybe?
+      router.refresh();
+      setSearchQuery("");
     } catch (error) {
       console.error(error);
     }
@@ -159,7 +163,7 @@ export function AddMembersDialog({ orgId }: { orgId: string }) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" className="gap-2">
-          <Users className="w-4 h-4" />
+          <Users01 className="w-4 h-4" />
           Add Members
         </Button>
       </DialogTrigger>
@@ -268,14 +272,28 @@ export function AddMembersDialog({ orgId }: { orgId: string }) {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="reviewer">Reviewer</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
                         <SelectItem
-                          value="Remove"
-                          className="text-destructive focus:text-destructive"
+                          value="reviewer"
+                          disabled={
+                            member.role === "admin" &&
+                            members.filter((m) => m.role === "admin").length ===
+                              1
+                          }
                         >
-                          Remove
+                          Reviewer
                         </SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                        {!(
+                          member.role === "admin" &&
+                          members.filter((m) => m.role === "admin").length === 1
+                        ) && (
+                          <SelectItem
+                            value="Remove"
+                            className="text-destructive focus:text-destructive"
+                          >
+                            Remove
+                          </SelectItem>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>

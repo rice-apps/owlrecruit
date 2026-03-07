@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { SearchInput } from "@/components/search-input";
 import {
   Table,
   TableBody,
@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { StatusBadge } from "@/components/status-badge";
-import { Search, Eye, EyeOff, ArrowUp, ArrowDown } from "lucide-react";
+import { Eye, EyeOff, ArrowUp, ArrowDown } from "@untitled-ui/icons-react";
 import type { ApplicationStatus } from "@/types/app";
 
 const ALL_STATUSES: ApplicationStatus[] = [
@@ -127,15 +127,11 @@ export function ApplicantsList({
     <div className="space-y-4">
       {/* Search and filters bar */}
       <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Search applicant by name, netid, year, major..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
+        <SearchInput
+          placeholder="Search applicant by name, netid, year, major..."
+          value={searchQuery}
+          onChange={setSearchQuery}
+        />
         <Button
           variant="outline"
           size="sm"
@@ -228,7 +224,7 @@ export function ApplicantsList({
                   <TableCell>
                     <Link
                       href={`/protected/org/${orgId}/opening/${openingId}/applicant/${applicant.applicationId}`}
-                      className="font-bold text-gray-900 hover:text-cyan-600"
+                      className="font-bold text-gray-900 hover:text-owl-purple"
                     >
                       {anonymousView
                         ? `Applicant ${applicant.id.slice(0, 8)}`

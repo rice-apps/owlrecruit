@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import type { ApplicationStatus } from "@/types/app";
 import { EditReviewersDialog } from "./EditReviewersDialog";
@@ -18,12 +17,8 @@ interface Applicant {
 interface Reviewer {
   id: string;
   user_id: string;
-  role: string;
-  user: {
-    id: string;
-    name: string | null;
-    email: string;
-  } | null;
+  name: string;
+  email: string;
 }
 
 interface OverviewTabProps {
@@ -41,7 +36,7 @@ const STATUS_ORDER: ApplicationStatus[] = [
   "No Status",
 ];
 
-// Avatar colours, same as in EditReviewersDialog
+// Deterministic avatar colours
 const AVATAR_COLORS = [
   "bg-violet-100 text-violet-700",
   "bg-sky-100 text-sky-700",
@@ -84,44 +79,19 @@ export function OverviewTab({
   const fetchReviewers = useCallback(async () => {
     setLoadingReviewers(true);
     try {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("org_members")
-        .select(
-          `
-          id,
-          user_id,
-          role,
-          users!user_id (
-            id,
-            name,
-            email
-          )
-        `,
-        )
-        .eq("org_id", orgId)
-        .eq("role", "reviewer");
-
-      if (error) {
-        console.error("Failed to fetch reviewers:", error);
-      } else if (data) {
-        const transformedData = data.map((item: any) => ({
-          id: item.id,
-          user_id: item.user_id,
-          role: item.role,
-          user:
-            Array.isArray(item.users) && item.users.length > 0
-              ? item.users[0]
-              : item.users,
-        }));
-        setReviewers(transformedData);
-      }
+      const res = await fetch(
+        `/api/org/${orgId}/openings/${openingId}/reviewers`,
+        { cache: "no-store" },
+      );
+      if (!res.ok) throw new Error("Failed to fetch reviewers");
+      const data: Reviewer[] = await res.json();
+      setReviewers(data);
     } catch (error) {
       console.error("Failed to fetch reviewers:", error);
     } finally {
       setLoadingReviewers(false);
     }
-  }, [orgId]);
+  }, [orgId, openingId]);
 
   useEffect(() => {
     fetchReviewers();
@@ -201,7 +171,7 @@ export function OverviewTab({
                       minHeight: "8px",
                     }}
                   >
-                    <div className="w-8 h-full rounded-md bg-cyan-400" />
+                    <div className="w-8 h-full rounded-md bg-owl-purple" />
                     <span className="absolute -top-8 left-1/2 -translate-x-1/2 hidden group-hover:block bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10">
                       {status}: {count}
                     </span>
@@ -218,7 +188,7 @@ export function OverviewTab({
       {/* Rubric Settings */}
       <Link
         href={`/protected/org/${orgId}/opening/${openingId}/rubric`}
-        className="text-cyan-600 text-sm hover:underline inline-block"
+        className="text-owl-purple text-sm hover:underline inline-block"
       >
         Rubric Settings
       </Link>
@@ -231,7 +201,7 @@ export function OverviewTab({
           </h2>
           <button
             onClick={() => setEditDialogOpen(true)}
-            className="text-cyan-600 text-sm hover:underline"
+            className="text-owl-purple text-sm hover:underline"
           >
             Edit
           </button>
@@ -243,35 +213,33 @@ export function OverviewTab({
           </div>
         ) : reviewers.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-            {reviewers
-              .filter((reviewer) => reviewer.user)
-              .map((reviewer) => {
-                const displayName =
-                  reviewer.user?.name || reviewer.user?.email || "Reviewer";
-                return (
-                  <div
-                    key={reviewer.id}
-                    className={cn(
-                      "flex items-center gap-3 rounded-xl border-2 border-dashed border-indigo-400 bg-indigo-50/50 p-3",
-                      "transition-all duration-200 hover:shadow-md hover:-translate-y-0.5",
-                    )}
-                  >
-                    <Avatar className="h-10 w-10 shrink-0">
-                      <AvatarFallback
-                        className={cn(
-                          "text-sm font-semibold",
-                          colorForId(reviewer.user_id),
-                        )}
-                      >
-                        {initials(displayName)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="font-medium text-sm text-gray-900 truncate">
-                      {displayName}
-                    </span>
-                  </div>
-                );
-              })}
+            {reviewers.map((reviewer) => {
+              const displayName =
+                reviewer.name || reviewer.email || "Reviewer";
+              return (
+                <div
+                  key={reviewer.id}
+                  className={cn(
+                    "flex items-center gap-3 rounded-xl border-2 border-dashed border-indigo-400 bg-indigo-50/50 p-3",
+                    "transition-all duration-200 hover:shadow-md hover:-translate-y-0.5",
+                  )}
+                >
+                  <Avatar className="h-10 w-10 shrink-0">
+                    <AvatarFallback
+                      className={cn(
+                        "text-sm font-semibold",
+                        colorForId(reviewer.user_id),
+                      )}
+                    >
+                      {initials(displayName)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="font-medium text-sm text-gray-900 truncate">
+                    {displayName}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">

@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChevronRight, X } from "lucide-react";
+import { ChevronRight, X } from "@untitled-ui/icons-react";
 import type { ColumnMapping, CustomQuestion } from "./useUploadWizard";
 
 interface ColumnMappingStepProps {
@@ -156,7 +156,7 @@ export function ColumnMappingStep({
             <h3 className="font-semibold text-gray-900">Questions</h3>
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
               <DialogTrigger asChild>
-                <button className="text-sm text-cyan-600 font-medium hover:text-cyan-700 hover:underline">
+                <button className="text-sm text-owl-purple font-medium hover:text-owl-purple/80 hover:underline">
                   Add question
                 </button>
               </DialogTrigger>
@@ -188,10 +188,7 @@ export function ColumnMappingStep({
                   >
                     Cancel
                   </Button>
-                  <Button
-                    onClick={handleAdd}
-                    className="bg-cyan-500 hover:bg-cyan-600"
-                  >
+                  <Button onClick={handleAdd} className="">
                     Add Question
                   </Button>
                 </DialogFooter>
@@ -242,11 +239,7 @@ export function ColumnMappingStep({
         <Button variant="outline" onClick={onBack} className="w-24">
           Back
         </Button>
-        <Button
-          onClick={onNext}
-          className="w-24 bg-cyan-500 hover:bg-cyan-600"
-          disabled={!isStep3Valid}
-        >
+        <Button onClick={onNext} className="w-24" disabled={!isStep3Valid}>
           Next <ChevronRight className="w-4 h-4 ml-1" />
         </Button>
       </div>

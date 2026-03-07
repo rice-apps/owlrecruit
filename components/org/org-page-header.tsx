@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { Eye, Pencil } from "lucide-react";
+import { Eye, Pencil01 } from "@untitled-ui/icons-react";
 
 type OrgPageHeaderProps = {
   displayOrgName: string;
@@ -40,7 +40,7 @@ export function OrgPageHeader({
                 className={cn(
                   "inline-flex items-center rounded-full border px-3 py-0.5 text-xs font-semibold",
                   isAdmin
-                    ? "border-indigo-200 bg-indigo-50/70 text-indigo-400"
+                    ? "border-owl-purple/30 bg-owl-purple/10 text-owl-purple"
                     : "border-slate-200 bg-slate-100 text-slate-500",
                 )}
               >
@@ -78,7 +78,7 @@ export function OrgPageHeader({
               }
               className={headerButtonClasses}
             >
-              <Pencil className="h-[22px] w-[22px]" />
+              <Pencil01 className="h-[22px] w-[22px]" />
               <span className="sr-only">
                 {hasRoleError
                   ? "Edit organization unavailable"

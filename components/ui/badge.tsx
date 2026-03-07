@@ -15,8 +15,15 @@ const badgeVariants = cva(
         destructive:
           "border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80",
         success:
-          "border-transparent bg-green-600 text-white shadow hover:bg-green-600/80",
+          "border-transparent bg-owl-green text-white shadow hover:bg-owl-green/80",
         outline: "text-foreground",
+        accepted: "border-transparent bg-owl-green text-white rounded-full",
+        rejected: "border-transparent bg-owl-red text-white rounded-full",
+        pending: "border-[#C5C5C5] bg-white text-gray-600 rounded-full",
+        interview: "border-transparent bg-gray-500 text-white rounded-full",
+        open: "border-transparent bg-owl-purple text-white rounded-full",
+        draft: "border-gray-300 bg-gray-100 text-gray-600 rounded-full",
+        closed: "border-gray-400 bg-gray-200 text-gray-600 rounded-full",
       },
     },
     defaultVariants: {

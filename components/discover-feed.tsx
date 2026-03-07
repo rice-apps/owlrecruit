@@ -2,16 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Search, SlidersHorizontal, ChevronRight } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
+import { LinkExternal01 } from "@untitled-ui/icons-react";
 import { Badge } from "@/components/ui/badge";
+import { SearchInput } from "@/components/search-input";
 
 interface Opening {
   id: string;
@@ -24,8 +17,17 @@ interface Opening {
   org: {
     name: string;
   };
-  // deadline
   closes_at?: string;
+}
+
+function isValidUrl(url: string | undefined): boolean {
+  if (!url) return false;
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function DiscoverFeed() {
@@ -59,20 +61,14 @@ export function DiscoverFeed() {
   );
 
   return (
-    <div className="flex flex-col gap-6 p-6 max-w-7xl mx-auto w-full">
+    <div className="flex flex-col gap-6 w-full max-w-7xl">
       {/* Search Header */}
-      <div className="flex items-center gap-4 bg-white p-2 rounded-lg border shadow-sm">
-        <Search className="text-gray-400 ml-2" />
-        <Input
-          placeholder="Search organizations, positions..."
-          className="border-0 shadow-none focus-visible:ring-0 text-base"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-        <Button variant="ghost" size="icon">
-          <SlidersHorizontal size={20} className="text-gray-500" />
-        </Button>
-      </div>
+      <SearchInput
+        value={searchQuery}
+        onChange={setSearchQuery}
+        placeholder="Search organizations, positions..."
+        showFilter
+      />
 
       <div>
         <h2 className="text-lg font-semibold mb-4">Recent Postings</h2>
@@ -86,62 +82,69 @@ export function DiscoverFeed() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredOpenings.map((opening) => (
-              <Card
+              <div
                 key={opening.id}
-                className="flex flex-col h-full hover:shadow-md transition-shadow"
+                className="flex flex-col h-full rounded-[20px] shadow-md bg-white overflow-hidden"
               >
-                <CardHeader className="p-4 pb-2 space-y-2">
-                  {/* Logo Placeholder - random color or just org initial */}
-                  <div className="w-12 h-12 rounded-lg bg-pink-600 flex items-center justify-center text-white font-bold text-xl mb-1">
+                {/* Pink header band */}
+                <div className="bg-owl-pink rounded-t-[20px] h-16 relative">
+                  <div className="absolute -bottom-5 left-4 w-12 h-12 rounded-lg bg-white flex items-center justify-center text-owl-purple font-bold text-xl shadow-sm border border-gray-100">
                     {opening.org.name.charAt(0)}
                   </div>
+                </div>
 
+                {/* Card body */}
+                <div className="flex flex-col flex-grow p-4 pt-8">
                   <div>
                     <h3 className="font-bold text-lg leading-tight">
                       {opening.title}
                     </h3>
                     <p className="text-sm text-gray-500">{opening.org.name}</p>
                   </div>
-                </CardHeader>
-                <CardContent className="p-4 pt-0 flex-grow">
-                  <Badge variant="secondary" className="mt-2">
-                    Open
-                  </Badge>
-                </CardContent>
-                <CardFooter className="p-4 border-t text-xs text-gray-400 flex justify-between items-center">
-                  <span>
-                    {opening.closes_at
-                      ? `Due ${new Date(opening.closes_at).toLocaleDateString(
-                          "en-US",
-                          {
-                            month: "2-digit",
-                            day: "2-digit",
-                            year: "numeric",
-                          },
-                        )}`
-                      : "No deadline"}
-                  </span>
+                  <div className="mt-2">
+                    <Badge variant="default">Open</Badge>
+                  </div>
+                </div>
 
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    asChild
-                    className="h-8 w-8 p-0 rounded-full"
+                {/* Footer */}
+                {isValidUrl(opening.application_link) ? (
+                  <Link
+                    href={opening.application_link!}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-3 border-t text-xs text-gray-400 flex justify-between items-center hover:bg-gray-50 transition-colors"
                   >
-                    <Link
-                      href={opening.application_link || "#"}
-                      target={opening.application_link ? "_blank" : undefined}
-                      rel={
-                        opening.application_link
-                          ? "noopener noreferrer"
-                          : undefined
-                      }
-                    >
-                      <ChevronRight size={16} />
-                    </Link>
-                  </Button>
-                </CardFooter>
-              </Card>
+                    <span>
+                      {opening.closes_at
+                        ? `Due ${new Date(opening.closes_at).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "2-digit",
+                              day: "2-digit",
+                              year: "numeric",
+                            },
+                          )}`
+                        : "No deadline"}
+                    </span>
+                    <LinkExternal01 className="w-4 h-4 text-gray-400" />
+                  </Link>
+                ) : (
+                  <div className="px-4 py-3 border-t text-xs text-gray-400">
+                    <span>
+                      {opening.closes_at
+                        ? `Due ${new Date(opening.closes_at).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "2-digit",
+                              day: "2-digit",
+                              year: "numeric",
+                            },
+                          )}`
+                        : "No deadline"}
+                    </span>
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         )}

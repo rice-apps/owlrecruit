@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight } from "@untitled-ui/icons-react";
 
 interface Question {
   id: string;
@@ -13,7 +13,7 @@ interface Question {
 
 interface Application {
   id: string;
-  form_responses: any;
+  form_responses: Record<string, unknown>;
 }
 
 interface QuestionsTabProps {
@@ -69,7 +69,7 @@ export function QuestionsTab({ openingId }: QuestionsTabProps) {
   const getResponsesForQuestion = (questionText: string) => {
     return applications
       .map((app) => {
-        const responses = (app.form_responses as Record<string, any>) || {};
+        const responses = app.form_responses || {};
         return responses[questionText];
       })
       .filter(
@@ -140,7 +140,7 @@ export function QuestionsTab({ openingId }: QuestionsTabProps) {
                       key={idx}
                       className="py-3 px-4 bg-white/80 backdrop-blur-sm rounded-lg text-sm text-gray-800 shadow-sm hover:shadow-md transition-shadow"
                     >
-                      {response}
+                      {String(response)}
                     </div>
                   ))
                 ) : (

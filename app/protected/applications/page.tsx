@@ -7,9 +7,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { ArrowLeft, Search } from "lucide-react";
 import { ApplicationCard } from "./components";
+import { SearchInput } from "@/components/search-input";
 import type { Enums } from "@/types/supabase";
 
 type ApplicationStatus = Enums<"status">;
@@ -73,35 +72,40 @@ export default function MyApplicationsPage() {
   // Separate active and past applications
   const activeApplications = filteredApplications.filter((app) => {
     // Active if not rejected/accepted offer, opening is not explicitly closed, and (no due date OR due date is in the future)
-    if (app.status === "Rejected" || app.status === "Accepted Offer" || app.opening_status === "closed") return false;
+    if (
+      app.status === "Rejected" ||
+      app.status === "Accepted Offer" ||
+      app.opening_status === "closed"
+    )
+      return false;
     if (!app.closes_at) return true;
     return new Date(app.closes_at) >= new Date();
   });
 
   const pastApplications = filteredApplications.filter((app) => {
     // Past if rejected/accepted offer, explicitly closed opening OR due date has passed
-    if (app.status === "Rejected" || app.status === "Accepted Offer" || app.opening_status === "closed") return true;
+    if (
+      app.status === "Rejected" ||
+      app.status === "Accepted Offer" ||
+      app.opening_status === "closed"
+    )
+      return true;
     if (!app.closes_at) return false;
     return new Date(app.closes_at) < new Date();
   });
 
   return (
-    <div className="flex-1 w-full flex flex-col gap-6">
+    <div className="w-full flex flex-col gap-6 max-w-7xl">
       {/* Search Bar */}
-      <div className="relative w-full">
-        <input
-          type="text"
-          placeholder="Search..."
-          className="w-full pl-6 pr-12 py-3 bg-transparent border border-gray-300 rounded-[30px] focus:outline-none focus:border-blue-500 text-sm"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-        <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-      </div>
+      <SearchInput
+        value={searchQuery}
+        onChange={setSearchQuery}
+        placeholder="Search organizations, positions..."
+      />
       {/* Loading State */}
       {loading && (
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-owl-purple"></div>
           <span className="ml-2 text-muted-foreground">Loading...</span>
         </div>
       )}
@@ -159,7 +163,7 @@ export default function MyApplicationsPage() {
             !searchQuery && (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">
-                  You haven't submitted any applications yet.
+                  You haven&apos;t submitted any applications yet.
                 </p>
               </div>
             )}

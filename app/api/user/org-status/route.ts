@@ -23,7 +23,10 @@ export async function GET() {
       .single();
 
     if (userError || !userData) {
-      return NextResponse.json({ error: "User not found in database" }, { status: 404 });
+      return NextResponse.json(
+        { error: "User not found in database" },
+        { status: 404 },
+      );
     }
 
     const netId = userData.net_id;
@@ -83,9 +86,9 @@ export async function GET() {
     const orgsResult =
       orgIds.size > 0
         ? await supabase
-          .from("orgs")
-          .select("id, name")
-          .in("id", Array.from(orgIds))
+            .from("orgs")
+            .select("id, name")
+            .in("id", Array.from(orgIds))
         : { data: [], error: null };
 
     if (orgsResult.error) {
