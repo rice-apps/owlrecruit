@@ -17,29 +17,30 @@ export function UploadTab() {
 
   return (
     <div className="py-8 max-w-4xl">
-      <div className="relative flex items-center justify-between mb-12 px-4 max-w-3xl mx-auto">
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-[2px] bg-gray-200 -z-10" />
-        <div
-          className="absolute left-0 top-1/2 -translate-y-1/2 h-[2px] bg-owl-purple -z-10 transition-all duration-300"
-          style={{
-            width: `${((wizard.currentStep - 1) / (wizard.steps.length - 1)) * 100}%`,
-          }}
-        />
+      <div className="relative flex items-center justify-between mb-12 max-w-3xl mx-auto px-4">
+        <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 flex items-center">
+          <div className="w-full h-0.5 bg-gray-200" />
+          <div
+            className="absolute left-0 h-0.5 bg-owl-purple transition-all duration-300"
+            style={{
+              width: `${((wizard.currentStep - 1) / (wizard.steps.length - 1)) * 100}%`,
+            }}
+          />
+        </div>
         {wizard.steps.map((step) => {
           const isActive = step === wizard.currentStep;
           const isCompleted = step < wizard.currentStep;
           return (
-            <div key={step} className="bg-gray-50 px-2">
-              <div
-                className={cn(
-                  "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium border-2 transition-colors",
-                  isActive || isCompleted
-                    ? "bg-owl-purple border-owl-purple text-white"
-                    : "bg-gray-50 border-gray-300 text-gray-400",
-                )}
-              >
-                {step}
-              </div>
+            <div
+              key={step}
+              className={cn(
+                "relative z-10 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium border-2 transition-colors",
+                isActive || isCompleted
+                  ? "bg-owl-purple border-owl-purple text-white"
+                  : "bg-gray-50 border-gray-300 text-gray-400",
+              )}
+            >
+              {step}
             </div>
           );
         })}
