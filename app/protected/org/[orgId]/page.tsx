@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { OpeningStatusBadge } from "@/components/status-badge";
-import { AddMembersDialog } from "@/components/add-members-dialog";
+import { EditMembersDialog } from "@/components/edit-members-dialog";
 import {
   MembersStrip,
   type OrgMemberRecord,
@@ -298,7 +298,7 @@ export default async function ReviewerOrgPage({
             <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-500">
               {memberCountLabel}
             </span>
-            {isAdmin && <AddMembersDialog orgId={orgId} />}
+            {isAdmin && <EditMembersDialog orgId={orgId} />}
           </div>
         }
       >
