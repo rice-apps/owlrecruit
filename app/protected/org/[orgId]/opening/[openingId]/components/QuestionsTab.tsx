@@ -6,7 +6,7 @@ import {
   ChevronRight,
   Plus,
   Trash01,
-  GripVertical,
+  GridDotsVerticalCenter,
 } from "@untitled-ui/icons-react";
 import { parseQuestionText, encodeQuestionText } from "@/lib/question-utils";
 import type { FieldType } from "@/lib/question-utils";
@@ -103,7 +103,7 @@ function SortableQuestionCard({
           className="mt-2 cursor-grab text-gray-400 hover:text-gray-600 shrink-0"
           aria-label="Drag to reorder"
         >
-          <GripVertical className="w-4 h-4" />
+          <GridDotsVerticalCenter className="w-4 h-4" />
         </button>
 
         <div className="flex-1 space-y-2">
