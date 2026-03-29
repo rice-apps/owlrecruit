@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import type { ApplicationStatus } from "@/types/app";
 
@@ -28,6 +29,7 @@ interface OverviewTabProps {
   applicants: Applicant[];
   orgId: string;
   openingId: string;
+  openingStatus: string | null;
 }
 
 const STATUS_ORDER: ApplicationStatus[] = [
@@ -43,9 +45,15 @@ export function OverviewTab({
   applicants,
   orgId,
   openingId,
+  openingStatus,
 }: OverviewTabProps) {
   const [reviewers, setReviewers] = useState<Reviewer[]>([]);
   const [loadingReviewers, setLoadingReviewers] = useState(true);
+  const [origin, setOrigin] = useState("");
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
 
   useEffect(() => {
     async function fetchReviewers() {
@@ -181,6 +189,31 @@ export function OverviewTab({
           </CardContent>
         </Card>
       </div>
+
+      {/* Application Form Link */}
+      {openingStatus === "open" && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Application Form Link
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex items-center gap-2">
+            <code className="text-sm bg-muted px-2 py-1 rounded flex-1 truncate">
+              {origin}/apply/{openingId}
+            </code>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                navigator.clipboard.writeText(`${origin}/apply/${openingId}`)
+              }
+            >
+              Copy
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Rubric Settings */}
       <Link

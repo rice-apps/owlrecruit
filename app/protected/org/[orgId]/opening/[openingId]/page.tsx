@@ -124,13 +124,14 @@ export default async function OpeningOverviewPage({
           />
         );
       case "questions":
-        return <QuestionsTab openingId={openingId} />;
+        return <QuestionsTab openingId={openingId} orgId={orgId} />;
       case "overview":
         return (
           <OverviewTab
             applicants={applicants}
             orgId={orgId}
             openingId={openingId}
+            openingStatus={openingData?.status ?? null}
           />
         );
       case "upload":
