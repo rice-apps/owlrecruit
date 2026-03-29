@@ -24,6 +24,7 @@ interface ApplyFormProps {
   questions: RawQuestion[];
   isAuthenticated: boolean;
   userEmail: string | null;
+  alreadyApplied: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -191,6 +192,7 @@ export function ApplyForm({
   questions,
   isAuthenticated,
   userEmail,
+  alreadyApplied,
 }: ApplyFormProps) {
   const parsedQuestions = questions.map((q) => ({
     ...q,
@@ -296,6 +298,30 @@ export function ApplyForm({
           <p className="text-sm text-yellow-800">
             A Rice University email address (<strong>@rice.edu</strong>) is
             required to apply. You are signed in as <strong>{userEmail}</strong>
+            .
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Already submitted
+  if (alreadyApplied) {
+    return (
+      <div>
+        {header}
+        <div className="rounded-xl border border-blue-200 bg-blue-50 p-8 text-center space-y-2">
+          <p className="text-sm text-blue-800 font-medium">
+            You&apos;ve already applied to this opening.
+          </p>
+          <p className="text-sm text-blue-700">
+            Track your status on your{" "}
+            <a
+              href="/protected/applications"
+              className="underline hover:text-blue-900"
+            >
+              applications page
+            </a>
             .
           </p>
         </div>

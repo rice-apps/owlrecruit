@@ -60,6 +60,21 @@ export async function PATCH(request: Request, { params }: { params: Params }) {
     );
   }
 
+  // Verify the opening belongs to this org before touching its questions
+  const { data: opening, error: openingError } = await supabase
+    .from("openings")
+    .select("id")
+    .eq("id", openingId)
+    .eq("org_id", orgId)
+    .single();
+
+  if (openingError || !opening) {
+    return NextResponse.json(
+      { error: "Opening not found in this organization" },
+      { status: 404 },
+    );
+  }
+
   // Delete existing and reinsert — same pattern as CSV upload
   const { error: deleteError } = await supabase
     .from("questions")

@@ -15,7 +15,9 @@ export default async function ApplyPage({ params }: Props) {
 
   const { data: opening, error } = await supabase
     .from("openings")
-    .select("id, title, description, status, closes_at, orgs(name)")
+    .select(
+      "id, title, description, status, closes_at, org_id, orgs!org_id(name)",
+    )
     .eq("id", openingId)
     .single();
 
@@ -43,12 +45,29 @@ export default async function ApplyPage({ params }: Props) {
     .eq("opening_id", openingId)
     .order("sort_order", { ascending: true });
 
-  const orgName =
-    opening.orgs && !Array.isArray(opening.orgs)
-      ? (opening.orgs as { name: string }).name
-      : Array.isArray(opening.orgs) && opening.orgs.length > 0
-        ? (opening.orgs[0] as { name: string }).name
-        : "Unknown Org";
+  const orgRow = Array.isArray(opening.orgs) ? opening.orgs[0] : opening.orgs;
+  const orgName = (orgRow as { name: string } | null)?.name ?? "Unknown Org";
+
+  // Check if the authenticated user has already applied
+  let alreadyApplied = false;
+  if (user?.email?.endsWith("@rice.edu")) {
+    const netId = user.email.split("@")[0];
+    const { data: applicant } = await supabase
+      .from("applicants")
+      .select("id")
+      .eq("net_id", netId)
+      .maybeSingle();
+
+    if (applicant) {
+      const { data: existing } = await supabase
+        .from("applications")
+        .select("id")
+        .eq("opening_id", openingId)
+        .eq("applicant_id", applicant.id)
+        .maybeSingle();
+      alreadyApplied = !!existing;
+    }
+  }
 
   return (
     <ApplyForm
@@ -60,6 +79,7 @@ export default async function ApplyPage({ params }: Props) {
       questions={questions ?? []}
       isAuthenticated={!!user}
       userEmail={user?.email ?? null}
+      alreadyApplied={alreadyApplied}
     />
   );
 }

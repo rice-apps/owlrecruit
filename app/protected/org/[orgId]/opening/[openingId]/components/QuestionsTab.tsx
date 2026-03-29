@@ -217,6 +217,7 @@ export function QuestionsTab({ openingId, orgId }: QuestionsTabProps) {
   const [isEditMode, setIsEditMode] = useState(false);
   const [draftQuestions, setDraftQuestions] = useState<DraftQuestion[]>([]);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const sensors = useSensors(useSensor(PointerSensor));
 
@@ -312,11 +313,19 @@ export function QuestionsTab({ openingId, orgId }: QuestionsTabProps) {
   };
 
   const saveForm = async () => {
+    setSaveError(null);
+
+    const emptyIndex = draftQuestions.findIndex((q) => q.label.trim() === "");
+    if (emptyIndex !== -1) {
+      setSaveError(`Question ${emptyIndex + 1} has no text.`);
+      return;
+    }
+
     setSaving(true);
     try {
       const payload = draftQuestions.map((q) => ({
         question_text: encodeQuestionText(
-          q.label,
+          q.label.trim(),
           q.type,
           q.options.length > 0 ? q.options : null,
         ),
@@ -334,13 +343,15 @@ export function QuestionsTab({ openingId, orgId }: QuestionsTabProps) {
 
       if (!res.ok) {
         const json = await res.json();
-        alert(`Failed to save: ${json.error ?? "Unknown error"}`);
+        setSaveError(json.error ?? "Failed to save. Please try again.");
         return;
       }
 
       const json = await res.json();
       setQuestions(json.questions ?? []);
       setIsEditMode(false);
+    } catch {
+      setSaveError("Network error. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -368,7 +379,10 @@ export function QuestionsTab({ openingId, orgId }: QuestionsTabProps) {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setIsEditMode(false)}
+              onClick={() => {
+                setIsEditMode(false);
+                setSaveError(null);
+              }}
               disabled={saving}
             >
               Cancel
@@ -378,6 +392,12 @@ export function QuestionsTab({ openingId, orgId }: QuestionsTabProps) {
             </Button>
           </div>
         </div>
+
+        {saveError && (
+          <p className="text-sm text-red-600 bg-red-50 rounded-lg px-4 py-3">
+            {saveError}
+          </p>
+        )}
 
         <DndContext
           sensors={sensors}

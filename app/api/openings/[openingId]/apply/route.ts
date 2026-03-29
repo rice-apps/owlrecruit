@@ -100,12 +100,15 @@ export async function POST(request: Request, { params }: { params: Params }) {
     ...formResponses,
   };
 
-  const { error: insertError } = await supabase.from("applications").insert({
-    opening_id: openingId,
-    applicant_id: applicant.id,
-    form_responses: enrichedResponses,
-    status: "Applied",
-  });
+  const { error: insertError } = await supabase.from("applications").upsert(
+    {
+      opening_id: openingId,
+      applicant_id: applicant.id,
+      form_responses: enrichedResponses,
+      status: "Applied",
+    },
+    { onConflict: "opening_id, applicant_id", ignoreDuplicates: true },
+  );
 
   if (insertError) {
     return NextResponse.json({ error: insertError.message }, { status: 500 });
