@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -53,7 +54,7 @@ export function EditOpeningDialog({
         body: JSON.stringify({
           title,
           description,
-          application_link: applicationLink,
+          ...(initialData.application_link ? { application_link: applicationLink } : {}),
           closes_at: closesAt || null,
           status,
         }),
@@ -77,6 +78,9 @@ export function EditOpeningDialog({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Edit Opening</DialogTitle>
+          <DialogDescription className="sr-only">
+            Edit the details of this opening.
+          </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-4 mt-2">
           <div className="space-y-2">
@@ -96,15 +100,17 @@ export function EditOpeningDialog({
               rows={3}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="edit-link">Application Link</Label>
-            <Input
-              id="edit-link"
-              value={applicationLink}
-              onChange={(e) => setApplicationLink(e.target.value)}
-              placeholder="https://..."
-            />
-          </div>
+          {initialData.application_link && (
+            <div className="space-y-2">
+              <Label htmlFor="edit-link">Application Link</Label>
+              <Input
+                id="edit-link"
+                value={applicationLink}
+                onChange={(e) => setApplicationLink(e.target.value)}
+                placeholder="https://..."
+              />
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="edit-closes">Closes At</Label>
             <Input

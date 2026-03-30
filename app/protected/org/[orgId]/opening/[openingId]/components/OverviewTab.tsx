@@ -30,6 +30,7 @@ interface OverviewTabProps {
   orgId: string;
   openingId: string;
   openingStatus: string | null;
+  applicationLink: string | null;
 }
 
 const STATUS_ORDER: ApplicationStatus[] = [
@@ -46,6 +47,7 @@ export function OverviewTab({
   orgId,
   openingId,
   openingStatus,
+  applicationLink,
 }: OverviewTabProps) {
   const [reviewers, setReviewers] = useState<Reviewer[]>([]);
   const [loadingReviewers, setLoadingReviewers] = useState(true);
@@ -199,18 +201,37 @@ export function OverviewTab({
             </CardTitle>
           </CardHeader>
           <CardContent className="flex items-center gap-2">
-            <code className="text-sm bg-muted px-2 py-1 rounded flex-1 truncate">
-              {origin}/apply/{openingId}
-            </code>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                navigator.clipboard.writeText(`${origin}/apply/${openingId}`)
-              }
-            >
-              Copy
-            </Button>
+            {applicationLink ? (
+              <>
+                <code className="text-sm bg-muted px-2 py-1 rounded flex-1 truncate">
+                  {applicationLink}
+                </code>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigator.clipboard.writeText(applicationLink)}
+                >
+                  Copy
+                </Button>
+              </>
+            ) : (
+              <>
+                <code className="text-sm bg-muted px-2 py-1 rounded flex-1 truncate">
+                  {origin}/apply/{openingId}
+                </code>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    navigator.clipboard.writeText(
+                      `${origin}/apply/${openingId}`,
+                    )
+                  }
+                >
+                  Copy
+                </Button>
+              </>
+            )}
           </CardContent>
         </Card>
       )}

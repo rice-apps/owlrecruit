@@ -156,24 +156,63 @@ export default function NewOpeningPage() {
           />
         </div>
 
-        {/* Application Link */}
-        <div className="space-y-2">
-          <Label
-            htmlFor="application_link"
-            className="text-sm font-medium text-gray-700"
-          >
-            Application Link
+        {/* Application Method */}
+        <div className="space-y-3">
+          <Label className="text-sm font-medium text-gray-700">
+            Application Method
           </Label>
-          <Input
-            id="application_link"
-            type="url"
-            value={formData.application_link}
-            onChange={(e) =>
-              setFormData({ ...formData, application_link: e.target.value })
-            }
-            placeholder="https://forms.google.com/..."
-            className="h-11 text-sm w-full"
-          />
+          <div className="flex rounded-lg border border-gray-200 w-fit overflow-hidden">
+            <button
+              type="button"
+              onClick={() =>
+                setFormData({ ...formData, application_link: "" })
+              }
+              className={`px-4 py-2 text-sm font-medium transition-colors ${
+                !formData.application_link
+                  ? "bg-owl-purple text-white"
+                  : "bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              Native Form
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setFormData({
+                  ...formData,
+                  application_link:
+                    formData.application_link || "https://",
+                })
+              }
+              className={`px-4 py-2 text-sm font-medium transition-colors border-l border-gray-200 ${
+                formData.application_link
+                  ? "bg-owl-purple text-white"
+                  : "bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              Google Forms
+            </button>
+          </div>
+          {!formData.application_link ? (
+            <p className="text-xs text-gray-500">
+              Build a form in the Questions tab after creating this opening.
+              Applicants will fill it out at a shareable link.
+            </p>
+          ) : (
+            <Input
+              id="application_link"
+              type="url"
+              value={formData.application_link}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  application_link: e.target.value,
+                })
+              }
+              placeholder="https://forms.google.com/..."
+              className="h-11 text-sm w-full"
+            />
+          )}
         </div>
 
         {/* Description */}

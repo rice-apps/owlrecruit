@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
   ChevronRight,
@@ -53,6 +54,7 @@ interface Application {
 interface QuestionsTabProps {
   openingId: string;
   orgId: string;
+  applicationLink: string | null;
 }
 
 const FIELD_TYPES: { value: FieldType; label: string }[] = [
@@ -202,16 +204,79 @@ function SortableQuestionCard({
 }
 
 // ---------------------------------------------------------------------------
+// Google Forms mode panel
+// ---------------------------------------------------------------------------
+
+function GoogleFormsMode({
+  applicationLink,
+  openingId,
+}: {
+  applicationLink: string;
+  openingId: string;
+}) {
+  const router = useRouter();
+  const [link, setLink] = useState(applicationLink);
+  const [saving, setSaving] = useState(false);
+
+  const saveLink = async () => {
+    setSaving(true);
+    try {
+      const supabase = createClient();
+      await supabase
+        .from("openings")
+        .update({ application_link: link })
+        .eq("id", openingId);
+      router.refresh();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="py-8 space-y-4">
+      <p className="text-sm text-gray-500">
+        Paste your Google Forms link below. Applicants will be directed to this
+        URL, and you can upload responses via the Upload Data tab.
+      </p>
+      <div className="flex gap-2 items-center max-w-xl">
+        <Input
+          value={link}
+          onChange={(e) => setLink(e.target.value)}
+          placeholder="https://docs.google.com/forms/..."
+          type="url"
+        />
+        <Button
+          size="sm"
+          onClick={saveLink}
+          disabled={saving || link === applicationLink}
+        >
+          {saving ? "Saving…" : "Save"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
 
-export function QuestionsTab({ openingId, orgId }: QuestionsTabProps) {
+export function QuestionsTab({
+  openingId,
+  orgId,
+  applicationLink,
+}: QuestionsTabProps) {
+  const router = useRouter();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(
     null,
   );
+
+  // Mode: null/empty = native form, URL = Google Forms
+  const isNativeForm = !applicationLink;
+  const [switchingMode, setSwitchingMode] = useState(false);
 
   // Builder state
   const [isEditMode, setIsEditMode] = useState(false);
@@ -220,6 +285,22 @@ export function QuestionsTab({ openingId, orgId }: QuestionsTabProps) {
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const sensors = useSensors(useSensor(PointerSensor));
+
+  const toggleMode = async (toNative: boolean) => {
+    setSwitchingMode(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("openings")
+        .update({
+          application_link: toNative ? null : "",
+        })
+        .eq("id", openingId);
+      if (!error) router.refresh();
+    } finally {
+      setSwitchingMode(false);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -369,7 +450,40 @@ export function QuestionsTab({ openingId, orgId }: QuestionsTabProps) {
     );
   }
 
-  // Edit mode
+  // Mode toggle bar (shared between edit & view)
+  const modeToggle = (
+    <div className="flex items-center gap-2 text-sm">
+      <span className="text-gray-500">Mode:</span>
+      <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden">
+        <button
+          type="button"
+          onClick={() => !isNativeForm && toggleMode(true)}
+          disabled={switchingMode}
+          className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+            isNativeForm
+              ? "bg-owl-purple text-white"
+              : "bg-white text-gray-600 hover:bg-gray-50"
+          }`}
+        >
+          Native Form
+        </button>
+        <button
+          type="button"
+          onClick={() => isNativeForm && toggleMode(false)}
+          disabled={switchingMode}
+          className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+            !isNativeForm
+              ? "bg-owl-purple text-white"
+              : "bg-white text-gray-600 hover:bg-gray-50"
+          }`}
+        >
+          Google Forms
+        </button>
+      </div>
+    </div>
+  );
+
+  // Edit mode (native form only)
   if (isEditMode) {
     return (
       <div className="py-4 space-y-4">
@@ -448,13 +562,21 @@ export function QuestionsTab({ openingId, orgId }: QuestionsTabProps) {
   // View mode
   return (
     <div className="py-4 space-y-1">
-      <div className="flex justify-end mb-2">
-        <Button variant="outline" size="sm" onClick={enterEditMode}>
-          Edit Form
-        </Button>
+      <div className="flex items-center justify-between mb-2">
+        {modeToggle}
+        {isNativeForm && (
+          <Button variant="outline" size="sm" onClick={enterEditMode}>
+            Edit Form
+          </Button>
+        )}
       </div>
 
-      {questions.length === 0 ? (
+      {!isNativeForm ? (
+        <GoogleFormsMode
+          applicationLink={applicationLink ?? ""}
+          openingId={openingId}
+        />
+      ) : questions.length === 0 ? (
         <div className="py-12 text-center text-gray-500">
           <p>
             No questions configured. Click &ldquo;Edit Form&rdquo; to build your
