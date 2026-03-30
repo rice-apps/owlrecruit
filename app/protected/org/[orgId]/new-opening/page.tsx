@@ -57,16 +57,16 @@ export default function NewOpeningPage() {
   React.useEffect(() => {
     const fetchData = async () => {
       try {
-        const [orgsRes, reviewersRes] = await Promise.all([
-          fetch(`/api/orgs`),
+        const [orgStatusRes, reviewersRes] = await Promise.all([
+          fetch(`/api/user/org-status`),
           fetch(`/api/org/${orgId}/members?role=admin,reviewer`),
         ]);
-        if (orgsRes.ok) {
-          const orgs = await orgsRes.json();
-          const org = orgs.find(
-            (o: { id: string; name: string }) => o.id === orgId,
+        if (orgStatusRes.ok) {
+          const { memberships } = await orgStatusRes.json();
+          const membership = memberships?.find(
+            (m: { org_id: string; org_name: string }) => m.org_id === orgId,
           );
-          if (org) setOrgName(org.name);
+          if (membership) setOrgName(membership.org_name);
         }
         if (reviewersRes.ok) {
           const reviewerData = await reviewersRes.json();
