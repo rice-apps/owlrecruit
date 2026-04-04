@@ -90,7 +90,7 @@ export function FilterDialog({
           <div className="space-y-3">
             <Label className="text-base font-semibold">Status</Label>
             <div className="space-y-2">
-              {["open", "closed", "draft"].map((status) => (
+              {["open", "closed"].map((status) => (
                 <div key={status} className="flex items-center gap-2">
                   <Checkbox
                     id={`status-${status}`}
@@ -105,7 +105,6 @@ export function FilterDialog({
                   >
                     {status === "open" && "Open (actively accepting)"}
                     {status === "closed" && "Closed (no longer accepting)"}
-                    {status === "draft" && "Draft (not yet published)"}
                   </label>
                 </div>
               ))}
