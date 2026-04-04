@@ -1,16 +1,21 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { Eye, Pencil01 } from "@untitled-ui/icons-react";
+import { Eye } from "@untitled-ui/icons-react";
+import { EditOrgDialog } from "@/components/edit-org-dialog";
 
 type OrgPageHeaderProps = {
+  orgId: string;
   displayOrgName: string;
+  orgDescription: string | null;
   roleLabel: string;
   isAdmin: boolean;
   hasRoleError: boolean;
 };
 
 export function OrgPageHeader({
+  orgId,
   displayOrgName,
+  orgDescription,
   roleLabel,
   isAdmin,
   hasRoleError,
@@ -67,24 +72,32 @@ export function OrgPageHeader({
                   : "View organization"}
               </span>
             </button>
-            <button
-              type="button"
-              disabled
-              aria-disabled="true"
-              aria-label={
-                hasRoleError
-                  ? "Edit organization unavailable"
-                  : "Edit organization"
-              }
-              className={headerButtonClasses}
-            >
-              <Pencil01 className="h-[22px] w-[22px]" />
-              <span className="sr-only">
-                {hasRoleError
-                  ? "Edit organization unavailable"
-                  : "Edit organization"}
-              </span>
-            </button>
+            {isAdmin && !hasRoleError ? (
+              <EditOrgDialog
+                orgId={orgId}
+                orgName={displayOrgName}
+                orgDescription={orgDescription}
+                triggerClassName={headerButtonClasses}
+              />
+            ) : (
+              <button
+                type="button"
+                disabled
+                aria-disabled="true"
+                aria-label={
+                  hasRoleError
+                    ? "Edit organization unavailable"
+                    : "Edit organization"
+                }
+                className={headerButtonClasses}
+              >
+                <span className="sr-only">
+                  {hasRoleError
+                    ? "Edit organization unavailable"
+                    : "Edit organization"}
+                </span>
+              </button>
+            )}
           </div>
         </div>
       </div>
