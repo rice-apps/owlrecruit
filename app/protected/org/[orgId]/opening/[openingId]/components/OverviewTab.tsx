@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { createClient } from "@/lib/supabase/client";
+import { AddMembersDialog } from "@/components/add-members-dialog";
 import type { ApplicationStatus } from "@/types/app";
 
 interface Applicant {
@@ -47,57 +48,57 @@ export function OverviewTab({
   const [reviewers, setReviewers] = useState<Reviewer[]>([]);
   const [loadingReviewers, setLoadingReviewers] = useState(true);
 
-  useEffect(() => {
-    async function fetchReviewers() {
-      try {
-        const supabase = createClient();
-        const { data, error } = await supabase
-          .from("org_members")
-          .select(
-            `
+  const fetchReviewers = useCallback(async () => {
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("org_members")
+        .select(
+          `
+          id,
+          user_id,
+          role,
+          users!user_id (
             id,
-            user_id,
-            role,
-            users!user_id (
-              id,
-              name,
-              email
-            )
-          `,
+            name,
+            email
           )
-          .eq("org_id", orgId)
-          .eq("role", "reviewer");
+        `,
+        )
+        .eq("org_id", orgId)
+        .eq("role", "reviewer");
 
-        if (error) {
-          console.error("Failed to fetch reviewers:", error);
-        } else if (data) {
-          // Transform data: Supabase returns users as an array, convert to single object
-          const transformedData = data.map(
-            (item: {
-              id: string;
-              user_id: string;
-              role: string;
-              users: unknown;
-            }) => ({
-              id: item.id,
-              user_id: item.user_id,
-              role: item.role,
-              user:
-                Array.isArray(item.users) && item.users.length > 0
-                  ? item.users[0]
-                  : item.users,
-            }),
-          );
-          setReviewers(transformedData);
-        }
-      } catch (error) {
+      if (error) {
         console.error("Failed to fetch reviewers:", error);
-      } finally {
-        setLoadingReviewers(false);
+      } else if (data) {
+        const transformedData = data.map(
+          (item: {
+            id: string;
+            user_id: string;
+            role: string;
+            users: unknown;
+          }) => ({
+            id: item.id,
+            user_id: item.user_id,
+            role: item.role,
+            user:
+              Array.isArray(item.users) && item.users.length > 0
+                ? item.users[0]
+                : item.users,
+          }),
+        );
+        setReviewers(transformedData);
       }
+    } catch (error) {
+      console.error("Failed to fetch reviewers:", error);
+    } finally {
+      setLoadingReviewers(false);
     }
-    fetchReviewers();
   }, [orgId]);
+
+  useEffect(() => {
+    fetchReviewers();
+  }, [fetchReviewers]);
 
   const totalSubmissions = applicants.length;
 
@@ -196,12 +197,15 @@ export function OverviewTab({
           <h2 className="text-base font-semibold uppercase tracking-wide">
             Assigned Reviewers
           </h2>
-          <button
-            onClick={() => alert("Edit functionality coming later!")}
-            className="text-owl-purple text-sm hover:underline"
-          >
-            Edit
-          </button>
+          <AddMembersDialog
+            orgId={orgId}
+            onMembersChanged={fetchReviewers}
+            trigger={
+              <button className="text-owl-purple text-sm hover:underline">
+                Edit
+              </button>
+            }
+          />
         </div>
 
         {loadingReviewers ? (

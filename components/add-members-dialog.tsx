@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import {
   Dialog,
@@ -39,7 +39,15 @@ type SearchedUser = {
   email: string;
 };
 
-export function AddMembersDialog({ orgId }: { orgId: string }) {
+export function AddMembersDialog({
+  orgId,
+  trigger,
+  onMembersChanged,
+}: {
+  orgId: string;
+  trigger?: ReactNode;
+  onMembersChanged?: () => void;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -133,6 +141,7 @@ export function AddMembersDialog({ orgId }: { orgId: string }) {
       }
       // Refresh server component to reflect changes on the page
       router.refresh();
+      onMembersChanged?.();
       fetchMembers();
     } catch (error) {
       console.error(error);
@@ -153,6 +162,7 @@ export function AddMembersDialog({ orgId }: { orgId: string }) {
       setSearchResults((prev) => prev.filter((u) => u.id !== userId));
       await fetchMembers();
       router.refresh();
+      onMembersChanged?.();
       setSearchQuery("");
     } catch (error) {
       console.error(error);
@@ -162,10 +172,12 @@ export function AddMembersDialog({ orgId }: { orgId: string }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2">
-          <Users01 className="w-4 h-4" />
-          Add Members
-        </Button>
+        {trigger ?? (
+          <Button variant="outline" className="gap-2">
+            <Users01 className="w-4 h-4" />
+            Add Members
+          </Button>
+        )}
       </DialogTrigger>
       {/* Set showCloseButton=false so we can place X on the left like the design */}
       <DialogContent
