@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -33,11 +34,11 @@ export async function GET(request: Request) {
     ]);
 
     if (openingsResult.error) {
-      console.error("Error fetching openings:", openingsResult.error);
+      logger.error("Error fetching openings:", openingsResult.error);
     }
 
     if (orgsResult.error) {
-      console.error("Error fetching orgs:", orgsResult.error);
+      logger.error("Error fetching orgs:", orgsResult.error);
     }
 
     return NextResponse.json({
@@ -45,7 +46,7 @@ export async function GET(request: Request) {
       orgs: orgsResult.data || [],
     });
   } catch (error) {
-    console.error("Error in search API:", error);
+    logger.error("Error in search API:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },

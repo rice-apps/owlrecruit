@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -59,7 +60,7 @@ export async function GET() {
 
     return NextResponse.json(applications);
   } catch (error) {
-    console.error("Error fetching user applications:", error);
+    logger.error("Error fetching user applications:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },

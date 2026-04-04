@@ -10,6 +10,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Upload01, CheckCircle, AlertCircle } from "@untitled-ui/icons-react";
 import { useState } from "react";
+import { logger } from "@/lib/logger";
+import { toast } from "sonner";
 
 interface UploadDialogProps {
   openingId: string;
@@ -118,7 +120,8 @@ export default function UploadDialog({ openingId, orgId }: UploadDialogProps) {
           setError(null);
         }
       } catch (error) {
-        console.error("Couldn't upload file: ", error);
+        logger.error("Couldn't upload file: ", error);
+        toast.error(error instanceof Error ? error.message : "Upload failed");
         setError(error instanceof Error ? error.message : "Upload failed");
       }
     }
@@ -136,7 +139,7 @@ export default function UploadDialog({ openingId, orgId }: UploadDialogProps) {
           `/api/org/${orgId}/applications`,
           "application",
         );
-        console.log("Upload successful! Result:", result);
+        logger.info("Upload successful!", result);
         setIsUploaded(true);
 
         // Handle partial warnings
@@ -152,7 +155,8 @@ export default function UploadDialog({ openingId, orgId }: UploadDialogProps) {
           setError(null);
         }
       } catch (error) {
-        console.error("Couldn't upload file: ", error);
+        logger.error("Couldn't upload file: ", error);
+        toast.error(error instanceof Error ? error.message : "Upload failed");
         setError(error instanceof Error ? error.message : "Upload failed");
       }
     }

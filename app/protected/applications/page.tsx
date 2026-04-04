@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { ApplicationCard } from "./components";
 import { SearchInput } from "@/components/search-input";
 import type { Enums } from "@/types/supabase";
+import { logger } from "@/lib/logger";
 
 type ApplicationStatus = Enums<"status">;
 
@@ -48,7 +49,7 @@ export default function MyApplicationsPage() {
         const data: ApplicationsData = await response.json();
         setApplications(data.applications || []);
       } catch (err) {
-        console.error("Error fetching applications:", err);
+        logger.error("Error fetching applications:", err);
         setError(
           err instanceof Error ? err.message : "An unexpected error occurred",
         );

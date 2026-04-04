@@ -16,6 +16,7 @@ import { OverviewTab } from "./components/OverviewTab";
 import { UploadTab } from "./components/UploadTab";
 import { QuestionsTab } from "./components/QuestionsTab";
 import type { ApplicationStatus } from "@/types/app";
+import { logger } from "@/lib/logger";
 
 interface OpeningOverviewPageProps {
   params: Promise<{ orgId: string; openingId: string }>;
@@ -91,7 +92,7 @@ export default async function OpeningOverviewPage({
   };
 
   if (appError) {
-    console.error("Error fetching applications:", appError);
+    logger.error("Error fetching applications:", appError);
   }
 
   // Transform applications to applicants list format

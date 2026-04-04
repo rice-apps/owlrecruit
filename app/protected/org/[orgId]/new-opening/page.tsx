@@ -13,6 +13,8 @@ import {
   UsersPlus,
   X,
 } from "@untitled-ui/icons-react";
+import { logger } from "@/lib/logger";
+import { toast } from "sonner";
 
 interface EligibleReviewer {
   id: string;
@@ -73,7 +75,7 @@ export default function NewOpeningPage() {
           setEligibleReviewers(reviewerData);
         }
       } catch (err) {
-        console.error("Error fetching page data:", err);
+        logger.error("Error fetching page data:", err);
       }
     };
     fetchData();
@@ -117,7 +119,10 @@ export default function NewOpeningPage() {
 
       router.push(`/protected/org/${orgId}`);
     } catch (err) {
-      console.error("Error creating opening:", err);
+      logger.error("Error creating opening:", err);
+      toast.error(
+        err instanceof Error ? err.message : "Failed to create opening",
+      );
       setError(err instanceof Error ? err.message : "Failed to create opening");
     } finally {
       setIsSubmitting(false);

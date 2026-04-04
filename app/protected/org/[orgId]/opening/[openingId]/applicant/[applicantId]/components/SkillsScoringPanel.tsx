@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 import { RubricEditorDialog } from "@/components/rubric-editor-dialog";
 import { Loading01 } from "@untitled-ui/icons-react";
 
@@ -14,7 +16,6 @@ interface SkillsScoringPanelProps {
   openingId: string;
   applicantId: string;
   isAdmin: boolean;
-  onToast: (message: string, type: "success" | "error") => void;
 }
 
 export function SkillsScoringPanel({
@@ -22,7 +23,6 @@ export function SkillsScoringPanel({
   openingId,
   applicantId,
   isAdmin,
-  onToast,
 }: SkillsScoringPanelProps) {
   const [rubrics, setRubrics] = useState<Rubric[]>([]);
   const [loadingRubrics, setLoadingRubrics] = useState(true);
@@ -44,7 +44,7 @@ export function SkillsScoringPanel({
           }
         }
       } catch (error) {
-        console.error("Error fetching rubrics:", error);
+        logger.error("Error fetching rubrics:", error);
       } finally {
         setLoadingRubrics(false);
       }
@@ -65,7 +65,7 @@ export function SkillsScoringPanel({
         }
       }
     } catch (error) {
-      console.error("Error fetching scores:", error);
+      logger.error("Error fetching scores:", error);
     }
   }, [orgId, applicantId]);
 
@@ -99,14 +99,14 @@ export function SkillsScoringPanel({
       );
 
       if (!res.ok) {
-        console.warn("Failed to save score");
-        onToast("Failed to save score", "error");
+        logger.warn("Failed to save score");
+        toast.error("Failed to save score");
       } else {
-        onToast("Score successfully saved!", "success");
+        toast.success("Score successfully saved!");
       }
     } catch (e) {
-      console.error("Error saving score", e);
-      onToast("Error saving score", "error");
+      logger.error("Error saving score", e);
+      toast.error("Error saving score");
     } finally {
       setSavingScore(false);
     }

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -132,7 +133,7 @@ export async function GET() {
       applications: transformedApplications,
     });
   } catch (error) {
-    console.error("Error fetching user org status:", error);
+    logger.error("Error fetching user org status:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },

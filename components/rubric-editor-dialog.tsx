@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { logger } from "@/lib/logger";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -96,7 +98,8 @@ export function RubricEditorDialog({
       onSuccess(rubric);
       setOpen(false);
     } catch (err) {
-      console.error("Error saving rubric:", err);
+      logger.error("Error saving rubric:", err);
+      toast.error("Failed to save changes. Please try again.");
       setError("Failed to save changes. Please try again.");
     } finally {
       setIsSaving(false);

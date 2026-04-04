@@ -14,6 +14,7 @@ import {
 import { OrgSectionNav } from "@/components/org-section-nav";
 import { LeaveOrgButton } from "@/components/leave-org-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { logger } from "@/lib/logger";
 
 type RawMemberUser = NonNullable<OrgMemberRecord["users"]>;
 
@@ -85,7 +86,7 @@ export default async function ReviewerOrgPage({
     .single();
 
   if (membershipError) {
-    console.error("Failed to fetch org membership", {
+    logger.error("Failed to fetch org membership", {
       orgId,
       userId,
       code: membershipError.code,
@@ -129,7 +130,7 @@ export default async function ReviewerOrgPage({
     .order("user_id", { ascending: true });
 
   if (membersError) {
-    console.error("Failed to fetch org members", {
+    logger.error("Failed to fetch org members", {
       orgId,
       code: membersError.code,
       message: membersError.message,

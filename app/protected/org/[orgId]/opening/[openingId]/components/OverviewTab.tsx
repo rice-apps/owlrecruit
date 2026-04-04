@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { createClient } from "@/lib/supabase/client";
 import type { ApplicationStatus } from "@/types/app";
+import { logger } from "@/lib/logger";
 
 interface Applicant {
   id: string;
@@ -69,7 +70,7 @@ export function OverviewTab({
           .eq("role", "reviewer");
 
         if (error) {
-          console.error("Failed to fetch reviewers:", error);
+          logger.error("Failed to fetch reviewers:", error);
         } else if (data) {
           // Transform data: Supabase returns users as an array, convert to single object
           const transformedData = data.map(
@@ -91,7 +92,7 @@ export function OverviewTab({
           setReviewers(transformedData);
         }
       } catch (error) {
-        console.error("Failed to fetch reviewers:", error);
+        logger.error("Failed to fetch reviewers:", error);
       } finally {
         setLoadingReviewers(false);
       }
