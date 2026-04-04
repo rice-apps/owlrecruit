@@ -10,7 +10,7 @@ export async function GET() {
       .select(
         `
         *,
-        org:orgs(name)
+        org:orgs(name, logo_url)
       `,
       )
       .eq("status", "open")

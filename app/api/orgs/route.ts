@@ -13,8 +13,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { name, description } = body;
+    const formData = await request.formData();
+    const name = formData.get("name") as string | null;
+    const description = formData.get("description") as string | null;
+    const logoFile = formData.get("logo") as File | null;
 
     if (!name?.trim()) {
       return NextResponse.json(
@@ -23,12 +25,38 @@ export async function POST(request: Request) {
       );
     }
 
+    // Upload logo if provided
+    let logo_url: string | null = null;
+    if (logoFile && logoFile.size > 0) {
+      const ext = logoFile.name.split(".").pop();
+      const path = `logos/${crypto.randomUUID()}.${ext}`;
+      const bytes = await logoFile.arrayBuffer();
+
+      const { error: uploadError } = await supabase.storage
+        .from("org-assets")
+        .upload(path, bytes, { contentType: logoFile.type });
+
+      if (uploadError) {
+        return NextResponse.json(
+          { error: "Failed to upload logo" },
+          { status: 500 },
+        );
+      }
+
+      const { data: urlData } = supabase.storage
+        .from("org-assets")
+        .getPublicUrl(path);
+
+      logo_url = urlData.publicUrl;
+    }
+
     // Create the organization
     const { data: newOrg, error: insertError } = await supabase
       .from("orgs")
       .insert({
         name: name.trim(),
         description: description?.trim() || null,
+        logo_url,
       })
       .select("id")
       .single();

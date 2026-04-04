@@ -100,7 +100,7 @@ export default async function ReviewerOrgPage({
 
   const { data: orgData } = await supabase
     .from("orgs")
-    .select("name, description")
+    .select("name, description, logo_url")
     .eq("id", orgId)
     .single();
 
@@ -191,6 +191,7 @@ export default async function ReviewerOrgPage({
         roleLabel={roleLabel}
         isAdmin={isAdmin}
         hasRoleError={Boolean(membershipError)}
+        logoUrl={orgData?.logo_url ?? null}
       />
 
       <OrgSectionNav
