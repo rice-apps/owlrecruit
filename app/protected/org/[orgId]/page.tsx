@@ -84,10 +84,6 @@ export default async function ReviewerOrgPage({
     .eq("org_id", orgId)
     .single();
 
-  if (membershipError) {
-    // non-fatal: membershipRole will be null, page renders as non-member
-  }
-
   const membershipRole = isMemberRole(membership?.role)
     ? membership.role
     : null;
@@ -122,10 +118,6 @@ export default async function ReviewerOrgPage({
     .eq("org_id", orgId)
     .order("role", { ascending: true })
     .order("user_id", { ascending: true });
-
-  if (membersError) {
-    // non-fatal: rawMembers falls back to []
-  }
 
   const rawMembers =
     membersError || !Array.isArray(membersData)

@@ -1,6 +1,4 @@
-import type { Enums } from "@/types/supabase";
-
-type ApplicationStatus = Enums<"status">;
+import type { ApplicationStatus } from "@/types/app";
 
 export const getStatusBadgeVariant = (
   status: ApplicationStatus | null,

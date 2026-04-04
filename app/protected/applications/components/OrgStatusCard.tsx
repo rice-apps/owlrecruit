@@ -13,10 +13,8 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getStatusBadgeVariant } from "@/lib/status-utils";
+import type { ApplicationStatus } from "@/types/app";
 import type { Enums } from "@/types/supabase";
-
-// Application status type from database enum
-type ApplicationStatus = Enums<"status">;
 
 // Type definitions for org-related data structures
 interface OrgMembership {

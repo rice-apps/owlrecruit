@@ -24,7 +24,7 @@ export default async function ProtectedLayout({
   };
 
   // Fetch user's organizations with their role
-  const { data: memberships, error: membershipsError } = await supabase
+  const { data: memberships } = await supabase
     .from("org_members")
     .select(
       `
@@ -40,10 +40,6 @@ export default async function ProtectedLayout({
     `,
     )
     .eq("user_id", userId);
-
-  if (membershipsError) {
-    // non-fatal: sidebar will render with no orgs
-  }
 
   // Transform data to OrgWithRole format
   const orgs: OrgWithRole[] = (memberships || [])

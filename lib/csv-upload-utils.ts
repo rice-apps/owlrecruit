@@ -484,17 +484,7 @@ export async function processAndUploadApplications(
         const existing = existingApplicants.get(netid)!;
         userId = existing.applicantId;
 
-        // Optional: If existing name is "-" and new name is real, update it?
-        // logic from ensureApplicant:
-        // if (existing.name === "-" && name !== "-") { update... }
-        // We'll trust ensureApplicant logic if we think we need an update,
-        // OR we can just skip if we don't care about name updates for existing applicants.
-        // For efficiency, let's skip the DB read if name is good or we don't assume update.
-        // But if we want perfection:
         if (existing.name === "-" && name !== "-") {
-          // If name needs update, we call update directly or use ensureApplicant (which does a read first)
-          // calling ensureApplicant is safer but does a read.
-          // We can just call update directly since we have the ID.
           const { error: updateError } = await supabase
             .from("applicants")
             .update({ name })

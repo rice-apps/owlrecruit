@@ -9,10 +9,7 @@
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { getStatusBadgeVariant } from "@/lib/status-utils";
-import type { Enums } from "@/types/supabase";
-
-// Application status type from database enum
-type ApplicationStatus = Enums<"status">;
+import type { ApplicationStatus } from "@/types/app";
 
 interface ApplicationCardProps {
   application: {

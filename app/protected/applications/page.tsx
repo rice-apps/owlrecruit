@@ -9,9 +9,7 @@
 import { useEffect, useState } from "react";
 import { ApplicationCard } from "./components";
 import { SearchInput } from "@/components/search-input";
-import type { Enums } from "@/types/supabase";
-
-type ApplicationStatus = Enums<"status">;
+import type { ApplicationStatus } from "@/types/app";
 
 interface Application {
   org_id: string;
