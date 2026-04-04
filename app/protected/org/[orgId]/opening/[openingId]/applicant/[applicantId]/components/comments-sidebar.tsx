@@ -33,8 +33,7 @@ export function CommentsSidebar({
             setIsAdmin(true);
           }
         }
-      } catch (error) {
-        console.error("Error checking role:", error);
+      } catch {
       }
     };
     if (orgId) {

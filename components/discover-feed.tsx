@@ -44,8 +44,7 @@ export function DiscoverFeed() {
         }
         const data = await response.json();
         setOpenings(data);
-      } catch (error) {
-        console.error("Error fetching openings:", error);
+      } catch {
       } finally {
         setLoading(false);
       }
@@ -71,12 +70,14 @@ export function DiscoverFeed() {
       />
 
       <div>
-        <h2 className="text-lg font-semibold mb-4">Recent Postings</h2>
+        <h2 className="text-lg font-semibold mb-4 dark:text-gray-100">
+          Recent Postings
+        </h2>
 
         {loading ? (
-          <div className="text-center py-10">Loading...</div>
+          <div className="text-center py-10 dark:text-gray-400">Loading...</div>
         ) : filteredOpenings.length === 0 ? (
-          <div className="text-center py-10 text-gray-500">
+          <div className="text-center py-10 text-gray-500 dark:text-gray-400">
             No open roles found.
           </div>
         ) : (
@@ -84,11 +85,11 @@ export function DiscoverFeed() {
             {filteredOpenings.map((opening) => (
               <div
                 key={opening.id}
-                className="flex flex-col h-full rounded-[20px] shadow-md bg-white overflow-hidden"
+                className="flex flex-col h-full rounded-[20px] shadow-md bg-white dark:bg-[#161b22] dark:border dark:border-[#30363d] overflow-hidden"
               >
                 {/* Pink header band */}
-                <div className="bg-owl-pink rounded-t-[20px] h-16 relative">
-                  <div className="absolute -bottom-5 left-4 w-12 h-12 rounded-lg bg-white flex items-center justify-center text-owl-purple font-bold text-xl shadow-sm border border-gray-100">
+                <div className="bg-owl-pink dark:bg-[#21262d] rounded-t-[20px] h-16 relative">
+                  <div className="absolute -bottom-5 left-4 w-12 h-12 rounded-lg bg-white dark:bg-[#0d1117] flex items-center justify-center text-owl-purple dark:text-[#e6edf3] font-bold text-xl shadow-sm border border-gray-100 dark:border-[#30363d]">
                     {opening.org.name.charAt(0)}
                   </div>
                 </div>
@@ -96,10 +97,12 @@ export function DiscoverFeed() {
                 {/* Card body */}
                 <div className="flex flex-col flex-grow p-4 pt-8">
                   <div>
-                    <h3 className="font-bold text-lg leading-tight">
+                    <h3 className="font-bold text-lg leading-tight dark:text-[#e6edf3]">
                       {opening.title}
                     </h3>
-                    <p className="text-sm text-gray-500">{opening.org.name}</p>
+                    <p className="text-sm text-gray-500 dark:text-[#7d8590]">
+                      {opening.org.name}
+                    </p>
                   </div>
                   <div className="mt-2">
                     <Badge variant="default">Open</Badge>
@@ -112,7 +115,7 @@ export function DiscoverFeed() {
                     href={opening.application_link!}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-3 border-t text-xs text-gray-400 flex justify-between items-center hover:bg-gray-50 transition-colors"
+                    className="px-4 py-3 border-t border-gray-100 dark:border-[#30363d] text-xs text-gray-400 dark:text-[#7d8590] flex justify-between items-center hover:bg-gray-50 dark:hover:bg-[#21262d] transition-colors"
                   >
                     <span>
                       {opening.closes_at
@@ -126,10 +129,10 @@ export function DiscoverFeed() {
                           )}`
                         : "No deadline"}
                     </span>
-                    <LinkExternal01 className="w-4 h-4 text-gray-400" />
+                    <LinkExternal01 className="w-4 h-4" />
                   </Link>
                 ) : (
-                  <div className="px-4 py-3 border-t text-xs text-gray-400">
+                  <div className="px-4 py-3 border-t border-gray-100 dark:border-[#30363d] text-xs text-gray-400 dark:text-[#7d8590]">
                     <span>
                       {opening.closes_at
                         ? `Due ${new Date(opening.closes_at).toLocaleDateString(

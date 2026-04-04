@@ -42,11 +42,8 @@ export function CommentsPanel({
       if (res.ok) {
         const data = await res.json();
         setComments(data.comments);
-      } else {
-        console.warn("Failed to fetch comments, API might be missing");
       }
-    } catch (error) {
-      console.error("Error fetching comments:", error);
+    } catch {
     }
   }, [orgId, applicantId]);
 
@@ -79,8 +76,7 @@ export function CommentsPanel({
         onToast("Comment successfully posted!", "success");
         fetchComments();
       }
-    } catch (error) {
-      console.error("Error posting comment:", error);
+    } catch {
       onToast("Error posting comment.", "error");
     } finally {
       setLoading(false);

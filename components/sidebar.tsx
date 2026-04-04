@@ -31,7 +31,7 @@ export function Sidebar({ orgs, user }: SidebarProps) {
   const isActive = (path: string) => pathname.startsWith(path);
 
   return (
-    <aside className="hidden md:flex md:flex-col h-screen w-64 bg-white border-r border-gray-200 shrink-0">
+    <aside className="hidden md:flex md:flex-col h-screen w-64 bg-white dark:bg-card border-r border-gray-200 dark:border-border shrink-0">
       {/* Logo */}
       <div className="p-6 pb-8">
         <Link href="/protected/discover" className="flex items-center gap-2">
@@ -68,8 +68,8 @@ export function Sidebar({ orgs, user }: SidebarProps) {
           className={cn(
             "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
             isActive("/protected/discover")
-              ? "bg-gray-100 text-gray-900"
-              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
+              ? "bg-gray-100 text-gray-900 dark:bg-secondary dark:text-foreground"
+              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-muted-foreground dark:hover:bg-secondary dark:hover:text-foreground",
           )}
         >
           <SearchMd className="w-5 h-5" />
@@ -82,8 +82,8 @@ export function Sidebar({ orgs, user }: SidebarProps) {
           className={cn(
             "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
             isActive("/protected/applications")
-              ? "bg-gray-100 text-gray-900"
-              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
+              ? "bg-gray-100 text-gray-900 dark:bg-secondary dark:text-foreground"
+              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-muted-foreground dark:hover:bg-secondary dark:hover:text-foreground",
           )}
         >
           {/* Using Folder as icon for Applications */}
@@ -99,14 +99,14 @@ export function Sidebar({ orgs, user }: SidebarProps) {
           value={isActive("/protected/org") ? "my-orgs" : undefined}
         >
           <AccordionItem value="my-orgs" className="border-none">
-            <AccordionTrigger className="w-full flex items-center justify-between px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:no-underline decoration-0">
+            <AccordionTrigger className="w-full flex items-center justify-between px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:no-underline decoration-0 dark:text-muted-foreground dark:hover:bg-secondary dark:hover:text-foreground">
               <div className="flex items-center gap-3">
                 <AlignJustify className="w-5 h-5" />
                 My Organizations
               </div>
             </AccordionTrigger>
             <AccordionContent className="pb-0 pt-1">
-              <div className="flex flex-col gap-1 pl-4 border-l ml-3.5 border-gray-200">
+              <div className="flex flex-col gap-1 pl-4 border-l ml-3.5 border-gray-200 dark:border-border">
                 {orgs.map((org) => (
                   <Link
                     key={org.id}
@@ -114,8 +114,8 @@ export function Sidebar({ orgs, user }: SidebarProps) {
                     className={cn(
                       "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
                       isActive(`/protected/org/${org.id}`)
-                        ? "bg-gray-100 text-gray-900 font-medium"
-                        : "text-gray-500 hover:text-gray-900 hover:bg-gray-50",
+                        ? "bg-gray-100 text-gray-900 font-medium dark:bg-secondary dark:text-foreground"
+                        : "text-gray-500 hover:text-gray-900 hover:bg-gray-50 dark:text-muted-foreground dark:hover:text-foreground dark:hover:bg-secondary",
                     )}
                   >
                     {/* Minimal org item - maybe just name or name + tiny icon */}
@@ -139,28 +139,28 @@ export function Sidebar({ orgs, user }: SidebarProps) {
       </nav>
 
       {/* User Profile Footer */}
-      <div className="p-4 border-t border-gray-100">
+      <div className="p-4 border-t border-gray-100 dark:border-border">
         <div className="flex items-center gap-3">
           <Link
             href="/protected/profile"
             className={cn(
               "flex items-center gap-3 flex-1 rounded-md transition-colors",
               isActive("/protected/profile")
-                ? "bg-gray-100"
-                : "hover:bg-gray-50",
+                ? "bg-gray-100 dark:bg-secondary"
+                : "hover:bg-gray-50 dark:hover:bg-secondary",
             )}
           >
-            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 overflow-hidden">
+            <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-secondary flex items-center justify-center text-gray-500 dark:text-muted-foreground overflow-hidden">
               {/* Placeholder avatar */}
               <span className="text-sm font-medium">
                 {user.name.charAt(0).toUpperCase()}
               </span>
             </div>
             <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-sm font-medium text-gray-900 truncate">
+              <span className="text-sm font-medium text-gray-900 dark:text-foreground truncate">
                 {user.name}
               </span>
-              <span className="text-xs text-gray-500 truncate">
+              <span className="text-xs text-gray-500 dark:text-muted-foreground truncate">
                 {user.email}
               </span>
             </div>
@@ -169,7 +169,7 @@ export function Sidebar({ orgs, user }: SidebarProps) {
             <button
               type="submit"
               title="Sign out"
-              className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+              className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors dark:text-muted-foreground dark:hover:text-foreground dark:hover:bg-secondary"
             >
               <LogOut01 className="w-4 h-4" />
             </button>

@@ -49,8 +49,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ id: newOrg.id }, { status: 201 });
-  } catch (error) {
-    console.error("Error creating organization:", error);
+  } catch {
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },

@@ -42,7 +42,7 @@ export default async function ProtectedLayout({
     .eq("user_id", userId);
 
   if (membershipsError) {
-    console.error("Error fetching org memberships:", membershipsError);
+    // non-fatal: sidebar will render with no orgs
   }
 
   // Transform data to OrgWithRole format
@@ -66,7 +66,7 @@ export default async function ProtectedLayout({
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 dark:bg-background">
       <Sidebar orgs={orgs} user={user} />
       <main className="flex-1 overflow-y-auto p-6">{children}</main>
     </div>

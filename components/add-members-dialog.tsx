@@ -75,8 +75,7 @@ export function AddMembersDialog({
       if (!res.ok) throw new Error("Failed to fetch members");
       const data = await res.json();
       setMembers(data as unknown as Member[]);
-    } catch (error) {
-      console.error(error);
+    } catch {
     } finally {
       setIsLoading(false);
     }
@@ -164,8 +163,7 @@ export function AddMembersDialog({
       router.refresh();
       onMembersChanged?.();
       setSearchQuery("");
-    } catch (error) {
-      console.error(error);
+    } catch {
     }
   };
 

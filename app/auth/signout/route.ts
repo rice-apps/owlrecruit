@@ -12,10 +12,7 @@ export async function POST(req: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (user) {
-    console.log("Signing out user:", user.email);
     await supabase.auth.signOut();
-  } else {
-    console.log("No active session found during signout");
   }
 
   return NextResponse.redirect(new URL("/", req.url), {

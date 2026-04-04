@@ -65,8 +65,7 @@ export function useUploadWizard() {
           );
           setExistingApplicants(map);
         }
-      } catch (error) {
-        console.error("Failed to fetch existing applicants:", error);
+      } catch {
       }
     };
     if (openingId && orgId) {
@@ -122,8 +121,6 @@ export function useUploadWizard() {
       if (droppedFile.name.endsWith(".csv")) {
         setFile(droppedFile);
         parseCSVHeaders(droppedFile);
-      } else {
-        alert("Please upload a CSV file");
       }
     }
   };
@@ -201,7 +198,6 @@ export function useUploadWizard() {
         );
       }
     } catch (error: unknown) {
-      console.error("Error uploading data:", error);
       setUploadErrors([
         {
           error:

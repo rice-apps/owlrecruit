@@ -12,6 +12,7 @@ import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { getStatusBadgeVariant } from "@/lib/status-utils";
 import type { Enums } from "@/types/supabase";
 
 // Application status type from database enum
@@ -42,28 +43,6 @@ interface OrgData {
   memberships: OrgMembership[];
   applications: OrgApplication[];
 }
-
-/**
- * Maps application status to appropriate badge variant for visual consistency
- */
-const getStatusBadgeVariant = (
-  status: ApplicationStatus | null,
-): "default" | "secondary" | "destructive" | "outline" => {
-  switch (status) {
-    case "No Status":
-    case "Applied":
-      return "secondary";
-    case "Interviewing":
-      return "default";
-    case "Offer":
-    case "Accepted Offer":
-      return "default";
-    case "Rejected":
-      return "destructive";
-    default:
-      return "outline";
-  }
-};
 
 /**
  * Formats ISO date string to user-friendly format (e.g., "Jan 15, 2024")
@@ -126,7 +105,6 @@ export default function OrgStatusCard({ userId }: OrgStatusCardProps) {
         const data: OrgData = await response.json();
         setOrgData(data);
       } catch (err) {
-        console.error("Error fetching org data:", err);
         setError(
           err instanceof Error ? err.message : "An unexpected error occurred",
         );

@@ -58,8 +58,7 @@ export async function GET() {
     }
 
     return NextResponse.json(applications);
-  } catch (error) {
-    console.error("Error fetching user applications:", error);
+  } catch {
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },

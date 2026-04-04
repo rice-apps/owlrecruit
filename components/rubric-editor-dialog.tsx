@@ -95,8 +95,7 @@ export function RubricEditorDialog({
 
       onSuccess(rubric);
       setOpen(false);
-    } catch (err) {
-      console.error("Error saving rubric:", err);
+    } catch {
       setError("Failed to save changes. Please try again.");
     } finally {
       setIsSaving(false);

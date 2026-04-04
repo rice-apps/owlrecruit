@@ -40,8 +40,7 @@ export async function PATCH(
     }
 
     return NextResponse.json({ ok: true });
-  } catch (error) {
-    console.error("Error updating org:", error);
+  } catch {
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },

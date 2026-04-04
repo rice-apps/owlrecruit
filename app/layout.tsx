@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
 import { ThemeProvider } from "next-themes";
+import { ThemeToggle } from "@/components/theme-toggle";
 import "./globals.css";
 
 const defaultUrl = "http://localhost:3000";
@@ -32,6 +33,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <ThemeToggle />
           {children}
         </ThemeProvider>
       </body>

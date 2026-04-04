@@ -48,7 +48,6 @@ export default function MyApplicationsPage() {
         const data: ApplicationsData = await response.json();
         setApplications(data.applications || []);
       } catch (err) {
-        console.error("Error fetching applications:", err);
         setError(
           err instanceof Error ? err.message : "An unexpected error occurred",
         );

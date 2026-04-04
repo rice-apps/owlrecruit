@@ -118,7 +118,6 @@ export default function UploadDialog({ openingId, orgId }: UploadDialogProps) {
           setError(null);
         }
       } catch (error) {
-        console.error("Couldn't upload file: ", error);
         setError(error instanceof Error ? error.message : "Upload failed");
       }
     }
@@ -136,7 +135,6 @@ export default function UploadDialog({ openingId, orgId }: UploadDialogProps) {
           `/api/org/${orgId}/applications`,
           "application",
         );
-        console.log("Upload successful! Result:", result);
         setIsUploaded(true);
 
         // Handle partial warnings
@@ -152,7 +150,6 @@ export default function UploadDialog({ openingId, orgId }: UploadDialogProps) {
           setError(null);
         }
       } catch (error) {
-        console.error("Couldn't upload file: ", error);
         setError(error instanceof Error ? error.message : "Upload failed");
       }
     }

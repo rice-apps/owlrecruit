@@ -8,6 +8,7 @@
 
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
+import { getStatusBadgeVariant } from "@/lib/status-utils";
 import type { Enums } from "@/types/supabase";
 
 // Application status type from database enum
@@ -24,28 +25,6 @@ interface ApplicationCardProps {
     closes_at?: string | null;
   };
 }
-
-/**
- * Maps application status to appropriate badge variant for visual consistency
- */
-const getStatusBadgeVariant = (
-  status: ApplicationStatus | null,
-): "default" | "secondary" | "destructive" | "outline" => {
-  switch (status) {
-    case "No Status":
-    case "Applied":
-      return "secondary";
-    case "Interviewing":
-      return "default";
-    case "Offer":
-    case "Accepted Offer":
-      return "default";
-    case "Rejected":
-      return "destructive";
-    default:
-      return "outline";
-  }
-};
 
 /**
  * Formats ISO date string to user-friendly format (e.g., "10/27/2026")

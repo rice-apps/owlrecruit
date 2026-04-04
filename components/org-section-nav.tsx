@@ -123,7 +123,7 @@ export function OrgSectionNav({ sections }: OrgSectionNavProps) {
   }
 
   return (
-    <nav aria-label="On this page" className="border-b border-gray-200">
+    <nav aria-label="On this page" className="border-b border-border">
       <div className="flex w-full overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         <div className="flex w-max items-center gap-8">
           {sections.map((section) => {
@@ -138,7 +138,7 @@ export function OrgSectionNav({ sections }: OrgSectionNavProps) {
                   "-mb-px inline-flex items-center border-b pb-3 text-base font-semibold transition-colors",
                   isActive
                     ? "border-owl-purple text-owl-purple"
-                    : "border-transparent text-gray-500 hover:text-gray-700",
+                    : "border-transparent text-muted-foreground hover:text-foreground",
                 )}
               >
                 {section.label}

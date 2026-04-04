@@ -43,8 +43,7 @@ export function SkillsScoringPanel({
             setRubrics(currentOpening.rubrics);
           }
         }
-      } catch (error) {
-        console.error("Error fetching rubrics:", error);
+      } catch {
       } finally {
         setLoadingRubrics(false);
       }
@@ -64,8 +63,7 @@ export function SkillsScoringPanel({
           setScores(data.myScoreSkills);
         }
       }
-    } catch (error) {
-      console.error("Error fetching scores:", error);
+    } catch {
     }
   }, [orgId, applicantId]);
 
@@ -99,13 +97,11 @@ export function SkillsScoringPanel({
       );
 
       if (!res.ok) {
-        console.warn("Failed to save score");
         onToast("Failed to save score", "error");
       } else {
         onToast("Score successfully saved!", "success");
       }
-    } catch (e) {
-      console.error("Error saving score", e);
+    } catch {
       onToast("Error saving score", "error");
     } finally {
       setSavingScore(false);

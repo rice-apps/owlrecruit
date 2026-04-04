@@ -85,12 +85,7 @@ export default async function ReviewerOrgPage({
     .single();
 
   if (membershipError) {
-    console.error("Failed to fetch org membership", {
-      orgId,
-      userId,
-      code: membershipError.code,
-      message: membershipError.message,
-    });
+    // non-fatal: membershipRole will be null, page renders as non-member
   }
 
   const membershipRole = isMemberRole(membership?.role)
@@ -129,11 +124,7 @@ export default async function ReviewerOrgPage({
     .order("user_id", { ascending: true });
 
   if (membersError) {
-    console.error("Failed to fetch org members", {
-      orgId,
-      code: membersError.code,
-      message: membersError.message,
-    });
+    // non-fatal: rawMembers falls back to []
   }
 
   const rawMembers =
@@ -190,7 +181,6 @@ export default async function ReviewerOrgPage({
         displayOrgName={displayOrgName}
         roleLabel={roleLabel}
         isAdmin={isAdmin}
-        hasRoleError={Boolean(membershipError)}
         orgId={orgId}
         socialLinks={
           orgData?.social_links &&
@@ -214,9 +204,7 @@ export default async function ReviewerOrgPage({
         title="About"
         subtitle="Summary and current context"
       >
-        <p
-          className={`text-base leading-relaxed ${sectionShellTokens.mutedCopy}`}
-        >
+        <p className="text-base leading-relaxed text-foreground">
           {orgData?.description ||
             "This organization has not added an about section yet."}
         </p>
@@ -230,7 +218,7 @@ export default async function ReviewerOrgPage({
           isAdmin ? (
             <Link
               href={`/protected/org/${orgId}/new-opening`}
-              className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-rose-600 shadow-sm transition hover:border-rose-300 hover:text-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-200"
+              className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-background px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-rose-600 shadow-sm transition hover:border-rose-300 hover:text-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-200 dark:border-rose-800/50 dark:text-rose-400 dark:hover:border-rose-700 dark:hover:text-rose-300"
             >
               <span>Add new position</span>
               <span aria-hidden="true" className="text-base font-bold">
@@ -249,8 +237,8 @@ export default async function ReviewerOrgPage({
                 key={opening.id}
                 href={`/protected/org/${orgId}/opening/${opening.id}`}
               >
-                <Card className="group h-full cursor-pointer overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm transition duration-150 hover:-translate-y-0.5 hover:shadow-lg">
-                  <div className="h-1 w-full bg-gradient-to-r from-rose-200/80 via-rose-100 to-rose-50" />
+                <Card className="group h-full cursor-pointer overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition duration-150 hover:-translate-y-0.5 hover:shadow-lg">
+                  <div className="h-1 w-full bg-gradient-to-r from-rose-200/80 via-rose-100 to-rose-50 dark:from-rose-900/60 dark:via-rose-900/30 dark:to-transparent" />
                   <CardHeader className="px-4 pt-3 pb-2">
                     <div className="flex items-start justify-between gap-3">
                       <CardTitle className="text-lg leading-tight">
@@ -259,7 +247,7 @@ export default async function ReviewerOrgPage({
                       <OpeningStatusBadge status={opening.status || "draft"} />
                     </div>
                     {opening.closes_at && (
-                      <p className="text-xs text-slate-400">
+                      <p className="text-xs text-muted-foreground">
                         Due:{" "}
                         {new Date(opening.closes_at).toLocaleDateString(
                           "en-US",
@@ -274,7 +262,7 @@ export default async function ReviewerOrgPage({
                   </CardHeader>
                   {opening.description && (
                     <CardContent className="px-4 pb-4 pt-0">
-                      <p className="text-sm text-slate-500 line-clamp-3">
+                      <p className="text-sm text-muted-foreground line-clamp-3">
                         {opening.description}
                       </p>
                     </CardContent>
@@ -284,8 +272,8 @@ export default async function ReviewerOrgPage({
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-slate-200/80 bg-white/70 px-6 py-12 text-center">
-            <h3 className="text-lg font-medium text-gray-600">
+          <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border bg-muted/30 px-6 py-12 text-center">
+            <h3 className="text-lg font-medium text-foreground">
               No Openings Yet
             </h3>
             <p className={`text-sm ${sectionShellTokens.mutedCopy}`}>
@@ -303,7 +291,7 @@ export default async function ReviewerOrgPage({
         subtitle={memberSectionSubtitle}
         actions={
           <div className="flex w-full flex-wrap items-center justify-end gap-2">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-500">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
               {memberCountLabel}
             </span>
             {isAdmin && <AddMembersDialog orgId={orgId} />}
@@ -311,7 +299,7 @@ export default async function ReviewerOrgPage({
         }
       >
         {membersError ? (
-          <div className="flex flex-col items-start gap-2 rounded-2xl border border-dashed border-amber-200/80 bg-amber-50/60 px-5 py-6">
+          <div className="flex flex-col items-start gap-2 rounded-2xl border border-dashed border-destructive/30 bg-destructive/5 px-5 py-6">
             <p className={sectionShellTokens.mutedCopy}>
               Could not load members right now. Refresh and try again.
             </p>
@@ -319,7 +307,7 @@ export default async function ReviewerOrgPage({
         ) : members.length > 0 ? (
           <MembersStrip members={members} />
         ) : (
-          <div className="flex flex-col items-start gap-2 rounded-2xl border border-dashed border-slate-200/70 bg-slate-50/80 px-5 py-6">
+          <div className="flex flex-col items-start gap-2 rounded-2xl border border-dashed border-border bg-muted/30 px-5 py-6">
             <p className={sectionShellTokens.mutedCopy}>
               No members yet. Invite collaborators via Add Members.
             </p>

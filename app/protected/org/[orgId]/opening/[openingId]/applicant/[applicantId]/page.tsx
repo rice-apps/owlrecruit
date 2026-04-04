@@ -139,8 +139,7 @@ export default function ApplicantReviewPage() {
 
         if (error) throw error;
         setApplicationData(data);
-      } catch (err) {
-        console.error("Error fetching application data:", err);
+      } catch {
       } finally {
         setLoading(false);
       }
@@ -259,8 +258,6 @@ export default function ApplicantReviewPage() {
         if (error instanceof DOMException && error.name === "AbortError") {
           return;
         }
-
-        console.error("Error fetching summary data:", error);
 
         if (isMounted) {
           setSummaryError("Unable to load summary data. Please try again.");

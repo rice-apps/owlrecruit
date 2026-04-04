@@ -108,8 +108,6 @@ export async function POST(
     orgId,
     openingId,
     buildInterviewRecord,
-    undefined,
-    undefined,
   );
 
   if (interviewRecords.length === 0) {

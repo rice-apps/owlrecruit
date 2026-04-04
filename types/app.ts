@@ -16,9 +16,6 @@ export type Comment = Tables<"comments">;
 export type Interview = Tables<"interviews">;
 export type OrgMember = Tables<"org_members">;
 export type Question = Tables<"questions">;
-// export type Rubric = Tables<"rubrics">;
-// export type ReviewScore = Tables<"review_scores">;
-
 // -- Enums --
 export type ApplicationStatus = Enums<"status">;
 export type Score = Enums<"score">;
@@ -26,14 +23,6 @@ export type OpeningStatus = Enums<"opening_status">;
 export type OrgRole = Enums<"org_role">;
 
 // -- Joined / Aggregate Types --
-
-export interface ApplicationWithApplicant extends Application {
-  users: Pick<User, "id" | "name" | "email">;
-}
-
-export interface OpeningWithApplicationCount extends Opening {
-  application_count: number;
-}
 
 export interface OrgWithRole extends Org {
   role: OrgRole;

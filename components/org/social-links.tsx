@@ -97,37 +97,37 @@ const PLATFORMS = [
     key: "website" as const,
     label: "Website",
     Icon: WebsiteIcon,
-    color: "text-slate-500 hover:text-slate-700 hover:bg-slate-100",
+    color: "text-muted-foreground hover:text-foreground hover:bg-muted",
   },
   {
     key: "instagram" as const,
     label: "Instagram",
     Icon: InstagramIcon,
-    color: "text-pink-500 hover:text-pink-600 hover:bg-pink-50",
+    color: "text-pink-500 hover:text-pink-600 hover:bg-pink-50 dark:hover:bg-pink-950",
   },
   {
     key: "twitter" as const,
     label: "Twitter / X",
     Icon: TwitterIcon,
-    color: "text-slate-800 hover:text-black hover:bg-slate-100",
+    color: "text-foreground hover:bg-muted",
   },
   {
     key: "linkedin" as const,
     label: "LinkedIn",
     Icon: LinkedInIcon,
-    color: "text-[#0A66C2] hover:text-[#004182] hover:bg-blue-50",
+    color: "text-[#0A66C2] hover:text-[#004182] hover:bg-blue-50 dark:text-[#4d9fd6] dark:hover:text-[#7ab8e8] dark:hover:bg-blue-950",
   },
   {
     key: "facebook" as const,
     label: "Facebook",
     Icon: FacebookIcon,
-    color: "text-[#1877F2] hover:text-[#0c5ecc] hover:bg-blue-50",
+    color: "text-[#1877F2] hover:text-[#0c5ecc] hover:bg-blue-50 dark:hover:bg-blue-950",
   },
   {
     key: "discord" as const,
     label: "Discord",
     Icon: DiscordIcon,
-    color: "text-[#5865F2] hover:text-[#4752c4] hover:bg-indigo-50",
+    color: "text-[#5865F2] hover:text-[#4752c4] hover:bg-indigo-50 dark:hover:bg-indigo-950",
   },
 ];
 

@@ -29,8 +29,7 @@ export function LeaveOrgButton({
       if (!res.ok) throw new Error("Failed to leave organization");
       router.push("/protected/discover");
       router.refresh();
-    } catch (err) {
-      console.error(err);
+    } catch {
       setLoading(false);
       setOpen(false);
     }
@@ -60,10 +59,10 @@ export function LeaveOrgButton({
           onClick={() => !loading && setOpen(false)}
         >
           <div
-            className="bg-white rounded-2xl shadow-xl px-8 py-8 flex flex-col items-center gap-6 max-w-sm w-full mx-4"
+            className="bg-card rounded-2xl shadow-xl px-8 py-8 flex flex-col items-center gap-6 max-w-sm w-full mx-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="text-center text-lg font-semibold text-slate-900 leading-snug">
+            <p className="text-center text-lg font-semibold text-foreground leading-snug">
               Are you sure you want to be removed as a member of {orgName}?
             </p>
             <button
@@ -78,7 +77,7 @@ export function LeaveOrgButton({
               type="button"
               onClick={() => setOpen(false)}
               disabled={loading}
-              className="text-sm text-muted-foreground hover:text-slate-700 transition"
+              className="text-sm text-muted-foreground hover:text-foreground transition"
             >
               No, cancel
             </button>

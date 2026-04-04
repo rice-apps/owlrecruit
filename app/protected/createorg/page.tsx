@@ -49,7 +49,6 @@ export default function NewOrgPage() {
       // Force a full reload to ensure the sidebar layout updates with the new organization
       window.location.href = `/protected/org/${data.id}`;
     } catch (err) {
-      console.error("Error creating organization:", err);
       setError(
         err instanceof Error ? err.message : "Failed to create organization",
       );

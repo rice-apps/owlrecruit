@@ -14,8 +14,8 @@ export type OrgMemberRecord = {
 };
 
 const ROLE_BADGE_STYLES: Record<OrgMemberRecord["role"], string> = {
-  admin: "border-amber-200 bg-amber-50 text-amber-900 shadow-sm",
-  reviewer: "border-slate-200 bg-slate-50 text-slate-900 shadow-sm",
+  admin: "border-rose-200 bg-rose-50 text-rose-700 shadow-sm dark:border-rose-800/50 dark:bg-rose-950/40 dark:text-rose-300",
+  reviewer: "border-border bg-muted text-muted-foreground shadow-sm",
 };
 
 type MembersStripProps = {
@@ -26,7 +26,7 @@ export function MembersStrip({ members }: MembersStripProps) {
   const count = members.length;
   if (count === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-slate-200 bg-white/80 px-4 py-6 text-center text-sm text-slate-500">
+      <div className="rounded-2xl border border-dashed border-border bg-muted/30 px-4 py-6 text-center text-sm text-muted-foreground">
         No members have joined this organization yet.
       </div>
     );
@@ -43,7 +43,7 @@ export function MembersStrip({ members }: MembersStripProps) {
         return (
           <article
             key={member.id}
-            className="flex min-w-[200px] max-w-[240px] flex-col gap-3 rounded-2xl border border-slate-100 bg-white/90 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            className="flex min-w-[200px] max-w-[240px] flex-col gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
           >
             <div className="flex items-center gap-3">
               <Avatar className="h-10 w-10">
@@ -52,10 +52,10 @@ export function MembersStrip({ members }: MembersStripProps) {
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-slate-900 truncate">
+                <p className="text-sm font-semibold text-foreground truncate">
                   {displayName}
                 </p>
-                <p className="text-xs text-slate-500 truncate">{email}</p>
+                <p className="text-xs text-muted-foreground truncate">{email}</p>
               </div>
             </div>
             <Badge

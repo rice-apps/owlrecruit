@@ -131,8 +131,7 @@ export async function GET() {
       memberships: transformedMemberships,
       applications: transformedApplications,
     });
-  } catch (error) {
-    console.error("Error fetching user org status:", error);
+  } catch {
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },

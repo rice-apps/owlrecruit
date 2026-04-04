@@ -32,20 +32,11 @@ export async function GET(request: Request) {
         .order("name", { ascending: true }),
     ]);
 
-    if (openingsResult.error) {
-      console.error("Error fetching openings:", openingsResult.error);
-    }
-
-    if (orgsResult.error) {
-      console.error("Error fetching orgs:", orgsResult.error);
-    }
-
     return NextResponse.json({
       openings: openingsResult.data || [],
       orgs: orgsResult.data || [],
     });
-  } catch (error) {
-    console.error("Error in search API:", error);
+  } catch {
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },

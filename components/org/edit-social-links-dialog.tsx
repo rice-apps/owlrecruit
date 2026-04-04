@@ -58,7 +58,7 @@ export function EditSocialLinksDialog({
         <button
           type="button"
           aria-label="Edit social links"
-          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
         >
           <Edit01 className="h-[18px] w-[18px]" />
         </button>
@@ -82,7 +82,7 @@ export function EditSocialLinksDialog({
         <div className="flex flex-col gap-3">
           {PLATFORMS.map(({ key, label, Icon }) => (
             <div key={key} className="flex items-center gap-3">
-              <Icon className="h-[18px] w-[18px] shrink-0 text-slate-400" />
+              <Icon className="h-[18px] w-[18px] shrink-0 text-muted-foreground" />
               <Input
                 placeholder={label}
                 value={links[key] ?? ""}

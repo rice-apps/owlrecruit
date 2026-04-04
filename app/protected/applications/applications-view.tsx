@@ -46,9 +46,7 @@ export function ApplicationsView({
           const data = await response.json();
           setSearchResults(data);
         } catch (error: unknown) {
-          if (error instanceof Error && error.name !== "AbortError") {
-            console.error("Failed to fetch search results:", error);
-          }
+          if (error instanceof Error && error.name === "AbortError") return;
         } finally {
           setIsSearching(false);
         }

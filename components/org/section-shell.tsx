@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 export const sectionShellTokens = {
   anchorOffset: "scroll-mt-28",
   accentBand: "bg-rose-200/80",
-  mutedCopy: "text-sm text-slate-500 dark:text-slate-400",
+  mutedCopy: "text-sm text-foreground/70",
   badgePill:
     "inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-3 py-0.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-rose-600 shadow-sm",
   cardRhythm: "space-y-5",

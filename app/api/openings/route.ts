@@ -17,7 +17,6 @@ export async function GET() {
       .order("created_at", { ascending: false });
 
     if (fetchError) {
-      console.error("Error fetching openings:", fetchError);
       return NextResponse.json(
         { error: "Failed to fetch openings" },
         { status: 500 },
@@ -25,8 +24,7 @@ export async function GET() {
     }
 
     return NextResponse.json(openings);
-  } catch (error) {
-    console.error("Error in openings API GET:", error);
+  } catch {
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },
@@ -88,8 +86,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(data);
-  } catch (error) {
-    console.error("Error in openings API:", error);
+  } catch {
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },

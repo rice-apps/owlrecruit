@@ -3,9 +3,9 @@ import type { ApplicationStatus, Score } from "@/types/app";
 
 // Status badge color mapping
 const statusColors: Record<ApplicationStatus, string> = {
-  "No Status": "bg-gray-100 text-gray-700 border-gray-300",
-  Applied: "bg-white text-gray-600 border-[#C5C5C5]",
-  Interviewing: "bg-gray-500 text-white border-transparent",
+  "No Status": "bg-muted text-foreground border-border",
+  Applied: "bg-background text-muted-foreground border-border",
+  Interviewing: "bg-muted text-foreground border-transparent",
   Offer: "bg-owl-green text-white border-transparent",
   "Accepted Offer": "bg-owl-green text-white border-transparent",
   Rejected: "bg-owl-red text-white border-transparent",
@@ -61,9 +61,9 @@ export function ScoreBadge({ score, className }: ScoreBadgeProps) {
 
 // Opening status badge
 const openingStatusColors = {
-  draft: "bg-gray-100 text-gray-600 border-gray-300",
+  draft: "bg-muted text-muted-foreground border-border",
   open: "bg-owl-purple/10 text-owl-purple border-owl-purple/30",
-  closed: "bg-gray-200 text-gray-600 border-gray-400",
+  closed: "bg-muted text-muted-foreground border-border",
 };
 
 interface OpeningStatusBadgeProps {

@@ -317,7 +317,6 @@ export async function processCSVRows<T>(
     status?: string,
   ) => T,
   defaultStatus?: string,
-  tableName?: string,
   columnMappings?: Record<string, string>,
 ): Promise<{ records: T[]; errors: ProcessingError[] }> {
   const records: T[] = [];
@@ -458,8 +457,8 @@ export async function processAndUploadApplications(
       columnMappings,
       customQuestions,
     );
-  } catch (error: unknown) {
-    console.error("Failed to upsert questions:", error);
+  } catch {
+    // non-fatal: question upsert failure doesn't block applicant upload
   }
 
   for (let i = 0; i < csvData.length; i++) {
@@ -500,7 +499,7 @@ export async function processAndUploadApplications(
             .from("applicants")
             .update({ name })
             .eq("id", userId);
-          if (updateError) console.error("Error updating name:", updateError);
+          if (updateError) throw updateError;
         }
       } else {
         // Not in our cache of "applicants for this opening".
