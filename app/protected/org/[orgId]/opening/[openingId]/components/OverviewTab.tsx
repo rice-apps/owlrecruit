@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { createClient } from "@/lib/supabase/client";
-import { AddMembersDialog } from "@/components/add-members-dialog";
+import { AssignReviewersDialog } from "@/components/assign-reviewers-dialog";
 import type { ApplicationStatus } from "@/types/app";
 
 interface Applicant {
@@ -14,15 +14,10 @@ interface Applicant {
   status: ApplicationStatus;
 }
 
-interface Reviewer {
+interface AssignedReviewer {
   id: string;
-  user_id: string;
-  role: string;
-  user: {
-    id: string;
-    name: string | null;
-    email: string;
-  } | null;
+  name: string | null;
+  email: string;
 }
 
 interface OverviewTabProps {
@@ -45,56 +40,51 @@ export function OverviewTab({
   orgId,
   openingId,
 }: OverviewTabProps) {
-  const [reviewers, setReviewers] = useState<Reviewer[]>([]);
+  const [reviewers, setReviewers] = useState<AssignedReviewer[]>([]);
+  const [reviewerIds, setReviewerIds] = useState<string[]>([]);
   const [loadingReviewers, setLoadingReviewers] = useState(true);
 
   const fetchReviewers = useCallback(async () => {
+    setLoadingReviewers(true);
     try {
       const supabase = createClient();
-      const { data, error } = await supabase
-        .from("org_members")
-        .select(
-          `
-          id,
-          user_id,
-          role,
-          users!user_id (
-            id,
-            name,
-            email
-          )
-        `,
-        )
-        .eq("org_id", orgId)
-        .eq("role", "reviewer");
 
-      if (error) {
-        console.error("Failed to fetch reviewers:", error);
-      } else if (data) {
-        const transformedData = data.map(
-          (item: {
-            id: string;
-            user_id: string;
-            role: string;
-            users: unknown;
-          }) => ({
-            id: item.id,
-            user_id: item.user_id,
-            role: item.role,
-            user:
-              Array.isArray(item.users) && item.users.length > 0
-                ? item.users[0]
-                : item.users,
-          }),
-        );
-        setReviewers(transformedData);
+      // Fetch reviewer_ids from the opening
+      const { data: opening, error: openingError } = await supabase
+        .from("openings")
+        .select("reviewer_ids")
+        .eq("id", openingId)
+        .single();
+
+      if (openingError) {
+        console.error("Failed to fetch opening:", openingError);
+        return;
       }
-    } catch (error) {
-      console.error("Failed to fetch reviewers:", error);
+
+      const ids: string[] = opening?.reviewer_ids ?? [];
+      setReviewerIds(ids);
+
+      if (ids.length === 0) {
+        setReviewers([]);
+        return;
+      }
+
+      // Fetch user details for each assigned reviewer
+      const { data: users, error: usersError } = await supabase
+        .from("users")
+        .select("id, name, email")
+        .in("id", ids);
+
+      if (usersError) {
+        console.error("Failed to fetch reviewer users:", usersError);
+        return;
+      }
+
+      setReviewers(users ?? []);
     } finally {
       setLoadingReviewers(false);
     }
-  }, [orgId]);
+  }, [openingId]);
 
   useEffect(() => {
     fetchReviewers();
@@ -197,9 +187,11 @@ export function OverviewTab({
           <h2 className="text-base font-semibold uppercase tracking-wide">
             Assigned Reviewers
           </h2>
-          <AddMembersDialog
+          <AssignReviewersDialog
             orgId={orgId}
-            onMembersChanged={fetchReviewers}
+            openingId={openingId}
+            currentReviewerIds={reviewerIds}
+            onSaved={fetchReviewers}
             trigger={
               <button className="text-owl-purple text-sm hover:underline">
                 Edit
@@ -214,29 +206,26 @@ export function OverviewTab({
           </div>
         ) : reviewers.length > 0 ? (
           <div className="flex flex-wrap gap-3">
-            {reviewers
-              .filter((reviewer) => reviewer.user)
-              .map((reviewer) => {
-                const displayName =
-                  reviewer.user?.name || reviewer.user?.email || "Reviewer";
-                return (
-                  <Card key={reviewer.id} className="w-fit">
-                    <CardContent className="flex items-center gap-3 p-4">
-                      <Avatar className="h-10 w-10">
-                        <AvatarFallback className="bg-muted text-muted-foreground text-sm">
-                          {displayName
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")
-                            .substring(0, 2)
-                            .toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="font-medium text-sm">{displayName}</span>
-                    </CardContent>
-                  </Card>
-                );
-              })}
+            {reviewers.map((reviewer) => {
+              const displayName = reviewer.name || reviewer.email;
+              return (
+                <Card key={reviewer.id} className="w-fit">
+                  <CardContent className="flex items-center gap-3 p-4">
+                    <Avatar className="h-10 w-10">
+                      <AvatarFallback className="bg-muted text-muted-foreground text-sm">
+                        {displayName
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .substring(0, 2)
+                          .toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="font-medium text-sm">{displayName}</span>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">

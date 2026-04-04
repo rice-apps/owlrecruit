@@ -44,8 +44,15 @@ export async function PATCH(
   }
 
   const body = await request.json();
-  const { title, description, application_link, closes_at, status, rubric } =
-    body;
+  const {
+    title,
+    description,
+    application_link,
+    closes_at,
+    status,
+    rubric,
+    reviewer_ids,
+  } = body;
 
   const updates: Record<string, unknown> = {};
   if (title !== undefined) updates.title = title.trim();
@@ -56,6 +63,7 @@ export async function PATCH(
   if (closes_at !== undefined) updates.closes_at = closes_at || null;
   if (status !== undefined) updates.status = status;
   if (rubric !== undefined) updates.rubric = rubric;
+  if (reviewer_ids !== undefined) updates.reviewer_ids = reviewer_ids;
 
   const { error: updateError } = await supabase
     .from("openings")
