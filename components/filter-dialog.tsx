@@ -43,7 +43,12 @@ export function FilterDialog({
   const [tempFilters, setTempFilters] = useState<FilterState>(filters);
 
   const handleStatusChange = (status: string, checked: boolean | string) => {
-    const isChecked = typeof checked === "boolean" ? checked : checked === "indeterminate" ? false : true;
+    const isChecked =
+      typeof checked === "boolean"
+        ? checked
+        : checked === "indeterminate"
+          ? false
+          : true;
     if (isChecked) {
       setTempFilters((prev) => ({
         ...prev,
@@ -80,9 +85,7 @@ export function FilterDialog({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Filter Openings</DialogTitle>
-          <DialogDescription>
-            Refine your search with filters
-          </DialogDescription>
+          <DialogDescription>Refine your search with filters</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
@@ -158,7 +161,9 @@ export function FilterDialog({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All</SelectItem>
-                <SelectItem value="closing-soon">Closing Soon (&lt; 7 days)</SelectItem>
+                <SelectItem value="closing-soon">
+                  Closing Soon (&lt; 7 days)
+                </SelectItem>
                 <SelectItem value="no-deadline">No Deadline</SelectItem>
               </SelectContent>
             </Select>
@@ -184,7 +189,9 @@ export function FilterDialog({
               <SelectContent>
                 <SelectItem value="recent">Recently Posted</SelectItem>
                 <SelectItem value="closing-soon">Closing Soon</SelectItem>
-                <SelectItem value="org-name">Organization Name (A-Z)</SelectItem>
+                <SelectItem value="org-name">
+                  Organization Name (A-Z)
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -194,8 +201,8 @@ export function FilterDialog({
           <Button variant="outline" onClick={handleReset}>
             Reset
           </Button>
-          <Button 
-            onClick={handleApply} 
+          <Button
+            onClick={handleApply}
             className="bg-black text-white hover:bg-gray-800"
           >
             Apply Filters
