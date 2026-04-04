@@ -78,7 +78,7 @@ export default function SignUpGoogleBtn() {
               <div className="text-left">
                 <h2 className="text-lg font-semibold text-gray-900">Failed to Sign Up</h2>
                 <p className="mt-1 text-sm text-gray-600">
-                  RiceApps requires the use of your Rice email to sign up. Please use your Rice email to sign up for an account.
+                  OwlRecruit requires the use of your Rice email to sign up. Please use your Rice email to sign up for an account.
                 </p>
               </div>
             </div>
