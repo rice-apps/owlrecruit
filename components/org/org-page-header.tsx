@@ -80,6 +80,7 @@ export function OrgPageHeader({
                 orgId={orgId}
                 orgName={displayOrgName}
                 orgDescription={orgDescription}
+                orgLogoUrl={logoUrl}
                 triggerClassName={headerButtonClasses}
               />
             ) : (

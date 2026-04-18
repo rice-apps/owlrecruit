@@ -13,12 +13,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Pencil01, X } from "@untitled-ui/icons-react";
+import { Pencil01, X, Upload01 } from "@untitled-ui/icons-react";
 
 type EditOrgDialogProps = {
   orgId: string;
   orgName: string;
   orgDescription: string | null;
+  orgLogoUrl?: string | null;
   triggerClassName?: string;
 };
 
@@ -26,23 +27,41 @@ export function EditOrgDialog({
   orgId,
   orgName,
   orgDescription,
+  orgLogoUrl,
   triggerClassName,
 }: EditOrgDialogProps) {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [name, setName] = React.useState(orgName);
   const [description, setDescription] = React.useState(orgDescription ?? "");
+  const [logoFile, setLogoFile] = React.useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = React.useState<string | null>(null);
   const [isSaving, setIsSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const logoInputRef = React.useRef<HTMLInputElement>(null);
 
   // Reset form to current values whenever the dialog opens
   React.useEffect(() => {
     if (open) {
       setName(orgName);
       setDescription(orgDescription ?? "");
+      setLogoFile(null);
+      setLogoPreview(null);
       setError(null);
     }
   }, [open, orgName, orgDescription]);
+
+  const handleLogoChange = (file: File | null) => {
+    if (!file) return;
+    setLogoFile(file);
+    setLogoPreview(URL.createObjectURL(file));
+  };
+
+  const handleLogoDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0] ?? null;
+    handleLogoChange(file);
+  };
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -54,13 +73,16 @@ export function EditOrgDialog({
     setError(null);
 
     try {
+      const formData = new FormData();
+      formData.append("name", name.trim());
+      formData.append("description", description.trim() || "");
+      if (logoFile) {
+        formData.append("logo", logoFile);
+      }
+
       const res = await fetch(`/api/org/${orgId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: name.trim(),
-          description: description.trim() || null,
-        }),
+        body: formData,
       });
 
       if (!res.ok) {
@@ -106,6 +128,61 @@ export function EditOrgDialog({
         </DialogHeader>
 
         <div className="flex flex-col gap-5">
+          <div className="space-y-2">
+            <Label className="text-sm font-medium text-gray-700">
+              Logo
+            </Label>
+            <input
+              ref={logoInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => handleLogoChange(e.target.files?.[0] ?? null)}
+            />
+            <div
+              onDrop={handleLogoDrop}
+              onDragOver={(e) => e.preventDefault()}
+              onClick={() => logoInputRef.current?.click()}
+              className="relative flex h-32 w-32 items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 transition hover:bg-slate-100 cursor-pointer"
+            >
+              {logoPreview ? (
+                <img
+                  src={logoPreview}
+                  alt="Logo preview"
+                  className="h-full w-full object-cover rounded-lg"
+                />
+              ) : orgLogoUrl ? (
+                <img
+                  src={orgLogoUrl}
+                  alt="Current logo"
+                  className="h-full w-full object-cover rounded-lg"
+                />
+              ) : (
+                <div className="flex flex-col items-center gap-2">
+                  <Upload01 className="h-6 w-6 text-slate-400" />
+                  <span className="text-sm text-slate-500">
+                    Drag and drop or click to upload
+                  </span>
+                </div>
+              )}
+            </div>
+            {logoFile && (
+              <button
+                type="button"
+                onClick={() => {
+                  setLogoFile(null);
+                  setLogoPreview(null);
+                  if (logoInputRef.current) {
+                    logoInputRef.current.value = "";
+                  }
+                }}
+                className="text-sm text-slate-600 hover:text-slate-900"
+              >
+                Remove logo
+              </button>
+            )}
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="edit-org-name" className="text-sm font-medium text-gray-700">
               Organization Name<span className="text-red-500">*</span>
