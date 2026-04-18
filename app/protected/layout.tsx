@@ -58,9 +58,15 @@ export default async function ProtectedLayout({
         role: m.role,
       };
     });
+  
+  const { data: userRecord } = await supabase
+  .from("users")
+  .select("name")
+  .eq("id", userId)
+  .single();
 
   const user = {
-    name: userMetadata.full_name || "User",
+    name: userRecord?.name || userMetadata.full_name || "User",
     email: userMetadata.email || "",
   };
 

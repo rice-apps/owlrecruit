@@ -36,11 +36,11 @@ export default function OrganizationsSection({
           You are not a member of any organizations yet.
         </p>
       ) : (
-        <div className="space-y-3">
+        <div className="divide-y divide-gray-200">
           {memberships.map((m) => (
             <div
               key={m.id}
-              className="flex items-center gap-4 p-4 border border-gray-300 rounded-lg hover:shadow-md transition-shadow"
+              className="flex items-center gap-4 p-4 border-gray-300 hover:shadow-md transition-shadow"
             >
               <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-gray-300 flex items-center justify-center text-white font-bold text-lg">
                 {m.org_name.charAt(0) ?? "?"}
@@ -52,6 +52,7 @@ export default function OrganizationsSection({
                 <Button
                   variant="outline"
                   size="sm"
+                  style={{ color: '#9692e3', borderColor: '#9692e3' }}
                   className={`${getRoleClasses()} cursor-default rounded-lg px-2 py-1 h-auto`}
                 >
                   {m.role.charAt(0).toUpperCase() + m.role.slice(1)}
