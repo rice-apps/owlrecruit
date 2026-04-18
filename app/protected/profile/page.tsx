@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import OrganizationsSection, { OrgMembership } from "./organizations-section";
+import ProfileForm from "./profileForm";
+
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -24,6 +26,8 @@ export default async function ProfilePage() {
   const nameParts = fullName.trim().split(" ");
   const firstName = nameParts[0] || "";
   const lastName = nameParts.slice(1).join(" ") || ""; // Everything after first word
+  const userEmail = userData.user.email;
+
 
   // Get user's avatar URL from Google OAuth (if exists)
   const avatarUrl = userData.user.user_metadata?.avatar_url || "";
@@ -78,46 +82,8 @@ export default async function ProfilePage() {
         </Avatar>
       </div>
 
-      {/* Name Section */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-3">
-          Name
-        </label>
-        <div className="flex gap-4">
-          {/* First Name Input */}
-          <input
-            type="text"
-            defaultValue={firstName}
-            placeholder="John"
-            className="flex-1 px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-owl-purple focus:border-transparent"
-          />
-          {/* Last Name Input */}
-          <input
-            type="text"
-            defaultValue={lastName}
-            placeholder="Doe"
-            className="flex-1 px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-owl-purple focus:border-transparent"
-          />
-        </div>
-      </div>
-
-      {/* Email Section */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-3">
-          Rice Email
-        </label>
-        <input
-          type="email"
-          defaultValue={userData.user.email}
-          placeholder="john.doe@example.com"
-          className="w-full px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-owl-purple focus:border-transparent"
-        />
-      </div>
-
-      <OrganizationsSection
-        memberships={orgMemberships}
-        userId={userData.user.id}
-      />
+        <ProfileForm firstName={firstName} lastName={lastName} email={userEmail ?? ""} 
+                            userId={userData.user.id} orgMemberships={orgMemberships} />
     </div>
   );
 }

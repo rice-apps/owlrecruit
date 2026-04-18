@@ -57,16 +57,16 @@ export default function NewOpeningPage() {
   React.useEffect(() => {
     const fetchData = async () => {
       try {
-        const [orgsRes, reviewersRes] = await Promise.all([
-          fetch(`/api/orgs`),
+        const [orgStatusRes, reviewersRes] = await Promise.all([
+          fetch(`/api/user/org-status`),
           fetch(`/api/org/${orgId}/members?role=admin,reviewer`),
         ]);
-        if (orgsRes.ok) {
-          const orgs = await orgsRes.json();
-          const org = orgs.find(
-            (o: { id: string; name: string }) => o.id === orgId,
+        if (orgStatusRes.ok) {
+          const { memberships } = await orgStatusRes.json();
+          const membership = memberships?.find(
+            (m: { org_id: string; org_name: string }) => m.org_id === orgId,
           );
-          if (org) setOrgName(org.name);
+          if (membership) setOrgName(membership.org_name);
         }
         if (reviewersRes.ok) {
           const reviewerData = await reviewersRes.json();
@@ -158,24 +158,63 @@ export default function NewOpeningPage() {
           />
         </div>
 
-        {/* Application Link */}
-        <div className="space-y-2">
-          <Label
-            htmlFor="application_link"
-            className="text-sm font-medium text-gray-700"
-          >
-            Application Link
+        {/* Application Method */}
+        <div className="space-y-3">
+          <Label className="text-sm font-medium text-gray-700">
+            Application Method
           </Label>
-          <Input
-            id="application_link"
-            type="url"
-            value={formData.application_link}
-            onChange={(e) =>
-              setFormData({ ...formData, application_link: e.target.value })
-            }
-            placeholder="https://forms.google.com/..."
-            className="h-11 text-sm w-full"
-          />
+          <div className="flex rounded-lg border border-gray-200 w-fit overflow-hidden">
+            <button
+              type="button"
+              onClick={() =>
+                setFormData({ ...formData, application_link: "" })
+              }
+              className={`px-4 py-2 text-sm font-medium transition-colors ${
+                !formData.application_link
+                  ? "bg-owl-purple text-white"
+                  : "bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              Native Form
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setFormData({
+                  ...formData,
+                  application_link:
+                    formData.application_link || "https://",
+                })
+              }
+              className={`px-4 py-2 text-sm font-medium transition-colors border-l border-gray-200 ${
+                formData.application_link
+                  ? "bg-owl-purple text-white"
+                  : "bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              Google Forms
+            </button>
+          </div>
+          {!formData.application_link ? (
+            <p className="text-xs text-gray-500">
+              Build a form in the Questions tab after creating this opening.
+              Applicants will fill it out at a shareable link.
+            </p>
+          ) : (
+            <Input
+              id="application_link"
+              type="url"
+              value={formData.application_link}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  application_link: e.target.value,
+                })
+              }
+              placeholder="https://forms.google.com/..."
+              className="h-11 text-sm w-full"
+            />
+          )}
         </div>
 
         {/* Description */}
