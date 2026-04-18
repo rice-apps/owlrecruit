@@ -32,7 +32,7 @@ export function CommentsPanel({
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isCommentsOpen, setIsCommentsOpen] = useState(false);
+  const [isCommentsOpen, setIsCommentsOpen] = useState(true);
 
   const fetchComments = useCallback(async () => {
     try {
@@ -118,8 +118,8 @@ export function CommentsPanel({
         type="single"
         collapsible
         className="w-full"
+        value={isCommentsOpen ? "item-1" : ""}
         onValueChange={(val) => setIsCommentsOpen(val === "item-1")}
-        defaultValue="item-1"
       >
         <AccordionItem value="item-1" className="border-none">
           <AccordionTrigger className="py-2 hover:no-underline font-semibold text-lg text-foreground">
