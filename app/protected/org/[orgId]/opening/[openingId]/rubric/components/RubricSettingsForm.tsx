@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loading01 } from "@untitled-ui/icons-react";
+import { Loading01, Trash01 } from "@untitled-ui/icons-react";
 
 interface Rubric {
   name: string;
-  max_val: number;
+  max_val: number | string;
   description: string;
 }
 
@@ -18,6 +18,8 @@ interface RubricSettingsFormProps {
   openingId: string;
   initialRubric: Rubric[];
 }
+
+const MAX_RUBRIC_SCORE = 1_000_000_000_000;
 
 export function RubricSettingsForm({
   orgId,
@@ -36,7 +38,10 @@ export function RubricSettingsForm({
   ) => {
     const updated = [...rubric];
     if (field === "max_val") {
-      updated[index] = { ...updated[index], [field]: Number(value) };
+      updated[index] = {
+        ...updated[index],
+        [field]: value === "" ? "" : Number(value),
+      };
     } else {
       updated[index] = { ...updated[index], [field]: value as string };
     }
@@ -50,12 +55,32 @@ export function RubricSettingsForm({
   const handleSave = async () => {
     setError(null);
 
-    if (rubric.some((r) => !r.name.trim())) {
+    const normalizedRubric = rubric.map((r) => ({
+      name: r.name.trim(),
+      description: r.description.trim(),
+      max_val: Number(r.max_val),
+    }));
+
+    if (normalizedRubric.some((r) => !r.name)) {
       setError("All criteria must have a name.");
       return;
     }
-    if (rubric.some((r) => r.max_val <= 0)) {
+
+    const normalizedNames = normalizedRubric.map((r) =>
+      r.name.toLowerCase(),
+    );
+    if (new Set(normalizedNames).size !== normalizedNames.length) {
+      setError("Criteria names must be unique.");
+      return;
+    }
+
+    if (normalizedRubric.some((r) => r.max_val <= 0)) {
       setError("Max score must be greater than 0.");
+      return;
+    }
+
+    if (normalizedRubric.some((r) => r.max_val > MAX_RUBRIC_SCORE)) {
+      setError("Max score must be less than or equal to 1,000,000,000,000.");
       return;
     }
 
@@ -64,7 +89,7 @@ export function RubricSettingsForm({
       const res = await fetch(`/api/org/${orgId}/openings/${openingId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rubric }),
+        body: JSON.stringify({ rubric: normalizedRubric }),
       });
 
       if (!res.ok) {
@@ -84,7 +109,7 @@ export function RubricSettingsForm({
       <Card>
         <CardContent className="p-6">
           {/* Header row */}
-          <div className="grid grid-cols-[1fr_120px_1fr] gap-4 mb-4">
+          <div className="grid grid-cols-[1fr_120px_1fr_32px] gap-4 mb-4">
             <span className="text-sm font-semibold">
               Criteria<span className="text-red-500">*</span>
             </span>
@@ -92,6 +117,7 @@ export function RubricSettingsForm({
               Max Score<span className="text-red-500">*</span>
             </span>
             <span className="text-sm font-semibold">Description</span>
+            <span />
           </div>
 
           {/* Rubric rows */}
@@ -99,7 +125,7 @@ export function RubricSettingsForm({
             {rubric.map((item, index) => (
               <div
                 key={index}
-                className="grid grid-cols-[1fr_120px_1fr] gap-4 items-center"
+                className="grid grid-cols-[1fr_120px_1fr_32px] gap-4 items-center"
               >
                 <Input
                   value={item.name}
@@ -109,6 +135,7 @@ export function RubricSettingsForm({
                 <Input
                   type="number"
                   min="1"
+                  max={MAX_RUBRIC_SCORE}
                   value={item.max_val}
                   onChange={(e) =>
                     handleUpdate(index, "max_val", e.target.value)
@@ -121,6 +148,15 @@ export function RubricSettingsForm({
                   }
                   placeholder=""
                 />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setRubric(rubric.filter((_, i) => i !== index))
+                  }
+                  className="text-gray-300 hover:text-red-400 transition-colors"
+                >
+                  <Trash01 className="h-4 w-4" />
+                </button>
               </div>
             ))}
           </div>

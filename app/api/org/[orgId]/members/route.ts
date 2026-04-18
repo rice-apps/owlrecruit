@@ -46,17 +46,41 @@ export async function POST(
 ) {
   try {
     const { orgId } = await params;
-    const body = await request.json();
-    const { userId, role } = body;
+    const supabase = await createClient();
 
-    if (!userId || !role) {
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Only admins can add members
+    const { data: callerMembership } = await supabase
+      .from("org_members")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("org_id", orgId)
+      .single();
+
+    if (callerMembership?.role !== "admin") {
       return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 },
+        { error: "Only admins can add members" },
+        { status: 403 },
       );
     }
 
-    const supabase = await createClient();
+    const body = await request.json();
+    const { userId, role } = body;
+
+    if (!userId || !role || !["admin", "reviewer"].includes(role)) {
+      return NextResponse.json(
+        { error: "Missing or invalid fields" },
+        { status: 400 },
+      );
+    }
 
     const { data, error } = await supabase
       .from("org_members")

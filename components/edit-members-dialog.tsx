@@ -8,6 +8,7 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -323,6 +324,9 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
             </DialogClose>
           </div>
           <DialogTitle className="sr-only">Edit members</DialogTitle>
+          <DialogDescription className="sr-only">
+            Add or remove organization members and change their roles.
+          </DialogDescription>
           <div className="relative" ref={searchContainerRef}>
             <Input
               placeholder="Add members"

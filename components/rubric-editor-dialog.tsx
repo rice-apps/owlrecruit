@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -112,6 +113,9 @@ export function RubricEditorDialog({
       <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Scoring Rubric</DialogTitle>
+          <DialogDescription className="sr-only">
+            Define the skills and maximum scores for evaluating candidates.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">

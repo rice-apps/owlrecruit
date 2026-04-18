@@ -26,6 +26,8 @@ interface EligibleReviewer {
     | null;
 }
 
+const MAX_RUBRIC_SCORE = 1_000_000_000_000;
+
 export default function NewOpeningPage() {
   const params = useParams<{ orgId: string }>();
   const orgId = params.orgId;
@@ -59,16 +61,16 @@ export default function NewOpeningPage() {
   React.useEffect(() => {
     const fetchData = async () => {
       try {
-        const [orgsRes, reviewersRes] = await Promise.all([
-          fetch(`/api/orgs`),
+        const [orgStatusRes, reviewersRes] = await Promise.all([
+          fetch(`/api/user/org-status`),
           fetch(`/api/org/${orgId}/members?role=admin,reviewer`),
         ]);
-        if (orgsRes.ok) {
-          const orgs = await orgsRes.json();
-          const org = orgs.find(
-            (o: { id: string; name: string }) => o.id === orgId,
+        if (orgStatusRes.ok) {
+          const { memberships } = await orgStatusRes.json();
+          const membership = memberships?.find(
+            (m: { org_id: string; org_name: string }) => m.org_id === orgId,
           );
-          if (org) setOrgName(org.name);
+          if (membership) setOrgName(membership.org_name);
         }
         if (reviewersRes.ok) {
           const reviewerData = await reviewersRes.json();
@@ -90,6 +92,42 @@ export default function NewOpeningPage() {
       return;
     }
 
+    const normalizedRubric = rubric.map((r) => ({
+      ...r,
+      name: r.name.trim(),
+      description: r.description.trim(),
+      max_val: Number(r.max_val),
+    }));
+
+    const hasRubricContent = normalizedRubric.some(
+      (r) => r.name !== "" || r.description !== "" || r.max_val !== 10,
+    );
+
+    if (hasRubricContent) {
+      if (normalizedRubric.some((r) => !r.name)) {
+        setError("All criteria must have a name.");
+        return;
+      }
+
+      const normalizedNames = normalizedRubric.map((r) =>
+        r.name.toLowerCase(),
+      );
+      if (new Set(normalizedNames).size !== normalizedNames.length) {
+        setError("Criteria names must be unique.");
+        return;
+      }
+
+      if (normalizedRubric.some((r) => r.max_val <= 0)) {
+        setError("Max score must be greater than 0.");
+        return;
+      }
+
+      if (normalizedRubric.some((r) => r.max_val > MAX_RUBRIC_SCORE)) {
+        setError("Max score must be less than or equal to 1,000,000,000,000.");
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -105,9 +143,11 @@ export default function NewOpeningPage() {
             ? new Date(formData.closes_at).toISOString()
             : null,
           status: formData.status,
+          reviewer_ids:
+            selectedReviewers.length > 0 ? selectedReviewers : undefined,
           rubric:
-            rubric.filter((r) => r.name.trim()).length > 0
-              ? rubric.map((r) => ({ ...r, max_val: Number(r.max_val) || 0 }))
+            hasRubricContent
+              ? normalizedRubric
               : undefined,
         }),
       });
@@ -161,24 +201,63 @@ export default function NewOpeningPage() {
           />
         </div>
 
-        {/* Application Link */}
-        <div className="space-y-2">
-          <Label
-            htmlFor="application_link"
-            className="text-sm font-medium text-gray-700"
-          >
-            Application Link
+        {/* Application Method */}
+        <div className="space-y-3">
+          <Label className="text-sm font-medium text-gray-700">
+            Application Method
           </Label>
-          <Input
-            id="application_link"
-            type="url"
-            value={formData.application_link}
-            onChange={(e) =>
-              setFormData({ ...formData, application_link: e.target.value })
-            }
-            placeholder="https://forms.google.com/..."
-            className="h-11 text-sm w-full"
-          />
+          <div className="flex rounded-lg border border-gray-200 w-fit overflow-hidden">
+            <button
+              type="button"
+              onClick={() =>
+                setFormData({ ...formData, application_link: "" })
+              }
+              className={`px-4 py-2 text-sm font-medium transition-colors ${
+                !formData.application_link
+                  ? "bg-owl-purple text-white"
+                  : "bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              Native Form
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setFormData({
+                  ...formData,
+                  application_link:
+                    formData.application_link || "https://",
+                })
+              }
+              className={`px-4 py-2 text-sm font-medium transition-colors border-l border-gray-200 ${
+                formData.application_link
+                  ? "bg-owl-purple text-white"
+                  : "bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              Google Forms
+            </button>
+          </div>
+          {!formData.application_link ? (
+            <p className="text-xs text-gray-500">
+              Build a form in the Questions tab after creating this opening.
+              Applicants will fill it out at a shareable link.
+            </p>
+          ) : (
+            <Input
+              id="application_link"
+              type="url"
+              value={formData.application_link}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  application_link: e.target.value,
+                })
+              }
+              placeholder="https://forms.google.com/..."
+              className="h-11 text-sm w-full"
+            />
+          )}
         </div>
 
         {/* Description */}
@@ -461,14 +540,20 @@ export default function NewOpeningPage() {
           <button
             type="button"
             onClick={() => {
-              setRubricOpen(!rubricOpen);
-              if (!rubricOpen && rubric.length === 0) {
+              if (rubricOpen) {
+                setRubric([]);
+                setRubricOpen(false);
+                return;
+              }
+
+              setRubricOpen(true);
+              if (rubric.length === 0) {
                 setRubric([{ name: "", max_val: 10, description: "" }]);
               }
             }}
             className="text-sm font-medium text-owl-purple hover:text-owl-purple/80 transition-colors"
           >
-            {rubricOpen ? "Hide Rubric" : "Add Rubric"}
+            {rubricOpen ? "Delete Rubric" : "Add Rubric"}
           </button>
 
           {rubricOpen && (
@@ -521,7 +606,7 @@ export default function NewOpeningPage() {
                     <Input
                       type="number"
                       min="1"
-                      max="100"
+                      max={MAX_RUBRIC_SCORE}
                       value={item.max_val}
                       onChange={(e) => {
                         const updated = [...rubric];
