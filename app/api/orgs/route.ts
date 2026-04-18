@@ -50,33 +50,32 @@ export async function POST(request: Request) {
       logo_url = urlData.publicUrl;
     }
 
-    // Create the organization
-    const { data: newOrg, error: insertError } = await supabase
-      .from("orgs")
-      .insert({
-        name: name.trim(),
-        description: description?.trim() || null,
-        logo_url,
-      })
-      .select("id")
-      .single();
+    // Atomically create org and assign creator as admin
+    const { data: newOrgId, error: rpcError } = await supabase.rpc(
+      "create_org_with_admin",
+      {
+        org_name: name.trim(),
+        org_description: description?.trim() || null,
+        creator_id: user.id,
+      },
+    );
 
-    if (insertError) {
-      return NextResponse.json({ error: insertError.message }, { status: 500 });
+    if (rpcError) {
+      return NextResponse.json({ error: rpcError.message }, { status: 500 });
     }
 
-    // Add the creator as an admin of the organization
-    const { error: memberError } = await supabase.from("org_members").insert({
-      user_id: user.id,
-      org_id: newOrg.id,
-      role: "admin",
-    });
+    if (logo_url) {
+      const { error: updateError } = await supabase
+        .from("orgs")
+        .update({ logo_url })
+        .eq("id", newOrgId);
 
-    if (memberError) {
-      return NextResponse.json({ error: memberError.message }, { status: 500 });
+      if (updateError) {
+        return NextResponse.json({ error: updateError.message }, { status: 500 });
+      }
     }
 
-    return NextResponse.json({ id: newOrg.id }, { status: 201 });
+    return NextResponse.json({ id: newOrgId }, { status: 201 });
   } catch (error) {
     console.error("Error creating organization:", error);
     return NextResponse.json(

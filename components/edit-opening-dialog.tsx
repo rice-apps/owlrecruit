@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -35,17 +36,35 @@ export function EditOpeningDialog({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [title, setTitle] = useState(initialData.title);
   const [description, setDescription] = useState(initialData.description || "");
+  const [useNativeForm, setUseNativeForm] = useState(
+    !initialData.application_link,
+  );
   const [applicationLink, setApplicationLink] = useState(
     initialData.application_link || "",
   );
   const [closesAt, setClosesAt] = useState(initialData.closes_at || "");
   const [status, setStatus] = useState(initialData.status);
 
+  // Reset form state whenever the dialog opens so we always show fresh data
+  useEffect(() => {
+    if (open) {
+      setSaveError(null);
+      setTitle(initialData.title);
+      setDescription(initialData.description || "");
+      setUseNativeForm(!initialData.application_link);
+      setApplicationLink(initialData.application_link || "");
+      setClosesAt(initialData.closes_at || "");
+      setStatus(initialData.status);
+    }
+  }, [open, initialData]);
+
   const handleSave = async () => {
     if (!title.trim()) return;
     setSaving(true);
+    setSaveError(null);
     try {
       const res = await fetch(`/api/org/${orgId}/openings/${openingId}`, {
         method: "PATCH",
@@ -53,7 +72,7 @@ export function EditOpeningDialog({
         body: JSON.stringify({
           title,
           description,
-          application_link: applicationLink,
+          application_link: useNativeForm ? null : applicationLink || null,
           closes_at: closesAt || null,
           status,
         }),
@@ -61,7 +80,12 @@ export function EditOpeningDialog({
       if (res.ok) {
         setOpen(false);
         router.refresh();
+      } else {
+        const data = await res.json().catch(() => null);
+        setSaveError(data?.error || "Failed to save changes. Please try again.");
       }
+    } catch {
+      setSaveError("An unexpected error occurred. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -77,6 +101,9 @@ export function EditOpeningDialog({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Edit Opening</DialogTitle>
+          <DialogDescription className="sr-only">
+            Edit the details of this opening.
+          </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-4 mt-2">
           <div className="space-y-2">
@@ -97,13 +124,46 @@ export function EditOpeningDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="edit-link">Application Link</Label>
-            <Input
-              id="edit-link"
-              value={applicationLink}
-              onChange={(e) => setApplicationLink(e.target.value)}
-              placeholder="https://..."
-            />
+            <Label>Application Method</Label>
+            <div className="flex rounded-lg border border-gray-200 w-fit overflow-hidden">
+              <button
+                type="button"
+                onClick={() => {
+                  setUseNativeForm(true);
+                  setApplicationLink("");
+                }}
+                className={`px-4 py-2 text-sm font-medium transition-colors ${
+                  useNativeForm
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-white text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                Native Form
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setUseNativeForm(false);
+                  if (!applicationLink) setApplicationLink("https://");
+                }}
+                className={`px-4 py-2 text-sm font-medium transition-colors border-l border-gray-200 ${
+                  !useNativeForm
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-white text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                Google Forms
+              </button>
+            </div>
+            {!useNativeForm && (
+              <Input
+                id="edit-link"
+                type="url"
+                value={applicationLink}
+                onChange={(e) => setApplicationLink(e.target.value)}
+                placeholder="https://forms.google.com/..."
+              />
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="edit-closes">Closes At</Label>
@@ -131,6 +191,11 @@ export function EditOpeningDialog({
               ))}
             </div>
           </div>
+          {saveError && (
+            <p className="text-sm text-red-600 rounded-lg bg-red-50 px-4 py-3">
+              {saveError}
+            </p>
+          )}
           <div className="flex justify-end gap-2 mt-2">
             <Button variant="outline" onClick={() => setOpen(false)}>
               Cancel

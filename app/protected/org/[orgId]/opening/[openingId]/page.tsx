@@ -124,13 +124,21 @@ export default async function OpeningOverviewPage({
           />
         );
       case "questions":
-        return <QuestionsTab openingId={openingId} />;
+        return (
+          <QuestionsTab
+            openingId={openingId}
+            orgId={orgId}
+            applicationLink={openingData?.application_link ?? null}
+          />
+        );
       case "overview":
         return (
           <OverviewTab
             applicants={applicants}
             orgId={orgId}
             openingId={openingId}
+            openingStatus={openingData?.status ?? null}
+            applicationLink={openingData?.application_link ?? null}
           />
         );
       case "upload":
@@ -180,7 +188,7 @@ export default async function OpeningOverviewPage({
 
       {/* Tabs */}
       <Suspense fallback={<div className="h-12" />}>
-        <OpeningTabs />
+        <OpeningTabs useNativeForm={!openingData?.application_link} />
       </Suspense>
 
       {/* Tab content */}
