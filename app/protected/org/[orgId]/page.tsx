@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { OpeningStatusBadge } from "@/components/status-badge";
 import { EditMembersDialog } from "@/components/edit-members-dialog";
 import {
   MembersStrip,
@@ -13,7 +12,7 @@ import {
 } from "@/components/org/section-shell";
 import { OrgSectionNav } from "@/components/org-section-nav";
 import { LeaveOrgButton } from "@/components/leave-org-button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { OpeningsGrid } from "./components/openings-grid";
 
 type RawMemberUser = NonNullable<OrgMemberRecord["users"]>;
 
@@ -234,61 +233,12 @@ export default async function ReviewerOrgPage({
           ) : null
         }
       >
-        {openings && openings.length > 0 ? (
-          <div
-            className={`grid ${sectionShellTokens.cardSpacing} md:grid-cols-2 lg:grid-cols-3`}
-          >
-            {openings.map((opening) => (
-              <Link
-                key={opening.id}
-                href={`/protected/org/${orgId}/opening/${opening.id}`}
-              >
-                <Card className="group h-full cursor-pointer overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm transition duration-150 hover:-translate-y-0.5 hover:shadow-lg">
-                  <div className="h-1 w-full bg-gradient-to-r from-rose-200/80 via-rose-100 to-rose-50" />
-                  <CardHeader className="px-4 pt-3 pb-2">
-                    <div className="flex items-start justify-between gap-3">
-                      <CardTitle className="text-lg leading-tight">
-                        {opening.title || "Untitled Opening"}
-                      </CardTitle>
-                      <OpeningStatusBadge status={opening.status || "draft"} />
-                    </div>
-                    {opening.closes_at && (
-                      <p className="text-xs text-slate-400">
-                        Due:{" "}
-                        {new Date(opening.closes_at).toLocaleDateString(
-                          "en-US",
-                          {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          },
-                        )}
-                      </p>
-                    )}
-                  </CardHeader>
-                  {opening.description && (
-                    <CardContent className="px-4 pb-4 pt-0">
-                      <p className="text-sm text-slate-500 line-clamp-3">
-                        {opening.description}
-                      </p>
-                    </CardContent>
-                  )}
-                </Card>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-slate-200/80 bg-white/70 px-6 py-12 text-center">
-            <h3 className="text-lg font-medium text-gray-600">
-              No Openings Yet
-            </h3>
-            <p className={`text-sm ${sectionShellTokens.mutedCopy}`}>
-              {isAdmin
-                ? "Create your first opening to start recruiting."
-                : "There are no openings for this organization yet."}
-            </p>
-          </div>
-        )}
+        <OpeningsGrid
+          openings={openings ?? []}
+          orgId={orgId}
+          orgName={displayOrgName}
+          isAdmin={isAdmin}
+        />
       </SectionShell>
 
       <SectionShell
