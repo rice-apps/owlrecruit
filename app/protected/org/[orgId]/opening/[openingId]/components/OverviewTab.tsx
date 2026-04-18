@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import type { ApplicationStatus } from "@/types/app";
+import { logger } from "@/lib/logger";
 import { ChevronDown, UsersPlus, X } from "@untitled-ui/icons-react";
 
 interface Applicant {
@@ -89,23 +90,35 @@ export function OverviewTab({
         ? opening.reviewer_ids.filter(
             (id: unknown): id is string => typeof id === "string",
           )
-        : [];
+          .eq("org_id", orgId)
+          .eq("role", "reviewer");
 
-      setSelectedReviewerIds(reviewerIds);
-
-      if (reviewerIds.length === 0) {
-        setReviewers([]);
-        return;
-      }
-
-      const { data: users, error: usersError } = await supabase
-        .from("users")
-        .select("id, name, email")
-        .in("id", reviewerIds);
-
-      if (usersError) {
-        console.error("Failed to fetch reviewer profiles:", usersError);
-        return;
+        if (error) {
+          logger.error("Failed to fetch reviewers:", error);
+        } else if (data) {
+          // Transform data: Supabase returns users as an array, convert to single object
+          const transformedData = data.map(
+            (item: {
+              id: string;
+              user_id: string;
+              role: string;
+              users: unknown;
+            }) => ({
+              id: item.id,
+              user_id: item.user_id,
+              role: item.role,
+              user:
+                Array.isArray(item.users) && item.users.length > 0
+                  ? item.users[0]
+                  : item.users,
+            }),
+          );
+          setReviewers(transformedData);
+        }
+      } catch (error) {
+        logger.error("Failed to fetch reviewers:", error);
+      } finally {
+        setLoadingReviewers(false);
       }
 
       const usersById = new Map((users || []).map((user) => [user.id, user]));

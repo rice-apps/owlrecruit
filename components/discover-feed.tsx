@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { logger } from "@/lib/logger";
 import Link from "next/link";
 import { LinkExternal01 } from "@untitled-ui/icons-react";
 import { Badge } from "@/components/ui/badge";
@@ -45,7 +46,7 @@ export function DiscoverFeed() {
         const data = await response.json();
         setOpenings(data);
       } catch (error) {
-        console.error("Error fetching openings:", error);
+        logger.error("Error fetching openings:", error);
       } finally {
         setLoading(false);
       }

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 
 export async function GET(
@@ -33,7 +34,7 @@ export async function GET(
 
     return NextResponse.json({ role: membership.role });
   } catch (error) {
-    console.error("Error fetching my-role:", error);
+    logger.error("Error fetching my-role:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },
