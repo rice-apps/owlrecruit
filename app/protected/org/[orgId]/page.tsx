@@ -187,7 +187,9 @@ export default async function ReviewerOrgPage({
   return (
     <div className={pageLayoutClass}>
       <OrgPageHeader
+        orgId={orgId}
         displayOrgName={displayOrgName}
+        orgDescription={orgData?.description ?? null}
         roleLabel={roleLabel}
         isAdmin={isAdmin}
         hasRoleError={Boolean(membershipError)}
