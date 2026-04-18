@@ -3,19 +3,27 @@
 import { usePathname, useSearchParams } from "next/navigation";
 import { TabBar } from "@/components/tab-bar";
 
-const tabs = [
+const allTabs = [
   { id: "applicants", label: "Applicants" },
   { id: "questions", label: "Questions" },
   { id: "overview", label: "Overview" },
   { id: "upload", label: "Upload Data" },
 ] as const;
 
-type TabId = (typeof tabs)[number]["id"];
+type TabId = (typeof allTabs)[number]["id"];
 
-export function OpeningTabs() {
+interface OpeningTabsProps {
+  useNativeForm: boolean;
+}
+
+export function OpeningTabs({ useNativeForm }: OpeningTabsProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const currentTab = (searchParams.get("tab") as TabId) || "applicants";
+
+  const tabs = useNativeForm
+    ? allTabs.filter((t) => t.id !== "upload")
+    : allTabs;
 
   const buildHref = (tabId: string) => {
     const params = new URLSearchParams(searchParams.toString());

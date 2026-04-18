@@ -1,0 +1,95 @@
+import { createClient } from "@/lib/supabase/server";
+import { NextResponse } from "next/server";
+
+type Params = Promise<{ orgId: string; openingId: string }>;
+
+export async function GET(_request: Request, { params }: { params: Params }) {
+  const { openingId } = await params;
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("questions")
+    .select("*")
+    .eq("opening_id", openingId)
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ questions: data });
+}
+
+export async function PATCH(request: Request, { params }: { params: Params }) {
+  const { orgId, openingId } = await params;
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { data: membership } = await supabase
+    .from("org_members")
+    .select("role")
+    .eq("user_id", user.id)
+    .eq("org_id", orgId)
+    .single();
+
+  if (membership?.role !== "admin") {
+    return NextResponse.json(
+      { error: "Only admins can manage questions" },
+      { status: 403 },
+    );
+  }
+
+  const body = await request.json();
+  const questions: Array<{
+    question_text: string;
+    is_required: boolean | null;
+    sort_order: number;
+  }> = body.questions;
+
+  if (!Array.isArray(questions)) {
+    return NextResponse.json(
+      { error: "questions must be an array" },
+      { status: 400 },
+    );
+  }
+
+  // Verify the opening belongs to this org before touching its questions
+  const { data: opening, error: openingError } = await supabase
+    .from("openings")
+    .select("id")
+    .eq("id", openingId)
+    .eq("org_id", orgId)
+    .single();
+
+  if (openingError || !opening) {
+    return NextResponse.json(
+      { error: "Opening not found in this organization" },
+      { status: 404 },
+    );
+  }
+
+  // Atomically delete existing and insert new questions
+  const records = questions.map((q, i) => ({
+    question_text: q.question_text,
+    is_required: q.is_required ?? null,
+    sort_order: i,
+  }));
+
+  const { data, error } = await supabase.rpc("replace_opening_questions", {
+    target_opening_id: openingId,
+    questions_json: records,
+  });
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ questions: data });
+}
