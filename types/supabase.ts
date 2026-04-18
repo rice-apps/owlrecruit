@@ -230,6 +230,7 @@ export type Database = {
           description: string | null;
           id: string;
           org_id: string;
+          reviewer_ids: string[] | null;
           rubric: Json[] | null;
           status: Database["public"]["Enums"]["opening_status"] | null;
           title: string;
@@ -242,6 +243,7 @@ export type Database = {
           description?: string | null;
           id?: string;
           org_id: string;
+          reviewer_ids?: string[] | null;
           rubric?: Json[] | null;
           status?: Database["public"]["Enums"]["opening_status"] | null;
           title: string;
@@ -254,6 +256,7 @@ export type Database = {
           description?: string | null;
           id?: string;
           org_id?: string;
+          reviewer_ids?: string[] | null;
           rubric?: Json[] | null;
           status?: Database["public"]["Enums"]["opening_status"] | null;
           title?: string;

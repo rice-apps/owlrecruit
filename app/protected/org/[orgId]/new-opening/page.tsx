@@ -103,6 +103,8 @@ export default function NewOpeningPage() {
             ? new Date(formData.closes_at).toISOString()
             : null,
           status: formData.status,
+          reviewer_ids:
+            selectedReviewers.length > 0 ? selectedReviewers : undefined,
           rubric:
             rubric.filter((r) => r.name.trim()).length > 0
               ? rubric.map((r) => ({ ...r, max_val: Number(r.max_val) || 0 }))
