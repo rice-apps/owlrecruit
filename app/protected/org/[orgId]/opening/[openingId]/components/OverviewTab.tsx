@@ -59,9 +59,9 @@ export function OverviewTab({
   const [reviewers, setReviewers] = useState<Reviewer[]>([]);
   const [loadingReviewers, setLoadingReviewers] = useState(true);
   const [isEditingReviewers, setIsEditingReviewers] = useState(false);
-  const [eligibleReviewers, setEligibleReviewers] = useState<EligibleReviewer[]>(
-    [],
-  );
+  const [eligibleReviewers, setEligibleReviewers] = useState<
+    EligibleReviewer[]
+  >([]);
   const [selectedReviewerIds, setSelectedReviewerIds] = useState<string[]>([]);
   const [savingReviewers, setSavingReviewers] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -82,7 +82,7 @@ export function OverviewTab({
         .single();
 
       if (openingError) {
-        console.error("Failed to fetch opening reviewers:", openingError);
+        logger.error("Failed to fetch opening reviewers:", openingError);
         return;
       }
 
@@ -90,45 +90,29 @@ export function OverviewTab({
         ? opening.reviewer_ids.filter(
             (id: unknown): id is string => typeof id === "string",
           )
-          .eq("org_id", orgId)
-          .eq("role", "reviewer");
+        : [];
 
-        if (error) {
-          logger.error("Failed to fetch reviewers:", error);
-        } else if (data) {
-          // Transform data: Supabase returns users as an array, convert to single object
-          const transformedData = data.map(
-            (item: {
-              id: string;
-              user_id: string;
-              role: string;
-              users: unknown;
-            }) => ({
-              id: item.id,
-              user_id: item.user_id,
-              role: item.role,
-              user:
-                Array.isArray(item.users) && item.users.length > 0
-                  ? item.users[0]
-                  : item.users,
-            }),
-          );
-          setReviewers(transformedData);
-        }
-      } catch (error) {
-        logger.error("Failed to fetch reviewers:", error);
-      } finally {
-        setLoadingReviewers(false);
+      if (reviewerIds.length === 0) {
+        setReviewers([]);
+        return;
       }
 
-      const usersById = new Map((users || []).map((user) => [user.id, user]));
-      const orderedReviewers = reviewerIds
-        .map((id) => usersById.get(id))
-        .filter((user): user is Reviewer => Boolean(user));
+      const { data: users, error } = await supabase
+        .from("users")
+        .select("id, name, email")
+        .in("id", reviewerIds);
 
-      setReviewers(orderedReviewers);
+      if (error) {
+        logger.error("Failed to fetch reviewers:", error);
+      } else if (users) {
+        const usersById = new Map(users.map((user) => [user.id, user]));
+        const orderedReviewers = reviewerIds
+          .map((id) => usersById.get(id))
+          .filter((user): user is Reviewer => Boolean(user));
+        setReviewers(orderedReviewers);
+      }
     } catch (error) {
-      console.error("Failed to fetch reviewers:", error);
+      logger.error("Failed to fetch reviewers:", error);
     } finally {
       setLoadingReviewers(false);
     }
@@ -361,7 +345,9 @@ export function OverviewTab({
                   );
                 })
               ) : (
-                <p className="text-sm text-gray-500 py-2">No reviewers assigned</p>
+                <p className="text-sm text-gray-500 py-2">
+                  No reviewers assigned
+                </p>
               )}
             </div>
 
@@ -426,7 +412,9 @@ export function OverviewTab({
                             <p className="font-medium text-sm">
                               {user?.name || "Unknown User"}
                             </p>
-                            <p className="text-xs text-gray-500">{user?.email}</p>
+                            <p className="text-xs text-gray-500">
+                              {user?.email}
+                            </p>
                           </div>
                         </div>
                         <span className="text-xs text-gray-500 uppercase">
@@ -443,7 +431,9 @@ export function OverviewTab({
               <button
                 type="button"
                 onClick={() => {
-                  setSelectedReviewerIds(reviewers.map((reviewer) => reviewer.id));
+                  setSelectedReviewerIds(
+                    reviewers.map((reviewer) => reviewer.id),
+                  );
                   setIsEditingReviewers(false);
                   setIsDropdownOpen(false);
                 }}
