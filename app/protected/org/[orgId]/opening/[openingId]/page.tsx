@@ -8,8 +8,8 @@ import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { ArrowLeft } from "@untitled-ui/icons-react";
-import { OpeningStatusBadge } from "@/components/status-badge";
 import { EditOpeningDialog } from "@/components/edit-opening-dialog";
+import { OpeningStatusButton } from "@/components/opening-status-button";
 import { OpeningTabs } from "./components/OpeningTabs";
 import { ApplicantsList } from "./components/ApplicantsList";
 import { OverviewTab } from "./components/OverviewTab";
@@ -183,7 +183,11 @@ export default async function OpeningOverviewPage({
             {openingData?.description}
           </p>
         </div>
-        <OpeningStatusBadge status={openingData?.status || "draft"} />
+        <OpeningStatusButton
+          orgId={orgId}
+          openingId={openingId}
+          status={openingData?.status || "draft"}
+        />
       </div>
 
       {/* Tabs */}
