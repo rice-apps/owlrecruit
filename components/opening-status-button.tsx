@@ -1,0 +1,76 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { OpeningStatusBadge } from "@/components/status-badge";
+import type { OpeningStatus } from "@/types/app";
+
+interface OpeningStatusButtonProps {
+  orgId: string;
+  openingId: string;
+  status: OpeningStatus;
+}
+
+const nextStatus: Record<OpeningStatus, OpeningStatus> = {
+  draft: "open",
+  open: "closed",
+  closed: "open",
+};
+
+const buttonLabel: Record<OpeningStatus, string> = {
+  draft: "Publish",
+  open: "Close",
+  closed: "Reopen",
+};
+
+const buttonVariant: Record<
+  OpeningStatus,
+  "default" | "outline" | "secondary"
+> = {
+  draft: "default",
+  open: "secondary",
+  closed: "outline",
+};
+
+export function OpeningStatusButton({
+  orgId,
+  openingId,
+  status,
+}: OpeningStatusButtonProps) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState<OpeningStatus>(status);
+
+  const handleClick = async () => {
+    setLoading(true);
+    const target = nextStatus[currentStatus];
+    try {
+      const res = await fetch(`/api/org/${orgId}/openings/${openingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: target }),
+      });
+      if (res.ok) {
+        setCurrentStatus(target);
+        router.refresh();
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <OpeningStatusBadge status={currentStatus} />
+      <Button
+        variant={buttonVariant[currentStatus]}
+        size="sm"
+        onClick={handleClick}
+        disabled={loading}
+      >
+        {loading ? "Saving..." : buttonLabel[currentStatus]}
+      </Button>
+    </div>
+  );
+}
