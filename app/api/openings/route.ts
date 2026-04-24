@@ -2,20 +2,65 @@ import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
     const supabase = await createClient();
 
-    const { data: openings, error: fetchError } = await supabase
+    let query = supabase
       .from("openings")
       .select(
         `
         *,
         org:orgs(name)
       `,
-      )
-      .eq("status", "open")
-      .order("created_at", { ascending: false });
+      );
+
+    // Filter by status(es)
+    const statuses = searchParams.get("statuses")?.split(",") || ["open"];
+    if (statuses.length === 1) {
+      query = query.eq("status", statuses[0]);
+    } else {
+      query = query.in("status", statuses);
+    }
+
+    // Filter by date posted
+    const datePosted = searchParams.get("datePosted") || "all";
+    if (datePosted !== "all") {
+      const now = new Date();
+      let cutoffDate = new Date();
+      
+      if (datePosted === "7days") {
+        cutoffDate.setDate(cutoffDate.getDate() - 7);
+      } else if (datePosted === "30days") {
+        cutoffDate.setDate(cutoffDate.getDate() - 30);
+      }
+      
+      query = query.gte("created_at", cutoffDate.toISOString());
+    }
+
+    // Filter by application deadline
+    const deadline = searchParams.get("deadline") || "all";
+    if (deadline === "closing-soon") {
+      const now = new Date();
+      const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      query = query.gte("closes_at", now.toISOString());
+      query = query.lte("closes_at", sevenDaysFromNow.toISOString());
+    } else if (deadline === "no-deadline") {
+      query = query.is("closes_at", null);
+    }
+
+    // Apply ordering based on sort parameter
+    const sort = searchParams.get("sort") || "recent";
+    if (sort === "recent") {
+      query = query.order("created_at", { ascending: false });
+    } else if (sort === "closing-soon") {
+      query = query.order("closes_at", { ascending: true, nullsFirst: false });
+    } else if (sort === "org-name") {
+      query = query.order("title", { ascending: true });
+    }
+
+    const { data: openings, error: fetchError } = await query;
 
     if (fetchError) {
       logger.error("Error fetching openings:", fetchError);
