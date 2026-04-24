@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Upload01 } from "@untitled-ui/icons-react";
+import { logger } from "@/lib/logger";
+import { toast } from "sonner";
 
 export default function NewOrgPage() {
   const router = useRouter();
@@ -49,7 +51,10 @@ export default function NewOrgPage() {
       // Force a full reload to ensure the sidebar layout updates with the new organization
       window.location.href = `/protected/org/${data.id}`;
     } catch (err) {
-      console.error("Error creating organization:", err);
+      logger.error("Error creating organization:", err);
+      toast.error(
+        err instanceof Error ? err.message : "Failed to create organization",
+      );
       setError(
         err instanceof Error ? err.message : "Failed to create organization",
       );
@@ -98,10 +103,10 @@ export default function NewOrgPage() {
           />
         </div>
 
-        {/* Upload01 logo */}
+        {/* Upload logo */}
         <div className="space-y-2">
           <Label className="text-sm font-medium text-gray-700">
-            Upload01 logo
+            Upload logo
           </Label>
           <div className="border-2 border-dashed border-gray-300 rounded-md h-36 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-gray-400 transition-colors bg-white">
             <Upload01 className="h-5 w-5 text-gray-400" />
@@ -111,10 +116,10 @@ export default function NewOrgPage() {
           </div>
         </div>
 
-        {/* Upload01 banner */}
+        {/* Upload banner */}
         <div className="space-y-2">
           <Label className="text-sm font-medium text-gray-700">
-            Upload01 banner
+            Upload banner
           </Label>
           <div className="border-2 border-dashed border-gray-300 rounded-md h-36 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-gray-400 transition-colors bg-white">
             <Upload01 className="h-5 w-5 text-gray-400" />

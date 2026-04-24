@@ -105,8 +105,15 @@ export async function PATCH(
   }
 
   const body = await request.json();
-  const { title, description, application_link, closes_at, status, rubric } =
-    body;
+  const {
+    title,
+    description,
+    application_link,
+    closes_at,
+    status,
+    rubric,
+    reviewer_ids,
+  } = body;
 
   const updates: Record<string, unknown> = {};
   if (title !== undefined) updates.title = title.trim();
@@ -117,6 +124,23 @@ export async function PATCH(
   if (closes_at !== undefined) updates.closes_at = closes_at || null;
   if (status !== undefined) updates.status = status;
   if (rubric !== undefined) updates.rubric = rubric;
+  if (reviewer_ids !== undefined) {
+    if (!Array.isArray(reviewer_ids)) {
+      return NextResponse.json(
+        { error: "reviewer_ids must be an array of user IDs" },
+        { status: 400 },
+      );
+    }
+
+    updates.reviewer_ids = Array.from(
+      new Set(
+        reviewer_ids
+          .filter((id: unknown) => typeof id === "string")
+          .map((id: string) => id.trim())
+          .filter(Boolean),
+      ),
+    );
+  }
 
   const { error: updateError } = await supabase
     .from("openings")

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Sidebar } from "@/components/sidebar";
 import type { OrgWithRole } from "@/types/app";
+import { logger } from "@/lib/logger";
 
 export default async function ProtectedLayout({
   children,
@@ -41,7 +42,7 @@ export default async function ProtectedLayout({
     .eq("user_id", userId);
 
   if (membershipsError) {
-    console.error("Error fetching org memberships:", membershipsError);
+    logger.error("Error fetching org memberships:", membershipsError);
   }
 
   // Transform data to OrgWithRole format
@@ -58,9 +59,15 @@ export default async function ProtectedLayout({
         role: m.role,
       };
     });
+  
+  const { data: userRecord } = await supabase
+  .from("users")
+  .select("name")
+  .eq("id", userId)
+  .single();
 
   const user = {
-    name: userMetadata.full_name || "User",
+    name: userRecord?.name || userMetadata.full_name || "User",
     email: userMetadata.email || "",
   };
 

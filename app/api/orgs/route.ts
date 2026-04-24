@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -23,34 +24,23 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create the organization
-    const { data: newOrg, error: insertError } = await supabase
-      .from("orgs")
-      .insert({
-        name: name.trim(),
-        description: description?.trim() || null,
-      })
-      .select("id")
-      .single();
+    // Atomically create org and assign creator as admin
+    const { data: newOrgId, error: rpcError } = await supabase.rpc(
+      "create_org_with_admin",
+      {
+        org_name: name.trim(),
+        org_description: description?.trim() || null,
+        creator_id: user.id,
+      },
+    );
 
-    if (insertError) {
-      return NextResponse.json({ error: insertError.message }, { status: 500 });
+    if (rpcError) {
+      return NextResponse.json({ error: rpcError.message }, { status: 500 });
     }
 
-    // Add the creator as an admin of the organization
-    const { error: memberError } = await supabase.from("org_members").insert({
-      user_id: user.id,
-      org_id: newOrg.id,
-      role: "admin",
-    });
-
-    if (memberError) {
-      return NextResponse.json({ error: memberError.message }, { status: 500 });
-    }
-
-    return NextResponse.json({ id: newOrg.id }, { status: 201 });
+    return NextResponse.json({ id: newOrgId }, { status: 201 });
   } catch (error) {
-    console.error("Error creating organization:", error);
+    logger.error("Error creating organization:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { logger } from "@/lib/logger";
+import { toast } from "sonner";
 
 interface LeaveOrgButtonProps {
   orgId: string;
@@ -30,7 +32,8 @@ export function LeaveOrgButton({
       router.push("/protected/discover");
       router.refresh();
     } catch (err) {
-      console.error(err);
+      logger.error("Failed to leave organization:", err);
+      toast.error("Failed to leave organization. Please try again.");
       setLoading(false);
       setOpen(false);
     }

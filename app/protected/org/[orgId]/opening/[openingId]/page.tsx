@@ -8,13 +8,14 @@ import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { ArrowLeft, Pencil01 } from "@untitled-ui/icons-react";
-import { OpeningStatusBadge } from "@/components/status-badge";
+import { OpeningStatusButton } from "@/components/opening-status-button";
 import { OpeningTabs } from "./components/OpeningTabs";
 import { ApplicantsList } from "./components/ApplicantsList";
 import { OverviewTab } from "./components/OverviewTab";
 import { UploadTab } from "./components/UploadTab";
 import { QuestionsTab } from "./components/QuestionsTab";
 import type { ApplicationStatus } from "@/types/app";
+import { logger } from "@/lib/logger";
 
 interface OpeningOverviewPageProps {
   params: Promise<{ orgId: string; openingId: string }>;
@@ -90,7 +91,7 @@ export default async function OpeningOverviewPage({
   };
 
   if (appError) {
-    console.error("Error fetching applications:", appError);
+    logger.error("Error fetching applications:", appError);
   }
 
   // Transform applications to applicants list format
@@ -131,7 +132,13 @@ export default async function OpeningOverviewPage({
           />
         );
       case "questions":
-        return <QuestionsTab openingId={openingId} />;
+        return (
+          <QuestionsTab
+            openingId={openingId}
+            orgId={orgId}
+            applicationLink={openingData?.application_link ?? null}
+          />
+        );
       case "upload":
         return <UploadTab />;
       default:
@@ -140,6 +147,8 @@ export default async function OpeningOverviewPage({
             applicants={applicants}
             orgId={orgId}
             openingId={openingId}
+            openingStatus={openingData?.status ?? null}
+            applicationLink={openingData?.application_link ?? null}
           />
         );
     }
@@ -177,12 +186,16 @@ export default async function OpeningOverviewPage({
             {openingData?.description}
           </p>
         </div>
-        <OpeningStatusBadge status={openingData?.status || "draft"} />
+        <OpeningStatusButton
+          orgId={orgId}
+          openingId={openingId}
+          status={openingData?.status || "draft"}
+        />
       </div>
 
       {/* Tabs */}
       <Suspense fallback={<div className="h-12" />}>
-        <OpeningTabs />
+        <OpeningTabs useNativeForm={!openingData?.application_link} />
       </Suspense>
 
       {/* Tab content */}

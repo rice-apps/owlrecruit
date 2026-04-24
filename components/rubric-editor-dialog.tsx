@@ -1,9 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { logger } from "@/lib/logger";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -96,7 +99,8 @@ export function RubricEditorDialog({
       onSuccess(rubric);
       setOpen(false);
     } catch (err) {
-      console.error("Error saving rubric:", err);
+      logger.error("Error saving rubric:", err);
+      toast.error("Failed to save changes. Please try again.");
       setError("Failed to save changes. Please try again.");
     } finally {
       setIsSaving(false);
@@ -109,6 +113,9 @@ export function RubricEditorDialog({
       <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Scoring Rubric</DialogTitle>
+          <DialogDescription className="sr-only">
+            Define the skills and maximum scores for evaluating candidates.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">

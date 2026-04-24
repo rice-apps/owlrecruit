@@ -17,6 +17,7 @@ import {
   ApplicationWithDetails,
 } from "@/components/application-card";
 import { Tables } from "@/types/app";
+import { logger } from "@/lib/logger";
 
 interface ApplicationsViewProps {
   initialApplications: ApplicationWithDetails[];
@@ -47,7 +48,7 @@ export function ApplicationsView({
           setSearchResults(data);
         } catch (error: unknown) {
           if (error instanceof Error && error.name !== "AbortError") {
-            console.error("Failed to fetch search results:", error);
+            logger.error("Failed to fetch search results:", error);
           }
         } finally {
           setIsSearching(false);

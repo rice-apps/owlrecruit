@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { logger } from "@/lib/logger";
 import Link from "next/link";
 import { LinkExternal01 } from "@untitled-ui/icons-react";
 import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "@/components/search-input";
+import { FilterDialog, FilterState } from "@/components/filter-dialog";
 
 interface Opening {
   id: string;
@@ -34,31 +36,49 @@ export function DiscoverFeed() {
   const [openings, setOpenings] = useState<Opening[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+  const [filters, setFilters] = useState<FilterState>({
+    statuses: ["open"],
+    datePosted: "all",
+    deadline: "all",
+    sort: "recent",
+  });
 
   useEffect(() => {
     async function fetchOpenings() {
       try {
-        const response = await fetch("/api/openings");
+        const params = new URLSearchParams({
+          statuses: filters.statuses.join(","),
+          datePosted: filters.datePosted,
+          deadline: filters.deadline,
+          sort: filters.sort,
+        });
+
+        const response = await fetch(`/api/openings?${params}`);
         if (!response.ok) {
           throw new Error("Failed to fetch openings");
         }
         const data = await response.json();
         setOpenings(data);
       } catch (error) {
-        console.error("Error fetching openings:", error);
+        logger.error("Error fetching openings:", error);
       } finally {
         setLoading(false);
       }
     }
 
     fetchOpenings();
-  }, []);
+  }, [filters]);
 
   const filteredOpenings = openings.filter(
     (opening) =>
       opening.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       opening.org.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
+
+  const handleApplyFilters = (newFilters: FilterState) => {
+    setFilters(newFilters);
+  };
 
   return (
     <div className="flex flex-col gap-6 w-full max-w-7xl">
@@ -68,6 +88,14 @@ export function DiscoverFeed() {
         onChange={setSearchQuery}
         placeholder="Search organizations, positions..."
         showFilter
+        onFilterClick={() => setFilterDialogOpen(true)}
+      />
+
+      <FilterDialog
+        open={filterDialogOpen}
+        onOpenChange={setFilterDialogOpen}
+        filters={filters}
+        onApply={handleApplyFilters}
       />
 
       <div>

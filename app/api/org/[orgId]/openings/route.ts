@@ -76,12 +76,26 @@ export async function POST(
   }
 
   const body = await request.json();
-  const { title, description, application_link, closes_at, status, rubric } =
-    body;
+  const {
+    title,
+    description,
+    application_link,
+    closes_at,
+    status,
+    rubric,
+    reviewer_ids,
+  } = body;
 
   if (!title?.trim()) {
     return NextResponse.json(
       { error: "Position title is required" },
+      { status: 400 },
+    );
+  }
+
+  if (reviewer_ids !== undefined && !Array.isArray(reviewer_ids)) {
+    return NextResponse.json(
+      { error: "reviewer_ids must be an array of user IDs" },
       { status: 400 },
     );
   }
@@ -95,6 +109,17 @@ export async function POST(
       application_link: application_link?.trim() || null,
       closes_at: closes_at || null,
       status: status || "open",
+      reviewer_ids:
+        reviewer_ids === undefined
+          ? null
+          : Array.from(
+              new Set(
+                reviewer_ids
+                  .filter((id: unknown) => typeof id === "string")
+                  .map((id: string) => id.trim())
+                  .filter(Boolean),
+              ),
+            ),
       rubric: rubric ?? null,
     })
     .select()

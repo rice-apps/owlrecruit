@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { formatRelativeTime } from "@/lib/date-utils";
 import {
@@ -21,18 +23,13 @@ interface Comment {
 interface CommentsPanelProps {
   orgId: string;
   applicantId: string;
-  onToast: (message: string, type: "success" | "error") => void;
 }
 
-export function CommentsPanel({
-  orgId,
-  applicantId,
-  onToast,
-}: CommentsPanelProps) {
+export function CommentsPanel({ orgId, applicantId }: CommentsPanelProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isCommentsOpen, setIsCommentsOpen] = useState(false);
+  const [isCommentsOpen, setIsCommentsOpen] = useState(true);
 
   const fetchComments = useCallback(async () => {
     try {
@@ -43,10 +40,10 @@ export function CommentsPanel({
         const data = await res.json();
         setComments(data.comments);
       } else {
-        console.warn("Failed to fetch comments, API might be missing");
+        logger.warn("Failed to fetch comments, API might be missing");
       }
     } catch (error) {
-      console.error("Error fetching comments:", error);
+      logger.error("Error fetching comments:", error);
     }
   }, [orgId, applicantId]);
 
@@ -76,12 +73,12 @@ export function CommentsPanel({
 
       if (res.ok) {
         setNewComment("");
-        onToast("Comment successfully posted!", "success");
+        toast.success("Comment successfully posted!");
         fetchComments();
       }
     } catch (error) {
-      console.error("Error posting comment:", error);
-      onToast("Error posting comment.", "error");
+      logger.error("Error posting comment:", error);
+      toast.error("Error posting comment.");
     } finally {
       setLoading(false);
     }
@@ -118,8 +115,8 @@ export function CommentsPanel({
         type="single"
         collapsible
         className="w-full"
+        value={isCommentsOpen ? "item-1" : ""}
         onValueChange={(val) => setIsCommentsOpen(val === "item-1")}
-        defaultValue="item-1"
       >
         <AccordionItem value="item-1" className="border-none">
           <AccordionTrigger className="py-2 hover:no-underline font-semibold text-lg text-foreground">
