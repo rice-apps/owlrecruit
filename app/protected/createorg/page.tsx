@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Upload01 } from "@untitled-ui/icons-react";
+import { logger } from "@/lib/logger";
+import { toast } from "sonner";
 
 export default function NewOrgPage() {
   const router = useRouter();
@@ -63,7 +65,10 @@ export default function NewOrgPage() {
       // Force a full reload to ensure the sidebar layout updates with the new organization
       window.location.href = `/protected/org/${data.id}`;
     } catch (err) {
-      console.error("Error creating organization:", err);
+      logger.error("Error creating organization:", err);
+      toast.error(
+        err instanceof Error ? err.message : "Failed to create organization",
+      );
       setError(
         err instanceof Error ? err.message : "Failed to create organization",
       );

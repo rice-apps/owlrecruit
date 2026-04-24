@@ -63,6 +63,7 @@ export function EditOrgDialog({
     handleLogoChange(file);
   };
 
+
   const handleSave = async () => {
     if (!name.trim()) {
       setError("Organization name is required");

@@ -13,6 +13,8 @@ import {
   UsersPlus,
   X,
 } from "@untitled-ui/icons-react";
+import { logger } from "@/lib/logger";
+import { toast } from "sonner";
 
 interface EligibleReviewer {
   id: string;
@@ -23,6 +25,8 @@ interface EligibleReviewer {
     | { id: string; name: string | null; email: string }[]
     | null;
 }
+
+const MAX_RUBRIC_SCORE = 1_000_000_000_000;
 
 export default function NewOpeningPage() {
   const params = useParams<{ orgId: string }>();
@@ -73,7 +77,7 @@ export default function NewOpeningPage() {
           setEligibleReviewers(reviewerData);
         }
       } catch (err) {
-        console.error("Error fetching page data:", err);
+        logger.error("Error fetching page data:", err);
       }
     };
     fetchData();
@@ -86,6 +90,42 @@ export default function NewOpeningPage() {
     if (!formData.title.trim()) {
       setError("Position title is required");
       return;
+    }
+
+    const normalizedRubric = rubric.map((r) => ({
+      ...r,
+      name: r.name.trim(),
+      description: r.description.trim(),
+      max_val: Number(r.max_val),
+    }));
+
+    const hasRubricContent = normalizedRubric.some(
+      (r) => r.name !== "" || r.description !== "" || r.max_val !== 10,
+    );
+
+    if (hasRubricContent) {
+      if (normalizedRubric.some((r) => !r.name)) {
+        setError("All criteria must have a name.");
+        return;
+      }
+
+      const normalizedNames = normalizedRubric.map((r) =>
+        r.name.toLowerCase(),
+      );
+      if (new Set(normalizedNames).size !== normalizedNames.length) {
+        setError("Criteria names must be unique.");
+        return;
+      }
+
+      if (normalizedRubric.some((r) => r.max_val <= 0)) {
+        setError("Max score must be greater than 0.");
+        return;
+      }
+
+      if (normalizedRubric.some((r) => r.max_val > MAX_RUBRIC_SCORE)) {
+        setError("Max score must be less than or equal to 1,000,000,000,000.");
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -103,9 +143,11 @@ export default function NewOpeningPage() {
             ? new Date(formData.closes_at).toISOString()
             : null,
           status: formData.status,
+          reviewer_ids:
+            selectedReviewers.length > 0 ? selectedReviewers : undefined,
           rubric:
-            rubric.filter((r) => r.name.trim()).length > 0
-              ? rubric.map((r) => ({ ...r, max_val: Number(r.max_val) || 0 }))
+            hasRubricContent
+              ? normalizedRubric
               : undefined,
         }),
       });
@@ -117,7 +159,10 @@ export default function NewOpeningPage() {
 
       router.push(`/protected/org/${orgId}`);
     } catch (err) {
-      console.error("Error creating opening:", err);
+      logger.error("Error creating opening:", err);
+      toast.error(
+        err instanceof Error ? err.message : "Failed to create opening",
+      );
       setError(err instanceof Error ? err.message : "Failed to create opening");
     } finally {
       setIsSubmitting(false);
@@ -495,14 +540,20 @@ export default function NewOpeningPage() {
           <button
             type="button"
             onClick={() => {
-              setRubricOpen(!rubricOpen);
-              if (!rubricOpen && rubric.length === 0) {
+              if (rubricOpen) {
+                setRubric([]);
+                setRubricOpen(false);
+                return;
+              }
+
+              setRubricOpen(true);
+              if (rubric.length === 0) {
                 setRubric([{ name: "", max_val: 10, description: "" }]);
               }
             }}
             className="text-sm font-medium text-owl-purple hover:text-owl-purple/80 transition-colors"
           >
-            {rubricOpen ? "Hide Rubric" : "Add Rubric"}
+            {rubricOpen ? "Delete Rubric" : "Add Rubric"}
           </button>
 
           {rubricOpen && (
@@ -555,7 +606,7 @@ export default function NewOpeningPage() {
                     <Input
                       type="number"
                       min="1"
-                      max="100"
+                      max={MAX_RUBRIC_SCORE}
                       value={item.max_val}
                       onChange={(e) => {
                         const updated = [...rubric];

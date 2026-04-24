@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { logger } from "@/lib/logger";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogClose,
@@ -88,7 +90,7 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
       const data = await res.json();
       setMembers(data as unknown as Member[]);
     } catch (error) {
-      console.error(error);
+      logger.error("Failed to fetch members:", error);
     } finally {
       setIsLoading(false);
     }
@@ -121,7 +123,7 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
           const results = await res.json();
           setSearchResults(results as SearchedUser[]);
         } catch (error) {
-          console.error(error);
+          logger.error("Failed to search users:", error);
         } finally {
           setIsSearching(false);
         }
@@ -289,7 +291,8 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
       router.refresh();
       setOpen(false);
     } catch (error) {
-      console.error("Failed to save changes:", error);
+      logger.error("Failed to save changes:", error);
+      toast.error("Failed to save changes. Please try again.");
     } finally {
       setIsSaving(false);
     }

@@ -6,6 +6,7 @@
  */
 
 import { SupabaseClient } from "@supabase/supabase-js";
+import { logger } from "@/lib/logger";
 import {
   CSV_RESERVED_COLUMNS,
   REQUIRED_CSV_COLUMNS,
@@ -459,7 +460,7 @@ export async function processAndUploadApplications(
       customQuestions,
     );
   } catch (error: unknown) {
-    console.error("Failed to upsert questions:", error);
+    logger.error("Failed to upsert questions:", error);
   }
 
   for (let i = 0; i < csvData.length; i++) {
@@ -500,7 +501,7 @@ export async function processAndUploadApplications(
             .from("applicants")
             .update({ name })
             .eq("id", userId);
-          if (updateError) console.error("Error updating name:", updateError);
+          if (updateError) logger.error("Error updating name:", updateError);
         }
       } else {
         // Not in our cache of "applicants for this opening".

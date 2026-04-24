@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "@untitled-ui/icons-react";
 import { Json } from "@/types/supabase";
 import { createClient } from "@/lib/supabase/client";
+import { logger } from "@/lib/logger";
 import { ApplicantTabs } from "./components/ApplicantTabs";
 import { CommentsSidebar } from "@/app/protected/org/[orgId]/opening/[openingId]/applicant/[applicantId]/components/comments-sidebar";
 import {
@@ -140,7 +141,7 @@ export default function ApplicantReviewPage() {
         if (error) throw error;
         setApplicationData(data);
       } catch (err) {
-        console.error("Error fetching application data:", err);
+        logger.error("Error fetching application data:", err);
       } finally {
         setLoading(false);
       }
@@ -260,7 +261,7 @@ export default function ApplicantReviewPage() {
           return;
         }
 
-        console.error("Error fetching summary data:", error);
+        logger.error("Error fetching summary data:", error);
 
         if (isMounted) {
           setSummaryError("Unable to load summary data. Please try again.");

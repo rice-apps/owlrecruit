@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Enums } from "@/types/supabase";
+import { logger } from "@/lib/logger";
 
 // Application status type from database enum
 type ApplicationStatus = Enums<"status">;
@@ -126,7 +127,7 @@ export default function OrgStatusCard({ userId }: OrgStatusCardProps) {
         const data: OrgData = await response.json();
         setOrgData(data);
       } catch (err) {
-        console.error("Error fetching org data:", err);
+        logger.error("Error fetching org data:", err);
         setError(
           err instanceof Error ? err.message : "An unexpected error occurred",
         );
