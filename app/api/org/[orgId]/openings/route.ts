@@ -108,7 +108,7 @@ export async function POST(
       description: description?.trim() || null,
       application_link: application_link?.trim() || null,
       closes_at: closes_at || null,
-      status: status || "draft",
+      status: status || "open",
       reviewer_ids:
         reviewer_ids === undefined
           ? null

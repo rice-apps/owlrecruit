@@ -1,14 +1,13 @@
 /**
  * Opening Overview Page
  *
- * Displays opening details with tabs for Applicants, Questions, Overview, and Upload.
+ * Displays opening details with tabs for Overview, Applicants, Questions, and Upload.
  */
 
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { ArrowLeft } from "@untitled-ui/icons-react";
-import { EditOpeningDialog } from "@/components/edit-opening-dialog";
+import { ArrowLeft, Pencil01 } from "@untitled-ui/icons-react";
 import { OpeningStatusButton } from "@/components/opening-status-button";
 import { OpeningTabs } from "./components/OpeningTabs";
 import { ApplicantsList } from "./components/ApplicantsList";
@@ -47,7 +46,7 @@ export default async function OpeningOverviewPage({
   searchParams,
 }: OpeningOverviewPageProps) {
   const { orgId, openingId } = await params;
-  const { tab = "applicants" } = await searchParams;
+  const { tab = "overview" } = await searchParams;
   const supabase = await createClient();
 
   // Fetch the organization name
@@ -116,6 +115,14 @@ export default async function OpeningOverviewPage({
 
   const renderTabContent = () => {
     switch (tab) {
+      case "overview":
+        return (
+          <OverviewTab
+            applicants={applicants}
+            orgId={orgId}
+            openingId={openingId}
+          />
+        );
       case "applicants":
         return (
           <ApplicantsList
@@ -132,7 +139,9 @@ export default async function OpeningOverviewPage({
             applicationLink={openingData?.application_link ?? null}
           />
         );
-      case "overview":
+      case "upload":
+        return <UploadTab />;
+      default:
         return (
           <OverviewTab
             applicants={applicants}
@@ -142,10 +151,6 @@ export default async function OpeningOverviewPage({
             applicationLink={openingData?.application_link ?? null}
           />
         );
-      case "upload":
-        return <UploadTab />;
-      default:
-        return null;
     }
   };
 
@@ -168,17 +173,14 @@ export default async function OpeningOverviewPage({
             <h1 className="text-2xl font-bold">
               {openingData?.title || "Untitled Opening"}
             </h1>
-            <EditOpeningDialog
-              orgId={orgId}
-              openingId={openingId}
-              initialData={{
-                title: openingData?.title || "",
-                description: openingData?.description || undefined,
-                application_link: openingData?.application_link || undefined,
-                closes_at: openingData?.closes_at || undefined,
-                status: openingData?.status || "draft",
-              }}
-            />
+            <Link
+              href={`/protected/org/${orgId}/opening/${openingId}/edit`}
+              className="rounded-md p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800"
+              aria-label="Edit opening"
+              title="Edit opening"
+            >
+              <Pencil01 className="h-4 w-4" />
+            </Link>
           </div>
           <p className="text-gray-600 mt-2 max-w-2xl">
             {openingData?.description}

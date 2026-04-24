@@ -6,7 +6,6 @@ import { TabBar } from "@/components/tab-bar";
 const allTabs = [
   { id: "applicants", label: "Applicants" },
   { id: "questions", label: "Questions" },
-  { id: "overview", label: "Overview" },
   { id: "upload", label: "Upload Data" },
 ] as const;
 
@@ -19,7 +18,7 @@ interface OpeningTabsProps {
 export function OpeningTabs({ useNativeForm }: OpeningTabsProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const currentTab = (searchParams.get("tab") as TabId) || "applicants";
+  const currentTab = (searchParams.get("tab") as TabId) || "overview";
 
   const tabs = useNativeForm
     ? allTabs.filter((t) => t.id !== "upload")
