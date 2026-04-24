@@ -13,11 +13,26 @@ export default function NewOrgPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [logoFile, setLogoFile] = React.useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = React.useState<string | null>(null);
+  const logoInputRef = React.useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = React.useState({
     name: "",
     description: "",
   });
+
+  const handleLogoChange = (file: File | null) => {
+    if (!file) return;
+    setLogoFile(file);
+    setLogoPreview(URL.createObjectURL(file));
+  };
+
+  const handleLogoDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0] ?? null;
+    handleLogoChange(file);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,15 +46,14 @@ export default function NewOrgPage() {
     setIsSubmitting(true);
 
     try {
+      const body = new FormData();
+      body.append("name", formData.name.trim());
+      body.append("description", formData.description.trim());
+      if (logoFile) body.append("logo", logoFile);
+
       const response = await fetch("/api/orgs", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: formData.name.trim(),
-          description: formData.description.trim() || null,
-        }),
+        body,
       });
 
       const data = await response.json();
@@ -106,27 +120,39 @@ export default function NewOrgPage() {
         {/* Upload logo */}
         <div className="space-y-2">
           <Label className="text-sm font-medium text-gray-700">
-            Upload logo
+            Organization logo
           </Label>
-          <div className="border-2 border-dashed border-gray-300 rounded-md h-36 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-gray-400 transition-colors bg-white">
-            <Upload01 className="h-5 w-5 text-gray-400" />
-            <span className="text-sm text-gray-400">
-              Drag &amp; drop or click to upload
-            </span>
+          <div
+            className="border-2 border-dashed border-gray-300 rounded-md h-36 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-gray-400 transition-colors bg-white overflow-hidden"
+            onClick={() => logoInputRef.current?.click()}
+            onDrop={handleLogoDrop}
+            onDragOver={(e) => e.preventDefault()}
+          >
+            {logoPreview ? (
+              <img
+                src={logoPreview}
+                alt="Logo preview"
+                className="h-full w-full object-contain p-2"
+              />
+            ) : (
+              <>
+                <Upload01 className="h-5 w-5 text-gray-400" />
+                <span className="text-sm text-gray-400">
+                  Drag &amp; drop or click to upload
+                </span>
+              </>
+            )}
           </div>
-        </div>
-
-        {/* Upload banner */}
-        <div className="space-y-2">
-          <Label className="text-sm font-medium text-gray-700">
-            Upload banner
-          </Label>
-          <div className="border-2 border-dashed border-gray-300 rounded-md h-36 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-gray-400 transition-colors bg-white">
-            <Upload01 className="h-5 w-5 text-gray-400" />
-            <span className="text-sm text-gray-400">
-              Drag &amp; drop or click to upload
-            </span>
-          </div>
+          <input
+            ref={logoInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => handleLogoChange(e.target.files?.[0] ?? null)}
+          />
+          {logoFile && (
+            <p className="text-xs text-gray-500">{logoFile.name}</p>
+          )}
         </div>
 
         {/* Error message */}

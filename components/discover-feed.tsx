@@ -18,6 +18,7 @@ interface Opening {
   application_link?: string;
   org: {
     name: string;
+    logo_url?: string | null;
   };
   closes_at?: string;
 }
@@ -116,8 +117,16 @@ export function DiscoverFeed() {
               >
                 {/* Pink header band */}
                 <div className="bg-owl-pink rounded-t-[20px] h-16 relative">
-                  <div className="absolute -bottom-5 left-4 w-12 h-12 rounded-lg bg-white flex items-center justify-center text-owl-purple font-bold text-xl shadow-sm border border-gray-100">
-                    {opening.org.name.charAt(0)}
+                  <div className="absolute -bottom-5 left-4 w-12 h-12 rounded-lg bg-white flex items-center justify-center text-owl-purple font-bold text-xl shadow-sm border border-gray-100 overflow-hidden">
+                    {opening.org.logo_url ? (
+                      <img
+                        src={opening.org.logo_url}
+                        alt={`${opening.org.name} logo`}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      opening.org.name.charAt(0)
+                    )}
                   </div>
                 </div>
 

@@ -12,7 +12,7 @@ export async function GET(request: Request) {
       .select(
         `
         *,
-        org:orgs(name)
+        org:orgs(name, logo_url)
       `,
       );
 

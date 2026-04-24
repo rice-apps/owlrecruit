@@ -30,8 +30,21 @@ export async function PATCH(
     );
   }
 
-  const body = await request.json();
-  const { name, description } = body;
+  const contentType = request.headers.get("content-type") || "";
+  let name: string | undefined;
+  let description: string | undefined;
+  let logoFile: File | null = null;
+
+  if (contentType.includes("application/json")) {
+    const body = await request.json();
+    name = body.name;
+    description = body.description;
+  } else if (contentType.includes("multipart/form-data")) {
+    const formData = await request.formData();
+    name = formData.get("name") as string | undefined;
+    description = formData.get("description") as string | undefined;
+    logoFile = formData.get("logo") as File | null;
+  }
 
   if (name !== undefined && !name?.trim()) {
     return NextResponse.json(
@@ -43,6 +56,31 @@ export async function PATCH(
   const updates: Record<string, unknown> = {};
   if (name !== undefined) updates.name = name.trim();
   if (description !== undefined) updates.description = description?.trim() || null;
+
+  // Handle logo upload if provided
+  if (logoFile && logoFile.size > 0) {
+    const ext = logoFile.name.split(".").pop();
+    const path = `logos/${crypto.randomUUID()}.${ext}`;
+    const bytes = await logoFile.arrayBuffer();
+
+    const { error: uploadError } = await supabase.storage
+      .from("org-assets")
+      .upload(path, bytes, { contentType: logoFile.type });
+
+    if (uploadError) {
+      return NextResponse.json(
+        { error: "Failed to upload logo" },
+        { status: 500 },
+      );
+    }
+
+    const { data: urlData } = supabase.storage
+      .from("org-assets")
+      .getPublicUrl(path);
+
+    updates.logo_url = urlData.publicUrl;
+  }
+
 
   const { error: updateError } = await supabase
     .from("orgs")

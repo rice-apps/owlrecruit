@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { Eye } from "@untitled-ui/icons-react";
 import { EditOrgDialog } from "@/components/edit-org-dialog";
@@ -10,6 +10,7 @@ type OrgPageHeaderProps = {
   roleLabel: string;
   isAdmin: boolean;
   hasRoleError: boolean;
+  logoUrl?: string | null;
 };
 
 export function OrgPageHeader({
@@ -19,6 +20,7 @@ export function OrgPageHeader({
   roleLabel,
   isAdmin,
   hasRoleError,
+  logoUrl,
 }: OrgPageHeaderProps) {
   const orgInitial = displayOrgName.charAt(0).toUpperCase();
   const headerButtonClasses =
@@ -30,6 +32,7 @@ export function OrgPageHeader({
         <div aria-hidden="true" className="h-[72px] rounded-3xl bg-rose-300" />
       </div>
       <Avatar className="absolute left-8 top-[54px] h-16 w-16 rounded-xl border-4 border-slate-50 bg-white shadow-md">
+        {logoUrl && <AvatarImage src={logoUrl} alt={`${displayOrgName} logo`} className="object-cover" />}
         <AvatarFallback className="bg-white text-rose-500 text-3xl font-semibold">
           {orgInitial}
         </AvatarFallback>
@@ -77,6 +80,7 @@ export function OrgPageHeader({
                 orgId={orgId}
                 orgName={displayOrgName}
                 orgDescription={orgDescription}
+                orgLogoUrl={logoUrl}
                 triggerClassName={headerButtonClasses}
               />
             ) : (
