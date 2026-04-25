@@ -1,110 +1,103 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
-import { Eye } from "@untitled-ui/icons-react";
+import {
+  Avatar,
+  Badge,
+  Button,
+  Card,
+  Group,
+  Stack,
+  Text,
+  ActionIcon,
+} from "@mantine/core";
+import { ChevronDown, Eye, Users01, File02 } from "@untitled-ui/icons-react";
 import { EditOrgDialog } from "@/components/edit-org-dialog";
 
 type OrgPageHeaderProps = {
   orgId: string;
   displayOrgName: string;
   orgDescription: string | null;
-  roleLabel: string;
   isAdmin: boolean;
   hasRoleError: boolean;
   logoUrl?: string | null;
+  memberCount: number;
+  openPositionCount: number;
 };
 
 export function OrgPageHeader({
   orgId,
   displayOrgName,
   orgDescription,
-  roleLabel,
   isAdmin,
   hasRoleError,
   logoUrl,
+  memberCount,
+  openPositionCount,
 }: OrgPageHeaderProps) {
   const orgInitial = displayOrgName.charAt(0).toUpperCase();
-  const headerButtonClasses =
-    "inline-flex h-8 w-8 items-center justify-center text-slate-500 transition hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-60";
 
   return (
-    <div className="relative overflow-hidden rounded-[28px] border border-slate-200 bg-slate-50">
-      <div className="px-4 pt-4">
-        <div aria-hidden="true" className="h-[72px] rounded-3xl bg-rose-300" />
-      </div>
-      <Avatar className="absolute left-8 top-[54px] h-16 w-16 rounded-xl border-4 border-slate-50 bg-white shadow-md">
-        {logoUrl && <AvatarImage src={logoUrl} alt={`${displayOrgName} logo`} className="object-cover" />}
-        <AvatarFallback className="bg-white text-rose-500 text-3xl font-semibold">
-          {orgInitial}
-        </AvatarFallback>
-      </Avatar>
-      <div className="px-8 pb-6 pt-16 sm:pb-7">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-4xl font-medium tracking-tight text-slate-950 md:text-5xl">
+    <Card radius="lg" shadow="sm" p="xl">
+      <Group justify="space-between" align="center">
+        {/* Left: logo + name + counts */}
+        <Group align="center" gap="md">
+          <Avatar src={logoUrl || undefined} radius="md" size={56} color="gray">
+            {orgInitial}
+          </Avatar>
+          <Stack gap={4}>
+            <Group gap="sm" align="center">
+              <Text fw={700} size="xl">
                 {displayOrgName}
-              </h1>
-              <span
-                className={cn(
-                  "inline-flex items-center rounded-full border px-3 py-0.5 text-xs font-semibold",
-                  isAdmin
-                    ? "border-owl-purple/30 bg-owl-purple/10 text-owl-purple"
-                    : "border-slate-200 bg-slate-100 text-slate-500",
-                )}
-              >
-                {roleLabel}
-              </span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 pt-3">
-            <button
-              type="button"
-              disabled
-              aria-disabled="true"
-              aria-label={
-                hasRoleError
-                  ? "View organization unavailable"
-                  : "View organization"
-              }
-              className={headerButtonClasses}
-            >
-              <Eye className="h-[22px] w-[22px]" />
-              <span className="sr-only">
-                {hasRoleError
-                  ? "View organization unavailable"
-                  : "View organization"}
-              </span>
-            </button>
-            {isAdmin && !hasRoleError ? (
-              <EditOrgDialog
-                orgId={orgId}
-                orgName={displayOrgName}
-                orgDescription={orgDescription}
-                orgLogoUrl={logoUrl}
-                triggerClassName={headerButtonClasses}
+              </Text>
+              {isAdmin && !hasRoleError && (
+                <Badge color="owlTeal" variant="filled" radius="xl">
+                  Admin
+                </Badge>
+              )}
+            </Group>
+            <Group gap="xs">
+              <Users01
+                width={14}
+                height={14}
+                color="var(--mantine-color-gray-5)"
               />
-            ) : (
-              <button
-                type="button"
-                disabled
-                aria-disabled="true"
-                aria-label={
-                  hasRoleError
-                    ? "Edit organization unavailable"
-                    : "Edit organization"
-                }
-                className={headerButtonClasses}
-              >
-                <span className="sr-only">
-                  {hasRoleError
-                    ? "Edit organization unavailable"
-                    : "Edit organization"}
-                </span>
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
+              <Text size="sm" c="dimmed">
+                {memberCount} {memberCount === 1 ? "member" : "members"}
+              </Text>
+              <File02
+                width={14}
+                height={14}
+                color="var(--mantine-color-gray-5)"
+              />
+              <Text size="sm" c="dimmed">
+                {openPositionCount} open{" "}
+                {openPositionCount === 1 ? "position" : "positions"}
+              </Text>
+            </Group>
+          </Stack>
+        </Group>
+
+        {/* Right: admin controls */}
+        {isAdmin && !hasRoleError && (
+          <Group gap="xs">
+            <Button
+              variant="outline"
+              radius="xl"
+              color="gray"
+              size="xs"
+              rightSection={<ChevronDown width={14} height={14} />}
+            >
+              Joined
+            </Button>
+            <ActionIcon variant="subtle" color="gray" aria-label="Preview">
+              <Eye width={16} height={16} />
+            </ActionIcon>
+            <EditOrgDialog
+              orgId={orgId}
+              orgName={displayOrgName}
+              orgDescription={orgDescription}
+            />
+          </Group>
+        )}
+      </Group>
+    </Card>
   );
 }

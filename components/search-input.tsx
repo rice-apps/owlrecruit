@@ -1,8 +1,7 @@
 "use client";
 
 import { SearchMd, Sliders01 } from "@untitled-ui/icons-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { ActionIcon, Group, TextInput } from "@mantine/core";
 
 interface SearchInputProps {
   value: string;
@@ -20,19 +19,40 @@ export function SearchInput({
   onFilterClick,
 }: SearchInputProps) {
   return (
-    <div className="flex items-center gap-4 bg-white p-2 rounded-lg border border-[#C5C5C5] shadow-sm">
-      <SearchMd className="text-gray-400 ml-2" />
-      <Input
+    <Group
+      gap="xs"
+      style={{
+        background: "white",
+        border: "1px solid var(--mantine-color-gray-3)",
+        borderRadius: "var(--mantine-radius-md)",
+        padding: "0.375rem 0.5rem",
+        boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+      }}
+    >
+      <SearchMd
+        width={18}
+        height={18}
+        style={{ color: "var(--mantine-color-gray-5)", flexShrink: 0 }}
+      />
+      <TextInput
         placeholder={placeholder}
-        className="border-0 shadow-none focus-visible:ring-0 text-base"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => onChange(e.currentTarget.value)}
+        variant="unstyled"
+        size="sm"
+        style={{ flex: 1 }}
+        styles={{ input: { fontSize: 16 } }}
       />
       {showFilter && (
-        <Button variant="ghost" size="icon" onClick={onFilterClick}>
-          <Sliders01 className="w-5 h-5 text-gray-500" />
-        </Button>
+        <ActionIcon
+          variant="subtle"
+          color="gray"
+          size="sm"
+          onClick={onFilterClick}
+        >
+          <Sliders01 width={18} height={18} />
+        </ActionIcon>
       )}
-    </div>
+    </Group>
   );
 }

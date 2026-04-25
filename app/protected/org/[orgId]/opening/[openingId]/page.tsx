@@ -6,9 +6,11 @@
 
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { ActionIcon, Box, Card, Group, Stack, Text } from "@mantine/core";
 import Link from "next/link";
-import { ArrowLeft, Pencil01 } from "@untitled-ui/icons-react";
+import { Pencil01 } from "@untitled-ui/icons-react";
 import { OpeningStatusButton } from "@/components/opening-status-button";
+import { OpeningStatusBadge } from "@/components/StatusBadge";
 import { OpeningTabs } from "./components/OpeningTabs";
 import { ApplicantsList } from "./components/ApplicantsList";
 import { OverviewTab } from "./components/OverviewTab";
@@ -16,6 +18,7 @@ import { UploadTab } from "./components/UploadTab";
 import { QuestionsTab } from "./components/QuestionsTab";
 import type { ApplicationStatus } from "@/types/app";
 import { logger } from "@/lib/logger";
+import { Breadcrumb } from "@/components/Breadcrumb";
 
 interface OpeningOverviewPageProps {
   params: Promise<{ orgId: string; openingId: string }>;
@@ -49,21 +52,18 @@ export default async function OpeningOverviewPage({
   const { tab = "overview" } = await searchParams;
   const supabase = await createClient();
 
-  // Fetch the organization name
   const { data: orgData } = await supabase
     .from("orgs")
     .select("name")
     .eq("id", orgId)
     .single();
 
-  // Fetch the opening details
   const { data: openingData } = await supabase
     .from("openings")
     .select("title, description, status, application_link, closes_at")
     .eq("id", openingId)
     .single();
 
-  // Fetch applications with user data for this specific opening
   const { data: applications, error: appError } = (await supabase
     .from("applications")
     .select(
@@ -94,8 +94,6 @@ export default async function OpeningOverviewPage({
     logger.error("Error fetching applications:", appError);
   }
 
-  // Transform applications to applicants list format
-  // Prefer user info if users_id is not empty, otherwise use applicant info
   const applicants = (applications || [])
     .map((app) => {
       const userData = app.user || app.applicant;
@@ -155,51 +153,67 @@ export default async function OpeningOverviewPage({
   };
 
   return (
-    <div className="flex-1 w-full max-w-5xl flex flex-col gap-6">
-      {/* Back link */}
-      <Link
-        href={`/protected/org/${orgId}`}
-        className="flex items-center gap-2 w-fit text-sm text-gray-500 hover:text-gray-700 transition-colors"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back to Openings
-      </Link>
+    <Stack gap="lg" style={{ flex: 1, width: "100%" }}>
+      {/* Breadcrumb */}
+      <Breadcrumb
+        items={[
+          {
+            label: orgData?.name || "Organization",
+            href: `/protected/org/${orgId}`,
+          },
+          { label: openingData?.title || "Opening" },
+        ]}
+      />
 
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm text-gray-500 mb-1">{orgData?.name}</p>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold">
-              {openingData?.title || "Untitled Opening"}
-            </h1>
-            <Link
-              href={`/protected/org/${orgId}/opening/${openingId}/edit`}
-              className="rounded-md p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800"
-              aria-label="Edit opening"
-              title="Edit opening"
-            >
-              <Pencil01 className="h-4 w-4" />
+      {/* Header card */}
+      <Card radius="lg" shadow="sm" withBorder={false} p="xl">
+        <Group justify="space-between" align="flex-start">
+          <Stack gap="xs" style={{ flex: 1 }}>
+            <Group gap="sm" align="center">
+              <Text fw={700} size="xl">
+                {openingData?.title || "Untitled Opening"}
+              </Text>
+              <OpeningStatusBadge status={openingData?.status || "draft"} />
+            </Group>
+            {openingData?.description && (
+              <Text c="dimmed">{openingData.description}</Text>
+            )}
+          </Stack>
+          <Group gap="xs">
+            <OpeningStatusButton
+              orgId={orgId}
+              openingId={openingId}
+              status={openingData?.status || "draft"}
+            />
+            <Link href={`/protected/org/${orgId}/opening/${openingId}/edit`}>
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                size="sm"
+                aria-label="Edit opening"
+              >
+                <Pencil01 width={16} height={16} />
+              </ActionIcon>
             </Link>
-          </div>
-          <p className="text-gray-600 mt-2 max-w-2xl">
-            {openingData?.description}
-          </p>
-        </div>
-        <OpeningStatusButton
-          orgId={orgId}
-          openingId={openingId}
-          status={openingData?.status || "draft"}
-        />
-      </div>
+          </Group>
+        </Group>
+      </Card>
 
-      {/* Tabs */}
-      <Suspense fallback={<div className="h-12" />}>
-        <OpeningTabs useNativeForm={!openingData?.application_link} />
-      </Suspense>
-
-      {/* Tab content */}
-      <div className="flex-1">{renderTabContent()}</div>
-    </div>
+      {/* Tabs and content */}
+      <Card
+        radius="lg"
+        shadow="sm"
+        withBorder={false}
+        p={0}
+        style={{ flex: 1 }}
+      >
+        <Box px="xl" pt="xl" pb="sm">
+          <Suspense fallback={<Box h={32} />}>
+            <OpeningTabs useNativeForm={!openingData?.application_link} />
+          </Suspense>
+        </Box>
+        <Box px="xl">{renderTabContent()}</Box>
+      </Card>
+    </Stack>
   );
 }

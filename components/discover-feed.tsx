@@ -1,191 +1,162 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { logger } from "@/lib/logger";
 import Link from "next/link";
-import { LinkExternal01 } from "@untitled-ui/icons-react";
-import { Badge } from "@/components/ui/badge";
-import { SearchInput } from "@/components/search-input";
-import { FilterDialog, FilterState } from "@/components/filter-dialog";
+import {
+  SimpleGrid,
+  Card,
+  Text,
+  Avatar,
+  Loader,
+  Center,
+  Stack,
+  Box,
+  TextInput,
+} from "@mantine/core";
+import { SearchMd } from "@untitled-ui/icons-react";
+import { ApplicationStatusBadge } from "@/components/StatusBadge";
+import { formatDate } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 
 interface Opening {
   id: string;
   title: string;
-  description: string;
+  description: string | null;
   created_at: string;
-  status: "open" | "closed" | "paused";
+  status: string;
   org_id: string;
-  application_link?: string;
-  org: {
-    name: string;
-    logo_url?: string | null;
-  };
-  closes_at?: string;
-}
-
-function isValidUrl(url: string | undefined): boolean {
-  if (!url) return false;
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return false;
-  }
+  application_link: string | null;
+  closes_at: string | null;
+  org: { name: string; logo_url?: string | null };
+  applicationStatus: string | null;
 }
 
 export function DiscoverFeed() {
   const [openings, setOpenings] = useState<Opening[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
-  const [filters, setFilters] = useState<FilterState>({
-    statuses: ["open"],
-    datePosted: "all",
-    deadline: "all",
-    sort: "recent",
-  });
 
   useEffect(() => {
     async function fetchOpenings() {
+      setLoading(true);
       try {
         const params = new URLSearchParams({
-          statuses: filters.statuses.join(","),
-          datePosted: filters.datePosted,
-          deadline: filters.deadline,
-          sort: filters.sort,
+          statuses: "open",
+          datePosted: "all",
+          deadline: "all",
+          sort: "recent",
         });
-
-        const response = await fetch(`/api/openings?${params}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch openings");
-        }
-        const data = await response.json();
-        setOpenings(data);
+        const res = await fetch(`/api/openings?${params}`);
+        if (!res.ok) throw new Error("Failed to fetch openings");
+        const json = await res.json();
+        setOpenings(json.data ?? json);
       } catch (error) {
         logger.error("Error fetching openings:", error);
       } finally {
         setLoading(false);
       }
     }
-
     fetchOpenings();
-  }, [filters]);
+  }, []);
 
-  const filteredOpenings = openings.filter(
-    (opening) =>
-      opening.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      opening.org.name.toLowerCase().includes(searchQuery.toLowerCase()),
+  const filtered = openings.filter(
+    (o) =>
+      o.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      o.org.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  const handleApplyFilters = (newFilters: FilterState) => {
-    setFilters(newFilters);
-  };
-
   return (
-    <div className="flex flex-col gap-6 w-full max-w-7xl">
-      {/* Search Header */}
-      <SearchInput
-        value={searchQuery}
-        onChange={setSearchQuery}
-        placeholder="Search organizations, positions..."
-        showFilter
-        onFilterClick={() => setFilterDialogOpen(true)}
-      />
+    <Stack gap="lg">
+      {/* Dark banner */}
+      <Box
+        bg="dark.6"
+        p="xl"
+        style={{ borderRadius: "var(--mantine-radius-xl)" }}
+      >
+        <Text c="white" fw={700} size="xl" mb={4}>
+          Discover
+        </Text>
+        <Text c="dark.2" size="sm" mb="md">
+          Find open positions across organizations.
+        </Text>
+        <TextInput
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.currentTarget.value)}
+          placeholder="Search clubs, roles..."
+          radius="xl"
+          leftSection={<SearchMd width={16} height={16} />}
+          styles={{
+            input: { background: "white" },
+          }}
+        />
+      </Box>
 
-      <FilterDialog
-        open={filterDialogOpen}
-        onOpenChange={setFilterDialogOpen}
-        filters={filters}
-        onApply={handleApplyFilters}
-      />
-
-      <div>
-        <h2 className="text-lg font-semibold mb-4">Recent Postings</h2>
-
-        {loading ? (
-          <div className="text-center py-10">Loading...</div>
-        ) : filteredOpenings.length === 0 ? (
-          <div className="text-center py-10 text-gray-500">
-            No open roles found.
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filteredOpenings.map((opening) => (
-              <div
-                key={opening.id}
-                className="flex flex-col h-full rounded-[20px] shadow-md bg-white overflow-hidden"
+      {loading ? (
+        <Center py="xl">
+          <Loader size="sm" />
+        </Center>
+      ) : filtered.length === 0 ? (
+        <Center py="xl">
+          <Text c="dimmed">No open roles found.</Text>
+        </Center>
+      ) : (
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing="md">
+          {filtered.map((opening) => (
+            <Link
+              key={opening.id}
+              href={`/apply/${opening.id}`}
+              style={{ textDecoration: "none" }}
+            >
+              <Card
+                radius="lg"
+                shadow="sm"
+                p="md"
+                style={{
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  cursor: "pointer",
+                }}
               >
-                {/* Pink header band */}
-                <div className="bg-owl-pink rounded-t-[20px] h-16 relative">
-                  <div className="absolute -bottom-5 left-4 w-12 h-12 rounded-lg bg-white flex items-center justify-center text-owl-purple font-bold text-xl shadow-sm border border-gray-100 overflow-hidden">
-                    {opening.org.logo_url ? (
-                      <img
-                        src={opening.org.logo_url}
-                        alt={`${opening.org.name} logo`}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      opening.org.name.charAt(0)
-                    )}
-                  </div>
-                </div>
+                {/* Org logo */}
+                <Avatar
+                  src={opening.org.logo_url || undefined}
+                  radius="md"
+                  size={48}
+                  color="gray"
+                >
+                  {opening.org.name.charAt(0).toUpperCase()}
+                </Avatar>
 
-                {/* Card body */}
-                <div className="flex flex-col flex-grow p-4 pt-8">
-                  <div>
-                    <h3 className="font-bold text-lg leading-tight">
-                      {opening.title}
-                    </h3>
-                    <p className="text-sm text-gray-500">{opening.org.name}</p>
-                  </div>
-                  <div className="mt-2">
-                    <Badge variant="default">Open</Badge>
-                  </div>
-                </div>
+                <Text fw={700} size="md" mt="sm" lh={1.3}>
+                  {opening.title}
+                </Text>
+                <Text size="sm" c="dimmed">
+                  {opening.org.name}
+                </Text>
 
-                {/* Footer */}
-                {isValidUrl(opening.application_link) ? (
-                  <Link
-                    href={opening.application_link!}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-4 py-3 border-t text-xs text-gray-400 flex justify-between items-center hover:bg-gray-50 transition-colors"
-                  >
-                    <span>
-                      {opening.closes_at
-                        ? `Due ${new Date(opening.closes_at).toLocaleDateString(
-                            "en-US",
-                            {
-                              month: "2-digit",
-                              day: "2-digit",
-                              year: "numeric",
-                            },
-                          )}`
-                        : "No deadline"}
-                    </span>
-                    <LinkExternal01 className="w-4 h-4 text-gray-400" />
-                  </Link>
-                ) : (
-                  <div className="px-4 py-3 border-t text-xs text-gray-400">
-                    <span>
-                      {opening.closes_at
-                        ? `Due ${new Date(opening.closes_at).toLocaleDateString(
-                            "en-US",
-                            {
-                              month: "2-digit",
-                              day: "2-digit",
-                              year: "numeric",
-                            },
-                          )}`
-                        : "No deadline"}
-                    </span>
-                  </div>
+                {opening.applicationStatus && (
+                  <ApplicationStatusBadge
+                    status={opening.applicationStatus}
+                    size="xs"
+                  />
                 )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+
+                <Text
+                  size="xs"
+                  c="dimmed"
+                  mt="xs"
+                  style={{ marginTop: "auto" }}
+                >
+                  {opening.closes_at
+                    ? `Due ${formatDate(opening.closes_at)}`
+                    : "No deadline"}
+                </Text>
+              </Card>
+            </Link>
+          ))}
+        </SimpleGrid>
+      )}
+    </Stack>
   );
 }

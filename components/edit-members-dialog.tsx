@@ -2,31 +2,26 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { logger } from "@/lib/logger";
-import { toast } from "sonner";
 import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
+  Modal,
+  TextInput,
+  Button,
   Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Users01, X } from "@untitled-ui/icons-react";
+  Avatar,
+  Text,
+  Group,
+  Stack,
+  Box,
+  Badge,
+  Loader,
+  Paper,
+} from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import { Users01 } from "@untitled-ui/icons-react";
+import { logger } from "@/lib/logger";
 
 type Member = {
-  id: string; // org_members.id
+  id: string;
   role: "admin" | "reviewer";
   user_id: string;
   users: {
@@ -87,8 +82,8 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
         cache: "no-store",
       });
       if (!res.ok) throw new Error("Failed to fetch members");
-      const data = await res.json();
-      setMembers(data as unknown as Member[]);
+      const json = await res.json();
+      setMembers((json.data ?? json) as Member[]);
     } catch (error) {
       logger.error("Failed to fetch members:", error);
     } finally {
@@ -96,7 +91,7 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
     }
   }, [orgId]);
 
-  // Initial load — reset all state when dialog opens
+  // Reset state when dialog opens
   useEffect(() => {
     if (open) {
       fetchMembers();
@@ -109,7 +104,7 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
     }
   }, [open, fetchMembers]);
 
-  // Search logic
+  // Search
   useEffect(() => {
     if (debouncedSearch) {
       const search = async () => {
@@ -120,8 +115,8 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
             { cache: "no-store" },
           );
           if (!res.ok) throw new Error("Failed to search users");
-          const results = await res.json();
-          setSearchResults(results as SearchedUser[]);
+          const json = await res.json();
+          setSearchResults((json.data ?? json) as SearchedUser[]);
         } catch (error) {
           logger.error("Failed to search users:", error);
         } finally {
@@ -134,25 +129,7 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
     }
   }, [debouncedSearch, orgId]);
 
-  // Close search dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      // Ignore clicks inside the search container
-      if (searchContainerRef.current?.contains(target)) return;
-      // Ignore clicks inside portaled Radix Select content (rendered at body level)
-      if (target.closest("[data-radix-popper-content-wrapper]")) return;
-      setSearchQuery("");
-    };
-    if (searchQuery) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () =>
-        document.removeEventListener("mousedown", handleClickOutside);
-    }
-  }, [searchQuery]);
-
   const handleAddMember = (user: SearchedUser, role: "admin" | "reviewer") => {
-    // Add to local members list
     const newMember: Member = {
       id: `pending-${user.id}`,
       role,
@@ -161,14 +138,12 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
     };
     setMembers((prev) => [...prev, newMember]);
 
-    // Track as pending add
     setPendingAdds((prev) => {
       const next = new Map(prev);
       next.set(user.id, { user, role });
       return next;
     });
 
-    // If this user was previously pending removal, remove from removals
     setPendingRemovals((prev) => {
       if (prev.has(user.id)) {
         const next = new Set(prev);
@@ -178,8 +153,8 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
       return prev;
     });
 
-    // Remove from search results
     setSearchResults((prev) => prev.filter((u) => u.id !== user.id));
+    setSearchQuery("");
   };
 
   const handleUndoRemoval = (userId: string) => {
@@ -193,7 +168,6 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
   const handleRoleChange = (userId: string, newRole: string) => {
     if (newRole === "Remove") {
       if (pendingAdds.has(userId)) {
-        // Was a pending add — just remove it entirely
         setMembers((prev) => prev.filter((m) => m.user_id !== userId));
         setPendingAdds((prev) => {
           const next = new Map(prev);
@@ -201,13 +175,11 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
           return next;
         });
       } else {
-        // Existing member — mark for removal but keep in list
         setPendingRemovals((prev) => {
           const next = new Set(prev);
           next.add(userId);
           return next;
         });
-        // Clean up any pending role change
         setPendingRoleChanges((prev) => {
           if (prev.has(userId)) {
             const next = new Map(prev);
@@ -221,14 +193,11 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
     }
 
     const typedRole = newRole as "admin" | "reviewer";
-
-    // Update local members list
     setMembers((prev) =>
       prev.map((m) => (m.user_id === userId ? { ...m, role: typedRole } : m)),
     );
 
     if (pendingAdds.has(userId)) {
-      // Update the pending add's role
       setPendingAdds((prev) => {
         const next = new Map(prev);
         const existing = next.get(userId)!;
@@ -236,7 +205,6 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
         return next;
       });
     } else {
-      // Existing member — track role change
       setPendingRoleChanges((prev) => {
         const next = new Map(prev);
         next.set(userId, typedRole);
@@ -256,7 +224,6 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
 
       const promises: Promise<Response>[] = [];
 
-      // Process additions
       for (const [userId, { role }] of pendingAdds) {
         promises.push(
           fetch(`/api/org/${orgId}/members`, {
@@ -267,7 +234,6 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
         );
       }
 
-      // Process role changes
       for (const [userId, role] of pendingRoleChanges) {
         promises.push(
           fetch(`/api/org/${orgId}/members/${userId}`, {
@@ -278,12 +244,9 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
         );
       }
 
-      // Process removals
       for (const userId of pendingRemovals) {
         promises.push(
-          fetch(`/api/org/${orgId}/members/${userId}`, {
-            method: "DELETE",
-          }),
+          fetch(`/api/org/${orgId}/members/${userId}`, { method: "DELETE" }),
         );
       }
 
@@ -292,79 +255,108 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
       setOpen(false);
     } catch (error) {
       logger.error("Failed to save changes:", error);
-      toast.error("Failed to save changes. Please try again.");
+      notifications.show({
+        color: "red",
+        message: "Failed to save changes. Please try again.",
+      });
     } finally {
       setIsSaving(false);
     }
   };
 
-  // Filter search results to exclude users already in the members list
   const filteredSearchResults = searchResults.filter(
     (user) => !members.some((m) => m.user_id === user.id),
   );
 
+  const isLastAdmin = (userId: string) =>
+    members.filter((m) => m.role === "admin" && !pendingRemovals.has(m.user_id))
+      .length === 1 &&
+    members.find((m) => m.user_id === userId)?.role === "admin";
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2">
-          <Users01 className="w-4 h-4" />
-          Edit Members
-        </Button>
-      </DialogTrigger>
-      {/* Set showCloseButton=false so we can place X on the left like the design */}
-      <DialogContent
-        showCloseButton={false}
-        className="sm:max-w-md p-6 max-h-[85vh] flex flex-col gap-6"
+    <>
+      <Button
+        leftSection={<Users01 width={16} height={16} />}
+        variant="default"
+        onClick={() => setOpen(true)}
       >
-        <DialogHeader className="space-y-4">
-          <div className="flex items-center gap-2">
-            <DialogClose className="opacity-70 transition-opacity hover:opacity-100 rounded-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
-              <X className="h-5 w-5" />
-              <span className="sr-only">Close</span>
-            </DialogClose>
-          </div>
-          <DialogTitle className="sr-only">Edit members</DialogTitle>
-          <DialogDescription className="sr-only">
-            Add or remove organization members and change their roles.
-          </DialogDescription>
-          <div className="relative" ref={searchContainerRef}>
-            <Input
-              placeholder="Add members"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full text-base font-medium py-6"
-            />
-            {/* Search results as floating overlay */}
-            {searchQuery && (
-              <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-[240px] overflow-y-auto rounded-md border bg-popover p-2 shadow-md">
-                {isSearching ? (
-                  <p className="px-2 py-3 text-sm text-muted-foreground">
-                    Searching...
-                  </p>
-                ) : filteredSearchResults.length > 0 ? (
-                  filteredSearchResults.map((user) => (
-                    <div
-                      key={user.id}
-                      className="flex items-center justify-between gap-3 rounded-sm px-2 py-2 hover:bg-accent"
-                    >
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback className="bg-muted text-muted-foreground text-xs">
-                            {user.name.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium">
-                            {user.name}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {user.email}
-                          </span>
-                        </div>
+        Edit Members
+      </Button>
+
+      <Modal
+        opened={open}
+        onClose={() => setOpen(false)}
+        title="Edit members"
+        size="md"
+        styles={{
+          body: { display: "flex", flexDirection: "column", gap: "1rem" },
+        }}
+      >
+        {/* Search */}
+        <Box ref={searchContainerRef} style={{ position: "relative" }}>
+          <TextInput
+            placeholder="Search to add members..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.currentTarget.value)}
+            rightSection={isSearching ? <Loader size="xs" /> : null}
+          />
+
+          {searchQuery && (
+            <Paper
+              shadow="md"
+              withBorder
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                top: "100%",
+                zIndex: 200,
+                marginTop: 4,
+                maxHeight: 240,
+                overflowY: "auto",
+                padding: "0.5rem",
+              }}
+            >
+              {isSearching ? (
+                <Text size="sm" c="dimmed" p="xs">
+                  Searching...
+                </Text>
+              ) : filteredSearchResults.length > 0 ? (
+                filteredSearchResults.map((user) => (
+                  <Box
+                    key={user.id}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: "0.75rem",
+                      padding: "0.5rem",
+                      borderRadius: 6,
+                    }}
+                  >
+                    <Group gap="sm">
+                      <Avatar size={32} radius="md" color="owlTeal">
+                        {user.name.charAt(0).toUpperCase()}
+                      </Avatar>
+                      <div>
+                        <Text size="sm" fw={500}>
+                          {user.name}
+                        </Text>
+                        <Text size="xs" c="dimmed">
+                          {user.email}
+                        </Text>
                       </div>
-                      <Select
-                        onValueChange={(val) => {
-                          // Defer so the Select can finish closing before we unmount the row
+                    </Group>
+                    <Select
+                      size="xs"
+                      w={110}
+                      placeholder="Add as..."
+                      data={[
+                        { value: "reviewer", label: "Reviewer" },
+                        { value: "admin", label: "Admin" },
+                      ]}
+                      onChange={(val) => {
+                        if (val)
                           setTimeout(
                             () =>
                               handleAddMember(
@@ -373,131 +365,122 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
                               ),
                             0,
                           );
-                        }}
-                      >
-                        <SelectTrigger className="w-[110px] h-8 text-xs">
-                          <SelectValue placeholder="Add as..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="reviewer">Reviewer</SelectItem>
-                          <SelectItem value="admin">Admin</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  ))
-                ) : (
-                  <p className="px-2 py-3 text-sm text-muted-foreground">
-                    No users found.
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-        </DialogHeader>
+                      }}
+                    />
+                  </Box>
+                ))
+              ) : (
+                <Text size="sm" c="dimmed" p="xs">
+                  No users found.
+                </Text>
+              )}
+            </Paper>
+          )}
+        </Box>
 
-        <div className="flex-1 overflow-y-auto space-y-4 pr-1">
-          <div className="space-y-4">
-            <h4 className="text-sm font-semibold text-foreground">Members</h4>
-            {isLoading ? (
-              <p className="text-sm text-muted-foreground">Loading...</p>
-            ) : members.length > 0 ? (
-              members.map((member) => (
-                <div
-                  key={member.id}
-                  className={`flex items-center justify-between gap-3 rounded-md px-2 py-1 ${
-                    pendingRemovals.has(member.user_id)
-                      ? "opacity-50"
-                      : pendingAdds.has(member.user_id)
-                        ? "bg-accent/50"
-                        : ""
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10">
-                      <AvatarFallback className="bg-muted text-muted-foreground text-sm">
+        {/* Members list */}
+        <Box style={{ flex: 1, overflowY: "auto", maxHeight: 320 }}>
+          <Text fw={600} size="sm" mb="xs">
+            Members
+          </Text>
+          {isLoading ? (
+            <Text size="sm" c="dimmed">
+              Loading...
+            </Text>
+          ) : members.length > 0 ? (
+            <Stack gap="xs">
+              {members.map((member) => {
+                const isPendingRemoval = pendingRemovals.has(member.user_id);
+                const isPendingAdd = pendingAdds.has(member.user_id);
+
+                return (
+                  <Group
+                    key={member.id}
+                    justify="space-between"
+                    gap="sm"
+                    style={{
+                      padding: "0.5rem",
+                      borderRadius: 8,
+                      opacity: isPendingRemoval ? 0.5 : 1,
+                      background: isPendingAdd
+                        ? "var(--mantine-color-owlTeal-0)"
+                        : "transparent",
+                    }}
+                  >
+                    <Group gap="sm">
+                      <Avatar size={40} radius="md" color="owlTeal">
                         {member.users.name?.charAt(0).toUpperCase() || "U"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`text-sm font-medium ${pendingRemovals.has(member.user_id) ? "line-through" : ""}`}
-                        >
-                          {member.users.name || "Unknown"}
-                        </span>
-                        {pendingAdds.has(member.user_id) && (
-                          <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
-                            New
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        {member.users.email}
-                      </span>
-                    </div>
-                  </div>
-                  {pendingRemovals.has(member.user_id) ? (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-9 text-xs text-muted-foreground hover:text-foreground"
-                      onClick={() => handleUndoRemoval(member.user_id)}
-                    >
-                      Undo
-                    </Button>
-                  ) : (
-                    <Select
-                      value={member.role}
-                      onValueChange={(val) =>
-                        handleRoleChange(member.user_id, val)
-                      }
-                    >
-                      <SelectTrigger className="w-[110px] h-9 capitalize">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem
-                          value="reviewer"
-                          disabled={
-                            member.role === "admin" &&
-                            members.filter((m) => m.role === "admin").length ===
-                              1
-                          }
-                        >
-                          Reviewer
-                        </SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        {!(
-                          member.role === "admin" &&
-                          members.filter((m) => m.role === "admin").length === 1
-                        ) && (
-                          <SelectItem
-                            value="Remove"
-                            className="text-destructive focus:text-destructive"
+                      </Avatar>
+                      <div>
+                        <Group gap="xs">
+                          <Text
+                            size="sm"
+                            fw={500}
+                            style={{
+                              textDecoration: isPendingRemoval
+                                ? "line-through"
+                                : "none",
+                            }}
                           >
-                            Remove
-                          </SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                  )}
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                No existing members.
-              </p>
-            )}
-          </div>
-        </div>
+                            {member.users.name || "Unknown"}
+                          </Text>
+                          {isPendingAdd && (
+                            <Badge size="xs" variant="filled" color="owlTeal">
+                              New
+                            </Badge>
+                          )}
+                        </Group>
+                        <Text size="xs" c="dimmed">
+                          {member.users.email}
+                        </Text>
+                      </div>
+                    </Group>
 
-        {/* Sticky footer with Done button */}
-        <div className="border-t pt-4">
-          <Button onClick={handleDone} disabled={isSaving} className="w-full">
-            {isSaving ? "Saving..." : "Done"}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+                    {isPendingRemoval ? (
+                      <Button
+                        variant="subtle"
+                        size="xs"
+                        color="gray"
+                        onClick={() => handleUndoRemoval(member.user_id)}
+                      >
+                        Undo
+                      </Button>
+                    ) : (
+                      <Select
+                        size="xs"
+                        w={120}
+                        value={member.role}
+                        data={[
+                          {
+                            value: "reviewer",
+                            label: "Reviewer",
+                            disabled: isLastAdmin(member.user_id),
+                          },
+                          { value: "admin", label: "Admin" },
+                          ...(!isLastAdmin(member.user_id)
+                            ? [{ value: "Remove", label: "Remove" }]
+                            : []),
+                        ]}
+                        onChange={(val) =>
+                          val && handleRoleChange(member.user_id, val)
+                        }
+                      />
+                    )}
+                  </Group>
+                );
+              })}
+            </Stack>
+          ) : (
+            <Text size="sm" c="dimmed">
+              No existing members.
+            </Text>
+          )}
+        </Box>
+
+        <Button onClick={handleDone} loading={isSaving} fullWidth>
+          Done
+        </Button>
+      </Modal>
+    </>
   );
 }

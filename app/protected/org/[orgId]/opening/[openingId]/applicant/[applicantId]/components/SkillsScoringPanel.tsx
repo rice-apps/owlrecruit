@@ -1,10 +1,18 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { toast } from "sonner";
+import { notifications } from "@mantine/notifications";
 import { logger } from "@/lib/logger";
 import { RubricEditorDialog } from "@/components/rubric-editor-dialog";
-import { Loading01 } from "@untitled-ui/icons-react";
+import {
+  Box,
+  Button,
+  Group,
+  Loader,
+  NumberInput,
+  Stack,
+  Text,
+} from "@mantine/core";
 
 interface Rubric {
   name: string;
@@ -33,14 +41,12 @@ export function SkillsScoringPanel({
     const fetchRubrics = async () => {
       setLoadingRubrics(true);
       try {
-        const res = await fetch(`/api/org/${orgId}/openings`);
+        const res = await fetch(`/api/org/${orgId}/openings/${openingId}`);
         if (res.ok) {
-          const openings = await res.json();
-          const currentOpening = openings.find(
-            (o: { id: string }) => o.id === openingId,
-          );
-          if (currentOpening?.rubrics) {
-            setRubrics(currentOpening.rubrics);
+          const json = await res.json();
+          const opening = json.data ?? json;
+          if (opening?.rubric) {
+            setRubrics(opening.rubric);
           }
         }
       } catch (error) {
@@ -73,19 +79,6 @@ export function SkillsScoringPanel({
     fetchScores();
   }, [applicantId, fetchScores]);
 
-  const updateScore = (skill: string, value: string, maxVal: number) => {
-    const num = parseFloat(value);
-    const newScores = { ...scores };
-
-    if (!isNaN(num) && num >= 0 && num <= maxVal) {
-      newScores[skill] = num;
-    } else if (value === "") {
-      delete newScores[skill];
-    }
-
-    setScores(newScores);
-  };
-
   const handleSaveScore = async () => {
     setSavingScore(true);
     try {
@@ -100,13 +93,13 @@ export function SkillsScoringPanel({
 
       if (!res.ok) {
         logger.warn("Failed to save score");
-        toast.error("Failed to save score");
+        notifications.show({ color: "red", message: "Failed to save score." });
       } else {
-        toast.success("Score successfully saved!");
+        notifications.show({ color: "green", message: "Score saved!" });
       }
     } catch (e) {
       logger.error("Error saving score", e);
-      toast.error("Error saving score");
+      notifications.show({ color: "red", message: "Error saving score." });
     } finally {
       setSavingScore(false);
     }
@@ -116,94 +109,119 @@ export function SkillsScoringPanel({
   const maxTotalScore = rubrics.reduce((a, b) => a + b.max_val, 0);
 
   return (
-    <div className="p-4">
-      <div className="border rounded-xl p-6 shadow-sm bg-card">
-        <div className="flex justify-between items-center mb-6">
-          <span className="text-muted-foreground font-medium">Skills</span>
-          <span className="text-muted-foreground font-medium">Your Score</span>
-        </div>
+    <Stack gap="md" p="md">
+      <Box
+        p="lg"
+        style={{
+          border: "1px solid var(--mantine-color-gray-2)",
+          borderRadius: "var(--mantine-radius-md)",
+          boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+        }}
+      >
+        <Group justify="space-between" mb="lg">
+          <Text fw={500} c="dimmed">
+            Skills
+          </Text>
+          <Text fw={500} c="dimmed">
+            Your Score
+          </Text>
+        </Group>
 
-        <div className="flex flex-col gap-6">
+        <Stack gap="lg">
           {loadingRubrics ? (
-            <div className="flex items-center justify-center py-4">
-              <Loading01 className="h-5 w-5 animate-spin text-muted-foreground" />
-            </div>
+            <Box ta="center" py="md">
+              <Loader size="sm" />
+            </Box>
           ) : rubrics.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">
+            <Text size="sm" c="dimmed" ta="center" py="md">
               No rubrics defined for this opening.
-            </p>
+            </Text>
           ) : (
             rubrics.map((rubric) => (
-              <div
-                key={rubric.name}
-                className="flex items-center justify-between"
-              >
-                <span className="font-semibold text-sm">{rubric.name}</span>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min="0"
+              <Group key={rubric.name} justify="space-between" align="center">
+                <Text size="sm" fw={600}>
+                  {rubric.name}
+                </Text>
+                <Group gap="xs" align="center">
+                  <NumberInput
+                    min={0}
                     max={rubric.max_val}
-                    className="w-16 h-9 border rounded-[10px] text-center text-sm focus:outline-none focus:ring-1 focus:ring-owl-purple bg-white"
                     value={scores[rubric.name] ?? ""}
-                    onChange={(e) =>
-                      updateScore(rubric.name, e.target.value, rubric.max_val)
-                    }
+                    onChange={(val) => {
+                      const newScores = { ...scores };
+                      if (val === "" || val === undefined) {
+                        delete newScores[rubric.name];
+                      } else {
+                        const n = Number(val);
+                        if (!isNaN(n) && n >= 0 && n <= rubric.max_val) {
+                          newScores[rubric.name] = n;
+                        }
+                      }
+                      setScores(newScores);
+                    }}
+                    size="sm"
+                    style={{ width: 72 }}
+                    styles={{ input: { textAlign: "center" } }}
                   />
-                  <span className="text-muted-foreground text-sm font-medium w-8 text-right">
+                  <Text
+                    size="sm"
+                    c="dimmed"
+                    fw={500}
+                    style={{ width: 32, textAlign: "right" }}
+                  >
                     / {rubric.max_val}
-                  </span>
-                </div>
-              </div>
+                  </Text>
+                </Group>
+              </Group>
             ))
           )}
-        </div>
+        </Stack>
 
-        <div className="mt-8 pt-4 border-t">
-          <div className="flex justify-between items-center mb-4">
-            <span className="font-semibold text-sm">Total Score:</span>
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-sm text-foreground">
+        <Box
+          mt="xl"
+          pt="md"
+          style={{ borderTop: "1px solid var(--mantine-color-gray-2)" }}
+        >
+          <Group justify="space-between" mb="md">
+            <Text size="sm" fw={600}>
+              Total Score:
+            </Text>
+            <Group gap="xs">
+              <Text size="sm" fw={600}>
                 {totalScore}
-              </span>
-              <span className="text-muted-foreground text-sm font-medium">
-                {" "}
+              </Text>
+              <Text size="sm" c="dimmed" fw={500}>
                 / {maxTotalScore}
-              </span>
-            </div>
-          </div>
-          <button
+              </Text>
+            </Group>
+          </Group>
+          <Button
+            fullWidth
+            loading={savingScore}
             onClick={handleSaveScore}
-            disabled={savingScore}
-            className="w-full bg-owl-purple hover:bg-owl-purple/90 text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+            color="dark"
+            radius="xl"
           >
-            {savingScore ? (
-              <>
-                <Loading01 className="h-4 w-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              "Submit Score"
-            )}
-          </button>
-        </div>
-      </div>
+            Submit rubric
+          </Button>
+        </Box>
+      </Box>
 
       {isAdmin && (
-        <div className="mt-4 flex justify-end">
+        <Group justify="flex-end">
           <RubricEditorDialog
             orgId={orgId}
             openingId={openingId}
             initialRubric={rubrics}
             onSuccess={(updatedRubric) => setRubrics(updatedRubric)}
             trigger={
-              <button className="text-owl-purple text-sm hover:underline">
+              <Button variant="subtle" size="xs" color="owlTeal">
                 Rubric Details
-              </button>
+              </Button>
             }
           />
-        </div>
+        </Group>
       )}
-    </div>
+    </Stack>
   );
 }

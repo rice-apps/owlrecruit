@@ -1,3 +1,4 @@
+import { Box, Text } from "@mantine/core";
 import { createClient } from "@/lib/supabase/server";
 import { ApplyForm } from "./ApplyForm";
 
@@ -23,19 +24,21 @@ export default async function ApplyPage({ params }: Props) {
 
   if (error || !opening) {
     return (
-      <div className="text-center py-16 text-gray-500">
-        <p className="text-lg font-medium">Opening not found.</p>
-      </div>
+      <Box ta="center" py="5rem">
+        <Text size="lg" fw={500} c="dimmed">
+          Opening not found.
+        </Text>
+      </Box>
     );
   }
 
   if (opening.status !== "open") {
     return (
-      <div className="text-center py-16 text-gray-500">
-        <p className="text-lg font-medium">
+      <Box ta="center" py="5rem">
+        <Text size="lg" fw={500} c="dimmed">
           This opening is not currently accepting applications.
-        </p>
-      </div>
+        </Text>
+      </Box>
     );
   }
 
@@ -48,7 +51,6 @@ export default async function ApplyPage({ params }: Props) {
   const orgRow = Array.isArray(opening.orgs) ? opening.orgs[0] : opening.orgs;
   const orgName = (orgRow as { name: string } | null)?.name ?? "Unknown Org";
 
-  // Check if the authenticated user has already applied
   let alreadyApplied = false;
   if (user?.email?.endsWith("@rice.edu")) {
     const netId = user.email.split("@")[0];

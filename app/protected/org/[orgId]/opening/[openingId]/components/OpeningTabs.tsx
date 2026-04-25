@@ -4,6 +4,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { TabBar } from "@/components/tab-bar";
 
 const allTabs = [
+  { id: "overview", label: "Overview" },
   { id: "applicants", label: "Applicants" },
   { id: "questions", label: "Questions" },
   { id: "upload", label: "Upload Data" },

@@ -2,14 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button, Menu, Text, Group } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import { ConfirmModal } from "@/components/ConfirmModal";
 import { logger } from "@/lib/logger";
-import { toast } from "sonner";
 
 interface LeaveOrgButtonProps {
   orgId: string;
   userId: string;
   isAdmin: boolean;
   orgName: string;
+  asMenuItem?: boolean;
 }
 
 export function LeaveOrgButton({
@@ -17,6 +20,7 @@ export function LeaveOrgButton({
   userId,
   isAdmin,
   orgName,
+  asMenuItem = false,
 }: LeaveOrgButtonProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -33,7 +37,10 @@ export function LeaveOrgButton({
       router.refresh();
     } catch (err) {
       logger.error("Failed to leave organization:", err);
-      toast.error("Failed to leave organization. Please try again.");
+      notifications.show({
+        color: "red",
+        message: "Failed to leave organization. Please try again.",
+      });
       setLoading(false);
       setOpen(false);
     }
@@ -41,53 +48,43 @@ export function LeaveOrgButton({
 
   return (
     <>
-      <div className="flex flex-col items-start gap-1">
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          disabled={isAdmin}
-          className="text-left text-lg font-semibold tracking-tight text-red-500 transition sm:text-xl disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          Leave organization
-        </button>
-        {isAdmin && (
-          <p className="text-xs text-muted-foreground">
-            Admins cannot leave the organization. Transfer admin rights first.
-          </p>
-        )}
-      </div>
-
-      {open && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-          onClick={() => !loading && setOpen(false)}
-        >
-          <div
-            className="bg-white rounded-2xl shadow-xl px-8 py-8 flex flex-col items-center gap-6 max-w-sm w-full mx-4"
-            onClick={(e) => e.stopPropagation()}
+      {asMenuItem ? (
+        <Menu.Item color="red" disabled={isAdmin} onClick={() => setOpen(true)}>
+          {isAdmin ? "Leave (transfer admin first)" : "Leave organization"}
+        </Menu.Item>
+      ) : (
+        <Group gap="sm">
+          <Button
+            variant="subtle"
+            color="red"
+            size="sm"
+            disabled={isAdmin}
+            onClick={() => setOpen(true)}
+            title={
+              isAdmin
+                ? "Admins cannot leave. Transfer admin rights first."
+                : undefined
+            }
           >
-            <p className="text-center text-lg font-semibold text-slate-900 leading-snug">
-              Are you sure you want to be removed as a member of {orgName}?
-            </p>
-            <button
-              type="button"
-              onClick={handleLeave}
-              disabled={loading}
-              className="w-40 py-3 rounded-xl bg-owl-purple hover:bg-owl-purple/90 text-white font-semibold text-base transition disabled:opacity-60"
-            >
-              {loading ? "Leaving…" : "Yes"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              disabled={loading}
-              className="text-sm text-muted-foreground hover:text-slate-700 transition"
-            >
-              No, cancel
-            </button>
-          </div>
-        </div>
+            Leave organization
+          </Button>
+          {isAdmin && (
+            <Text size="sm" c="dimmed">
+              Transfer admin role first to leave
+            </Text>
+          )}
+        </Group>
       )}
+      <ConfirmModal
+        opened={open}
+        onClose={() => setOpen(false)}
+        onConfirm={handleLeave}
+        title="Leave organization"
+        message={`Are you sure you want to leave ${orgName}?`}
+        confirmLabel="Leave"
+        confirmColor="red"
+        loading={loading}
+      />
     </>
   );
 }

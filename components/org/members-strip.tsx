@@ -1,6 +1,4 @@
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { Avatar, Badge, Divider, Group, Stack, Text } from "@mantine/core";
 
 export type OrgMemberRecord = {
   id: string;
@@ -13,61 +11,62 @@ export type OrgMemberRecord = {
   } | null;
 };
 
-const ROLE_BADGE_STYLES: Record<OrgMemberRecord["role"], string> = {
-  admin: "border-purple-200 bg-white text-purple-900 shadow-sm",
-  reviewer: "border-purple-200 bg-white text-purple-900 shadow-sm",
-};
-
 type MembersStripProps = {
   members: OrgMemberRecord[];
 };
 
 export function MembersStrip({ members }: MembersStripProps) {
-  const count = members.length;
-  if (count === 0) {
+  if (members.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-slate-200 bg-white/80 px-4 py-6 text-center text-sm text-slate-500">
+      <Text size="sm" c="dimmed" ta="center" p="xl">
         No members have joined this organization yet.
-      </div>
+      </Text>
     );
   }
 
   return (
-    <div className="flex gap-3 overflow-x-auto pb-1 pt-2 pr-1">
-      {members.map((member) => {
+    <Stack gap={0}>
+      {members.map((member, i) => {
         const displayName =
           member.users?.name?.trim() || member.users?.email || "Unknown";
+        const email = member.users?.email || "";
         const initial = displayName.charAt(0).toUpperCase() || "U";
+        const isAdmin = member.role === "admin";
 
         return (
-          <article
-            key={member.id}
-            className="flex min-w-[180px] max-w-[240px] flex-col gap-3 rounded-2xl border border-slate-100 bg-white/90 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-          >
-            <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10">
-                <AvatarFallback className="bg-muted text-muted-foreground text-base">
+          <div key={member.id}>
+            <Group justify="space-between" align="center" py="xs">
+              {/* Left: avatar + name + email */}
+              <Group gap="sm">
+                <Avatar radius="xl" size={40} color="gray">
                   {initial}
-                </AvatarFallback>
-              </Avatar>
-              <div className="min-w-0 flex flex-col gap-1">
-                <p className="text-sm font-semibold text-slate-900 truncate leading-none">
-                  {displayName}
-                </p>
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "self-start text-[11px] uppercase tracking-[0.2em]",
-                    ROLE_BADGE_STYLES[member.role],
+                </Avatar>
+                <Stack gap={0}>
+                  <Text size="sm" fw={600}>
+                    {displayName}
+                  </Text>
+                  {email && (
+                    <Text size="xs" c="dimmed">
+                      {email}
+                    </Text>
                   )}
-                >
-                  {member.role === "admin" ? "Admin" : "Reviewer"}
-                </Badge>
-              </div>
-            </div>
-          </article>
+                </Stack>
+              </Group>
+
+              {/* Right: role badge */}
+              <Badge
+                color={isAdmin ? "owlTeal" : "gray"}
+                variant={isAdmin ? "filled" : "outline"}
+                radius="xl"
+                size="sm"
+              >
+                {isAdmin ? "Admin" : "Reviewer"}
+              </Badge>
+            </Group>
+            {i < members.length - 1 && <Divider />}
+          </div>
         );
       })}
-    </div>
+    </Stack>
   );
 }

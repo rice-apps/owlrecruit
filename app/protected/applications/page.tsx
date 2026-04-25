@@ -1,23 +1,30 @@
-/**
- * My Applications Page
- *
- * Displays user's applications as cards with position, organization, status, and due date
- * Includes active applications and past applications sections
- */
 "use client";
 
 import { useEffect, useState } from "react";
-import { ApplicationCard } from "./components";
-import { SearchInput } from "@/components/search-input";
-import type { Enums } from "@/types/supabase";
+import {
+  Box,
+  Button,
+  Center,
+  Alert,
+  Group,
+  Loader,
+  SimpleGrid,
+  Stack,
+  Text,
+  TextInput,
+} from "@mantine/core";
+import { AlertCircle, SearchMd } from "@untitled-ui/icons-react";
+import {
+  ApplicationCard,
+  type ApplicationWithDetails,
+} from "@/components/application-card";
 import { logger } from "@/lib/logger";
-
-type ApplicationStatus = Enums<"status">;
+import type { Enums } from "@/types/supabase";
 
 interface Application {
   org_id: string;
   opening_id: string;
-  status: ApplicationStatus | null;
+  status: Enums<"status"> | null;
   created_at: string | null;
   opening_title?: string;
   org_name?: string;
@@ -25,8 +32,21 @@ interface Application {
   opening_status?: Enums<"opening_status">;
 }
 
-interface ApplicationsData {
-  applications: Application[];
+function toCardProps(app: Application): ApplicationWithDetails {
+  return {
+    id: app.opening_id,
+    org_id: app.org_id,
+    status: app.status,
+    created_at: app.created_at,
+    opening: {
+      title: app.opening_title ?? "Unknown Position",
+      closes_at: app.closes_at ?? null,
+      org: {
+        name: app.org_name ?? "Unknown Organization",
+        logo_url: null,
+      },
+    },
+  } as unknown as ApplicationWithDetails;
 }
 
 export default function MyApplicationsPage() {
@@ -34,20 +54,16 @@ export default function MyApplicationsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<"active" | "inactive">("active");
 
   useEffect(() => {
     async function fetchApplications() {
       try {
         setLoading(true);
-        setError(null);
-
-        const response = await fetch("/api/user/org-status");
-        if (!response.ok) {
-          throw new Error("Failed to fetch applications");
-        }
-
-        const data: ApplicationsData = await response.json();
-        setApplications(data.applications || []);
+        const res = await fetch("/api/user/org-status");
+        if (!res.ok) throw new Error("Failed to fetch applications");
+        const json = await res.json();
+        setApplications(json.applications ?? []);
       } catch (err) {
         logger.error("Error fetching applications:", err);
         setError(
@@ -57,119 +73,122 @@ export default function MyApplicationsPage() {
         setLoading(false);
       }
     }
-
     fetchApplications();
   }, []);
 
-  // Filter applications based on search query
-  const filteredApplications = applications.filter((app) => {
-    const query = searchQuery.toLowerCase();
+  const filtered = applications.filter((app) => {
+    const q = searchQuery.toLowerCase();
     return (
-      app.opening_title?.toLowerCase().includes(query) ||
-      app.org_name?.toLowerCase().includes(query)
+      app.opening_title?.toLowerCase().includes(q) ||
+      app.org_name?.toLowerCase().includes(q)
     );
   });
 
-  // Separate active and past applications
-  const activeApplications = filteredApplications.filter((app) => {
-    // Active if not rejected/accepted offer, opening is not explicitly closed, and (no due date OR due date is in the future)
+  const active = filtered.filter((app) => {
     if (
       app.status === "Rejected" ||
       app.status === "Accepted Offer" ||
       app.opening_status === "closed"
     )
       return false;
-    if (!app.closes_at) return true;
-    return new Date(app.closes_at) >= new Date();
+    return !app.closes_at || new Date(app.closes_at) >= new Date();
   });
 
-  const pastApplications = filteredApplications.filter((app) => {
-    // Past if rejected/accepted offer, explicitly closed opening OR due date has passed
+  const inactive = filtered.filter((app) => {
     if (
       app.status === "Rejected" ||
       app.status === "Accepted Offer" ||
       app.opening_status === "closed"
     )
       return true;
-    if (!app.closes_at) return false;
-    return new Date(app.closes_at) < new Date();
+    return app.closes_at != null && new Date(app.closes_at) < new Date();
   });
 
+  const shown = activeTab === "active" ? active : inactive;
+
   return (
-    <div className="w-full flex flex-col gap-6 max-w-7xl">
-      {/* Search Bar */}
-      <SearchInput
-        value={searchQuery}
-        onChange={setSearchQuery}
-        placeholder="Search organizations, positions..."
-      />
-      {/* Loading State */}
+    <Stack gap="lg">
+      {/* Dark banner */}
+      <Box
+        bg="dark.6"
+        p="xl"
+        style={{ borderRadius: "var(--mantine-radius-xl)" }}
+      >
+        <Text c="white" fw={700} size="xl" mb={4}>
+          My Applications
+        </Text>
+        <Text c="dark.2" size="sm" mb="md">
+          Track the status of your submissions.
+        </Text>
+        <TextInput
+          radius="xl"
+          placeholder="Search applications"
+          leftSection={<SearchMd width={16} height={16} />}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.currentTarget.value)}
+        />
+      </Box>
+
+      {/* Active / Inactive toggle */}
+      <Group gap="xs">
+        <Button
+          radius="xl"
+          size="sm"
+          variant={activeTab === "active" ? "filled" : "outline"}
+          color={activeTab === "active" ? "dark" : "gray"}
+          onClick={() => setActiveTab("active")}
+        >
+          Active
+        </Button>
+        <Button
+          radius="xl"
+          size="sm"
+          variant={activeTab === "inactive" ? "filled" : "outline"}
+          color={activeTab === "inactive" ? "dark" : "gray"}
+          onClick={() => setActiveTab("inactive")}
+        >
+          Inactive
+        </Button>
+      </Group>
+
       {loading && (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-owl-purple"></div>
-          <span className="ml-2 text-muted-foreground">Loading...</span>
-        </div>
+        <Center py="xl">
+          <Loader size="sm" />
+        </Center>
       )}
 
-      {/* Error State */}
       {error && (
-        <div className="text-center py-12">
-          <p className="text-destructive mb-2">Error loading applications</p>
-          <p className="text-sm text-muted-foreground">{error}</p>
-        </div>
+        <Alert
+          color="red"
+          title="Error loading applications"
+          icon={<AlertCircle width={16} height={16} />}
+        >
+          {error}
+        </Alert>
       )}
 
-      {/* Applications Content */}
       {!loading && !error && (
         <>
-          {/* My Applications Section */}
-          <div>
-            <h2 className="text-xl font-semibold mb-4">My Applications</h2>
-            {activeApplications.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {activeApplications.map((app) => (
-                  <ApplicationCard
-                    key={`${app.opening_id}-${app.created_at}`}
-                    application={app}
-                  />
-                ))}
-              </div>
-            ) : (
-              <p className="text-muted-foreground py-8">
+          {shown.length > 0 ? (
+            <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing="md">
+              {shown.map((app) => (
+                <ApplicationCard
+                  key={`${app.opening_id}-${app.created_at}`}
+                  application={toCardProps(app)}
+                />
+              ))}
+            </SimpleGrid>
+          ) : (
+            <Center py="xl">
+              <Text c="dimmed">
                 {searchQuery
-                  ? "No active applications match your search."
-                  : "No active applications found."}
-              </p>
-            )}
-          </div>
-
-          {/* Past Applications Section */}
-          {pastApplications.length > 0 && (
-            <div className="mt-8">
-              <h2 className="text-xl font-semibold mb-4">Past Applications</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {pastApplications.map((app) => (
-                  <ApplicationCard
-                    key={`${app.opening_id}-${app.created_at}`}
-                    application={app}
-                  />
-                ))}
-              </div>
-            </div>
+                  ? "No applications match your search."
+                  : `No ${activeTab} applications found.`}
+              </Text>
+            </Center>
           )}
-
-          {/* Empty State */}
-          {activeApplications.length === 0 &&
-            pastApplications.length === 0 &&
-            !searchQuery && (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">
-                  You haven&apos;t submitted any applications yet.
-                </p>
-              </div>
-            )}
         </>
       )}
-    </div>
+    </Stack>
   );
 }

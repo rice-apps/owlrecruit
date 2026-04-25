@@ -2,7 +2,11 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   experimental: {
-    optimizePackageImports: ["@untitled-ui/icons-react"],
+    optimizePackageImports: [
+      "@mantine/core",
+      "@mantine/hooks",
+      "@untitled-ui/icons-react",
+    ],
   },
 };
 

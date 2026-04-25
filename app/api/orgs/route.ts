@@ -72,10 +72,12 @@ export async function POST(request: Request) {
         .eq("id", newOrgId);
 
       if (updateError) {
-        return NextResponse.json({ error: updateError.message }, { status: 500 });
+        return NextResponse.json(
+          { error: updateError.message },
+          { status: 500 },
+        );
       }
     }
-
 
     return NextResponse.json({ id: newOrgId }, { status: 201 });
   } catch (error) {

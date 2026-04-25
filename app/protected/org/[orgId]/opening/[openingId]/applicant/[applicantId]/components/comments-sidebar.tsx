@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { MessageChatCircle, SearchMd } from "@untitled-ui/icons-react";
 import { logger } from "@/lib/logger";
-import { cn } from "@/lib/utils";
+import { Box, Group, ActionIcon } from "@mantine/core";
 import { CommentsPanel } from "./CommentsPanel";
 import { SkillsScoringPanel } from "./SkillsScoringPanel";
 
@@ -18,7 +18,7 @@ export function CommentsSidebar({
   openingId,
   orgId,
 }: CommentsSidebarProps) {
-  const [activeTab, setActiveTab] = useState<"comments" | "skills">("comments");
+  const [activeTab, setActiveTab] = useState<"comments" | "skills">("skills");
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
@@ -41,37 +41,54 @@ export function CommentsSidebar({
   }, [orgId]);
 
   return (
-    <div className="w-[350px] border-l h-full flex flex-col bg-background relative">
-      <div className="flex items-center justify-end p-2 gap-2 border-b">
-        <div className="flex bg-muted/50 rounded-lg p-1">
-          <button
+    <Box
+      style={{
+        width: 350,
+        borderLeft: "1px solid var(--mantine-color-gray-2)",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        background: "white",
+      }}
+    >
+      {/* Tab toggle */}
+      <Group
+        justify="flex-end"
+        p="xs"
+        gap="xs"
+        style={{ borderBottom: "1px solid var(--mantine-color-gray-2)" }}
+      >
+        <Box
+          p={4}
+          style={{
+            display: "flex",
+            gap: 4,
+            background: "var(--mantine-color-gray-1)",
+            borderRadius: "var(--mantine-radius-md)",
+          }}
+        >
+          <ActionIcon
+            variant={activeTab === "skills" ? "white" : "transparent"}
+            size="sm"
+            color={activeTab === "skills" ? "owlTeal" : "gray"}
             onClick={() => setActiveTab("skills")}
-            className={cn(
-              "p-2 rounded-md transition-all hover:text-owl-purple",
-              activeTab === "skills"
-                ? "bg-white shadow text-owl-purple"
-                : "text-muted-foreground",
-            )}
             title="Skills & Rubric"
           >
-            <SearchMd className="w-5 h-5" />
-          </button>
-          <button
+            <SearchMd width={18} height={18} />
+          </ActionIcon>
+          <ActionIcon
+            variant={activeTab === "comments" ? "white" : "transparent"}
+            size="sm"
+            color={activeTab === "comments" ? "owlTeal" : "gray"}
             onClick={() => setActiveTab("comments")}
-            className={cn(
-              "p-2 rounded-md transition-all hover:text-owl-purple",
-              activeTab === "comments"
-                ? "bg-white shadow text-owl-purple"
-                : "text-muted-foreground",
-            )}
             title="Comments"
           >
-            <MessageChatCircle className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
+            <MessageChatCircle width={18} height={18} />
+          </ActionIcon>
+        </Box>
+      </Group>
 
-      <div className="flex-1 overflow-y-auto">
+      <Box style={{ flex: 1, overflowY: "auto" }}>
         {activeTab === "comments" ? (
           <CommentsPanel orgId={orgId} applicantId={applicantId} />
         ) : (
@@ -82,7 +99,7 @@ export function CommentsSidebar({
             isAdmin={isAdmin}
           />
         )}
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 }

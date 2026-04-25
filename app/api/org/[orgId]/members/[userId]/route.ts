@@ -16,7 +16,10 @@ async function getAuthContext(orgId: string) {
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return { supabase, error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
+    return {
+      supabase,
+      error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
+    };
   }
 
   // Caller's membership
@@ -43,10 +46,7 @@ async function getAuthContext(orgId: string) {
   };
 }
 
-export async function PUT(
-  request: Request,
-  { params }: { params: Params },
-) {
+export async function PUT(request: Request, { params }: { params: Params }) {
   try {
     const { orgId, userId } = await params;
     const body = await request.json();
@@ -106,10 +106,7 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: Params },
-) {
+export async function DELETE(request: Request, { params }: { params: Params }) {
   try {
     const { orgId, userId } = await params;
 
@@ -122,7 +119,9 @@ export async function DELETE(
       // Leaving the org — block if they're the only admin
       if (ctx.callerRole === "admin" && ctx.adminCount <= 1) {
         return NextResponse.json(
-          { error: "Cannot leave as the only admin. Transfer admin role first." },
+          {
+            error: "Cannot leave as the only admin. Transfer admin role first.",
+          },
           { status: 403 },
         );
       }

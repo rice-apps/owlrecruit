@@ -1,47 +1,38 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "@untitled-ui/icons-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { DueDateInput } from "@/components/opening-form/due-date-input";
-import { ReviewerSelector } from "@/components/opening-form/reviewer-selector";
-import { RubricEditor } from "@/components/opening-form/rubric-editor";
-import type {
-  OpeningFormData,
-  OpeningInitialData,
-  RubricItem,
-} from "@/components/opening-form/types";
-import { useOpeningFormContext } from "@/components/opening-form/use-opening-form-context";
+import {
+  Stack,
+  Card,
+  Title,
+  Text,
+  TextInput,
+  Textarea,
+  SegmentedControl,
+  MultiSelect,
+  Button,
+  Group,
+  Anchor,
+  Alert,
+  Box,
+  Table,
+  NumberInput,
+  ActionIcon,
+} from "@mantine/core";
+import { DateTimePicker } from "@mantine/dates";
+import { AlertCircle, Trash01 } from "@untitled-ui/icons-react";
+import { Breadcrumb } from "@/components/Breadcrumb";
+import { useOpeningFormContext } from "./use-opening-form-context";
+import type { OpeningInitialData, RubricItem } from "./types";
+
+const MAX_RUBRIC_SCORE = 1_000_000_000_000;
 
 interface OpeningFormPageProps {
   mode: "create" | "edit";
   orgId: string;
   openingId?: string;
   initialOpening?: OpeningInitialData;
-}
-
-function toLocalDateTimeValue(value?: string | null): string {
-  if (!value) return "";
-
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
-    return "";
-  }
-
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${parsed.getFullYear()}-${pad(parsed.getMonth() + 1)}-${pad(parsed.getDate())}T${pad(parsed.getHours())}:${pad(parsed.getMinutes())}`;
-}
-
-function initialRubric(initialOpening?: OpeningInitialData): RubricItem[] {
-  return (initialOpening?.rubric || []).map((item) => ({
-    name: item.name || "",
-    max_val: Number(item.max_val) || 10,
-    description: item.description || "",
-  }));
 }
 
 export function OpeningFormPage({
@@ -56,33 +47,58 @@ export function OpeningFormPage({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedReviewers, setSelectedReviewers] = useState<string[]>([]);
-  const [rubric, setRubric] = useState<RubricItem[]>(
-    initialRubric(initialOpening),
+  const [title, setTitle] = useState(initialOpening?.title || "");
+  const [description, setDescription] = useState(
+    initialOpening?.description || "",
   );
-  const [formData, setFormData] = useState<OpeningFormData>({
-    title: initialOpening?.title || "",
-    description: initialOpening?.description || "",
-    application_link: initialOpening?.application_link || "",
-    closes_at: toLocalDateTimeValue(initialOpening?.closes_at),
-    status: initialOpening?.status === "closed" ? "closed" : "open",
+  const [applicationMethod, setApplicationMethod] = useState<
+    "native" | "external"
+  >(initialOpening?.application_link ? "external" : "native");
+  const [applicationLink, setApplicationLink] = useState(
+    initialOpening?.application_link || "",
+  );
+  const [closesAt, setClosesAt] = useState<string | null>(
+    initialOpening?.closes_at ?? null,
+  );
+  const [status, setStatus] = useState<"draft" | "open" | "closed">(
+    initialOpening?.status || "draft",
+  );
+  const [selectedReviewers, setSelectedReviewers] = useState<string[]>([]);
+  const [rubricOpen, setRubricOpen] = useState(
+    Boolean(initialOpening?.rubric?.length),
+  );
+  const [rubric, setRubric] = useState<RubricItem[]>(
+    (initialOpening?.rubric || []).map((item) => ({
+      name: item.name || "",
+      max_val: Number(item.max_val) || 10,
+      description: item.description || "",
+    })),
+  );
+
+  const reviewerOptions = eligibleReviewers.map((r) => {
+    const u = Array.isArray(r.users) ? r.users[0] : r.users;
+    return { value: r.user_id, label: u?.name || u?.email || r.user_id };
   });
 
-  const pageTitle = isEditMode ? "Edit Opening" : "Create New Opening";
+  const updateRubricItem = (index: number, patch: Partial<RubricItem>) => {
+    const updated = [...rubric];
+    updated[index] = { ...updated[index], ...patch };
+    setRubric(updated);
+  };
 
   const normalizedRubric = rubric
-    .filter((item) => item.name.trim())
+    .filter((item) => String(item.name).trim())
     .map((item) => ({
-      name: item.name.trim(),
+      name: String(item.name).trim(),
       max_val: Number(item.max_val) || 0,
-      description: item.description?.trim() || "",
+      description: String(item.description).trim() || "",
     }));
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (!formData.title.trim()) {
+    if (!title.trim()) {
       setError("Position title is required");
       return;
     }
@@ -92,22 +108,45 @@ export function OpeningFormPage({
       return;
     }
 
+    if (rubric.length > 0) {
+      if (normalizedRubric.some((r) => !r.name)) {
+        setError("All criteria must have a name.");
+        return;
+      }
+      const names = normalizedRubric.map((r) => r.name.toLowerCase());
+      if (new Set(names).size !== names.length) {
+        setError("Criteria names must be unique.");
+        return;
+      }
+      if (normalizedRubric.some((r) => r.max_val <= 0)) {
+        setError("Max score must be greater than 0.");
+        return;
+      }
+      if (normalizedRubric.some((r) => r.max_val > MAX_RUBRIC_SCORE)) {
+        setError("Max score must be ≤ 1,000,000,000,000.");
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     try {
       const payload: Record<string, unknown> = {
-        title: formData.title.trim(),
-        description: formData.description.trim() || null,
-        application_link: formData.application_link.trim() || null,
-        closes_at: formData.closes_at
-          ? new Date(formData.closes_at).toISOString()
-          : null,
-        status: formData.status,
+        title: title.trim(),
+        description: description.trim() || null,
+        application_link:
+          applicationMethod === "external"
+            ? applicationLink.trim() || null
+            : null,
+        closes_at: closesAt ?? null,
+        status,
         rubric: isEditMode
           ? normalizedRubric
           : normalizedRubric.length > 0
             ? normalizedRubric
             : undefined,
+        reviewer_ids:
+          selectedReviewers.length > 0 ? selectedReviewers : undefined,
       };
 
       if (!isEditMode) {
@@ -137,7 +176,6 @@ export function OpeningFormPage({
         router.push(`/protected/org/${orgId}`);
       }
     } catch (submitError) {
-      console.error("Error submitting opening:", submitError);
       setError(
         submitError instanceof Error
           ? submitError.message
@@ -148,170 +186,309 @@ export function OpeningFormPage({
     }
   };
 
+  const pageTitle = isEditMode ? "Edit Opening" : "Create position";
+
   return (
-    <div className="flex flex-col">
-      <button
-        onClick={() => router.back()}
-        className="mb-8 flex w-fit items-center gap-2 text-sm text-gray-500 transition-colors hover:text-gray-900"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back
-      </button>
+    <Stack gap="lg" style={{ width: "100%" }}>
+      <Breadcrumb
+        items={[
+          {
+            label: orgName || "Organization",
+            href: `/protected/org/${orgId}`,
+          },
+          ...(isEditMode && openingId
+            ? [
+                {
+                  label: initialOpening?.title || "Opening",
+                  href: `/protected/org/${orgId}/opening/${openingId}`,
+                },
+                { label: "Edit" },
+              ]
+            : [{ label: pageTitle }]),
+        ]}
+      />
 
-      <h1 className="mb-1 text-3xl font-semibold">{pageTitle}</h1>
-      {orgName && <p className="mb-8 text-sm text-gray-500">{orgName}</p>}
+      <Card radius="lg" shadow="sm" withBorder={false} p="xl">
+        <Stack gap="xs" mb="xl">
+          <Title order={3}>{pageTitle}</Title>
+          {orgName && (
+            <Text c="dimmed" size="sm">
+              {orgName}
+            </Text>
+          )}
+        </Stack>
 
-      <form onSubmit={handleSubmit} className="flex flex-1 flex-col space-y-7">
-        <div className="space-y-2">
-          <Label htmlFor="title" className="text-sm font-medium text-gray-700">
-            Position Title <span className="text-red-500">*</span>
-            <span className="font-normal text-gray-500"> (required)</span>
-          </Label>
-          <Input
-            id="title"
-            value={formData.title}
-            onChange={(e) =>
-              setFormData({ ...formData, title: e.target.value })
-            }
-            placeholder="e.g. Software Developer"
-            required
-            className="h-11 w-full text-sm"
-          />
-        </div>
+        <form onSubmit={handleSubmit}>
+          <Stack gap="lg">
+            <TextInput
+              label="Position Name"
+              required
+              value={title}
+              onChange={(e) => setTitle(e.currentTarget.value)}
+              placeholder="e.g. Software Developer"
+            />
 
-        <div className="space-y-2">
-          <Label
-            htmlFor="application_link"
-            className="text-sm font-medium text-gray-700"
-          >
-            Application Link
-          </Label>
-          <Input
-            id="application_link"
-            type="url"
-            value={formData.application_link}
-            onChange={(e) =>
-              setFormData({ ...formData, application_link: e.target.value })
-            }
-            placeholder="https://forms.google.com/..."
-            className="h-11 w-full text-sm"
-          />
-        </div>
+            <div>
+              <Text size="sm" fw={500} mb="xs">
+                Application Link
+              </Text>
+              <SegmentedControl
+                value={applicationMethod}
+                onChange={(val) => {
+                  setApplicationMethod(val as "native" | "external");
+                  if (val === "native") setApplicationLink("");
+                  else if (!applicationLink) setApplicationLink("https://");
+                }}
+                data={[
+                  { label: "Native Form", value: "native" },
+                  { label: "External Link", value: "external" },
+                ]}
+                mb="xs"
+              />
+              {applicationMethod === "native" ? (
+                <Text size="xs" c="dimmed">
+                  Build a form in the Questions tab after creating this opening.
+                </Text>
+              ) : (
+                <TextInput
+                  type="url"
+                  value={applicationLink}
+                  onChange={(e) => setApplicationLink(e.currentTarget.value)}
+                  placeholder="https://forms.google.com/..."
+                />
+              )}
+            </div>
 
-        <div className="space-y-2">
-          <Label
-            htmlFor="description"
-            className="text-sm font-medium text-gray-700"
-          >
-            Description
-          </Label>
-          <Textarea
-            id="description"
-            value={formData.description}
-            onChange={(e) =>
-              setFormData({ ...formData, description: e.target.value })
-            }
-            placeholder="Describe the position and responsibilities..."
-            rows={3}
-            className="min-h-[80px] w-full resize-y text-sm"
-          />
-        </div>
+            <Textarea
+              label="Description"
+              value={description}
+              onChange={(e) => setDescription(e.currentTarget.value)}
+              placeholder="Describe the position and responsibilities..."
+              minRows={3}
+              autosize
+            />
 
-        <div className="space-y-2">
-          <Label className="text-sm font-medium text-gray-700">Due Date</Label>
-          <DueDateInput
-            value={formData.closes_at}
-            onChange={(value) => setFormData({ ...formData, closes_at: value })}
-          />
-        </div>
+            <DateTimePicker
+              label="Due Date"
+              placeholder="Select date and time"
+              value={closesAt}
+              onChange={setClosesAt}
+              clearable
+            />
 
-        <div className="space-y-3">
-          <Label className="text-sm font-medium uppercase tracking-wide text-gray-700">
-            Applicant Stages
-          </Label>
-          <div className="flex flex-wrap items-center gap-2">
-            {[
-              { label: "Accepted", className: "bg-owl-green text-white" },
-              { label: "Rejected", className: "bg-owl-red text-white" },
-              {
-                label: "Pending",
-                className: "border border-[#C5C5C5] bg-white text-gray-600",
-              },
-              { label: "Interview", className: "bg-gray-500 text-white" },
-            ].map(({ label, className }) => (
-              <span
-                key={label}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium ${className}`}
+            {isEditMode && (
+              <div>
+                <Text size="sm" fw={500} mb="xs">
+                  Status
+                </Text>
+                <SegmentedControl
+                  value={status}
+                  onChange={(val) =>
+                    setStatus(val as "draft" | "open" | "closed")
+                  }
+                  data={[
+                    { label: "Draft", value: "draft" },
+                    { label: "Open", value: "open" },
+                    { label: "Closed", value: "closed" },
+                  ]}
+                />
+              </div>
+            )}
+
+            {reviewerOptions.length > 0 && (
+              <MultiSelect
+                label="Assign Reviewers"
+                placeholder="Search members by name"
+                data={reviewerOptions}
+                value={selectedReviewers}
+                onChange={setSelectedReviewers}
+                searchable
+                clearable
+              />
+            )}
+
+            <div>
+              <Text size="sm" fw={500} mb={4}>
+                Add rubric
+              </Text>
+              <Text size="xs" c="dimmed" mb="sm">
+                Define what you&apos;re grading and how many points each part is
+                worth.
+              </Text>
+              {!rubricOpen ? (
+                <Button
+                  type="button"
+                  color="dark"
+                  radius="xl"
+                  size="sm"
+                  onClick={() => {
+                    setRubricOpen(true);
+                    if (rubric.length === 0) {
+                      setRubric([{ name: "", max_val: 10, description: "" }]);
+                    }
+                  }}
+                >
+                  Add rubric +
+                </Button>
+              ) : (
+                <Box
+                  style={{
+                    border: "1px solid var(--mantine-color-gray-2)",
+                    borderRadius: "var(--mantine-radius-lg)",
+                    padding: "1rem",
+                  }}
+                >
+                  <Table>
+                    <Table.Thead>
+                      <Table.Tr>
+                        <Table.Th>
+                          <Text size="sm" fw={600}>
+                            Criteria *
+                          </Text>
+                          <Text size="xs" c="dimmed">
+                            e.g. &quot;Experience, Teamwork&quot;
+                          </Text>
+                        </Table.Th>
+                        <Table.Th style={{ width: 140 }}>
+                          <Text size="sm" fw={600}>
+                            Max Score *
+                          </Text>
+                          <Text size="xs" c="dimmed">
+                            Highest rating
+                          </Text>
+                        </Table.Th>
+                        <Table.Th>
+                          <Text size="sm" fw={600}>
+                            Description
+                          </Text>
+                          <Text size="xs" c="dimmed">
+                            Describe this criterion
+                          </Text>
+                        </Table.Th>
+                        <Table.Th style={{ width: 40 }} />
+                      </Table.Tr>
+                    </Table.Thead>
+                    <Table.Tbody>
+                      {rubric.map((item, index) => (
+                        <Table.Tr key={index}>
+                          <Table.Td>
+                            <TextInput
+                              value={item.name}
+                              onChange={(e) =>
+                                updateRubricItem(index, {
+                                  name: e.currentTarget.value,
+                                })
+                              }
+                              placeholder="e.g. Teamwork"
+                              size="xs"
+                            />
+                          </Table.Td>
+                          <Table.Td>
+                            <NumberInput
+                              value={
+                                item.max_val === "" ? "" : Number(item.max_val)
+                              }
+                              min={1}
+                              max={MAX_RUBRIC_SCORE}
+                              onChange={(val) =>
+                                updateRubricItem(index, { max_val: val })
+                              }
+                              size="xs"
+                            />
+                          </Table.Td>
+                          <Table.Td>
+                            <TextInput
+                              value={item.description}
+                              onChange={(e) =>
+                                updateRubricItem(index, {
+                                  description: e.currentTarget.value,
+                                })
+                              }
+                              placeholder="Describe this criterion..."
+                              size="xs"
+                            />
+                          </Table.Td>
+                          <Table.Td>
+                            <ActionIcon
+                              variant="subtle"
+                              color="red"
+                              onClick={() =>
+                                setRubric(rubric.filter((_, i) => i !== index))
+                              }
+                            >
+                              <Trash01 width={14} height={14} />
+                            </ActionIcon>
+                          </Table.Td>
+                        </Table.Tr>
+                      ))}
+                    </Table.Tbody>
+                  </Table>
+
+                  <Group justify="space-between" mt="sm">
+                    <Text size="sm" fw={600}>
+                      Total Score:{" "}
+                      <Text component="span" c="dimmed" fw={400}>
+                        {rubric.reduce(
+                          (sum, r) => sum + (Number(r.max_val) || 0),
+                          0,
+                        )}
+                      </Text>
+                    </Text>
+                    <Group gap="xs">
+                      <Button
+                        type="button"
+                        variant="subtle"
+                        color="owlTeal"
+                        size="xs"
+                        onClick={() =>
+                          setRubric([
+                            ...rubric,
+                            { name: "", max_val: 10, description: "" },
+                          ])
+                        }
+                      >
+                        Add criterion +
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="subtle"
+                        color="red"
+                        size="xs"
+                        onClick={() => {
+                          setRubric([]);
+                          setRubricOpen(false);
+                        }}
+                      >
+                        Delete rubric
+                      </Button>
+                    </Group>
+                  </Group>
+                </Box>
+              )}
+            </div>
+
+            {error && (
+              <Alert color="red" icon={<AlertCircle width={16} height={16} />}>
+                {error}
+              </Alert>
+            )}
+
+            <Group justify="space-between" pt="md">
+              <Anchor onClick={() => router.back()} c="dimmed" size="sm">
+                Cancel
+              </Anchor>
+              <Button
+                type="submit"
+                loading={isSubmitting}
+                color="dark"
+                radius="xl"
               >
-                {label}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <ReviewerSelector
-          eligibleReviewers={eligibleReviewers}
-          selectedReviewers={selectedReviewers}
-          onChange={setSelectedReviewers}
-        />
-
-        <div className="space-y-3">
-          <Label className="text-sm font-medium uppercase tracking-wide text-gray-700">
-            Opening Status
-          </Label>
-          <div className="flex flex-wrap gap-2">
-            {(["open", "closed"] as const).map((status) => (
-              <button
-                key={status}
-                type="button"
-                onClick={() => setFormData({ ...formData, status })}
-                className={`rounded-full px-5 py-2.5 text-sm font-medium transition-all ${
-                  formData.status === status
-                    ? status === "open"
-                      ? "bg-owl-purple text-white shadow-md"
-                      : "bg-black text-white shadow-md"
-                    : "border border-gray-300 bg-white text-gray-600 hover:bg-gray-50"
-                }`}
-              >
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <RubricEditor rubric={rubric} onChange={setRubric} />
-
-        {error && (
-          <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600">
-            {error}
-          </div>
-        )}
-
-        <div className="flex justify-end gap-3 pt-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.back()}
-            className="h-11 px-8 text-sm"
-            disabled={isSubmitting}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            className="h-11 px-8 text-sm"
-            disabled={isSubmitting}
-          >
-            {isSubmitting
-              ? isEditMode
-                ? "Saving..."
-                : "Creating..."
-              : isEditMode
-                ? "Save changes"
-                : "Create opening"}
-          </Button>
-        </div>
-      </form>
-    </div>
+                {isEditMode ? "Save changes" : "Create position"}
+              </Button>
+            </Group>
+          </Stack>
+        </form>
+      </Card>
+    </Stack>
   );
 }

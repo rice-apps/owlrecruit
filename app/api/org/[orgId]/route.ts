@@ -55,7 +55,8 @@ export async function PATCH(
 
   const updates: Record<string, unknown> = {};
   if (name !== undefined) updates.name = name.trim();
-  if (description !== undefined) updates.description = description?.trim() || null;
+  if (description !== undefined)
+    updates.description = description?.trim() || null;
 
   // Handle logo upload if provided
   if (logoFile && logoFile.size > 0) {
@@ -80,7 +81,6 @@ export async function PATCH(
 
     updates.logo_url = urlData.publicUrl;
   }
-
 
   const { error: updateError } = await supabase
     .from("orgs")

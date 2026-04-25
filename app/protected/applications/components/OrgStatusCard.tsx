@@ -2,23 +2,18 @@
  * OrgStatusCard Component
  *
  * Displays a user's organization memberships and application statuses in a card format.
- * Fetches data from Supabase including memberships, applications, organizations, and roles.
- * Provides loading states, error handling, and empty state management.
  */
 "use client";
 
 import { useEffect, useState } from "react";
-import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Badge, Box, Card, Group, Loader, Stack, Text } from "@mantine/core";
 import type { Enums } from "@/types/supabase";
 import { logger } from "@/lib/logger";
+import { getApplicationStatusColor } from "@/lib/status";
 
-// Application status type from database enum
 type ApplicationStatus = Enums<"status">;
 
-// Type definitions for org-related data structures
 interface OrgMembership {
   org_id: string;
   role: Enums<"org_role">;
@@ -44,51 +39,12 @@ interface OrgData {
   applications: OrgApplication[];
 }
 
-/**
- * Maps application status to appropriate badge variant for visual consistency
- */
-const getStatusBadgeVariant = (
-  status: ApplicationStatus | null,
-): "default" | "secondary" | "destructive" | "outline" => {
-  switch (status) {
-    case "No Status":
-    case "Applied":
-      return "secondary";
-    case "Interviewing":
-      return "default";
-    case "Offer":
-    case "Accepted Offer":
-      return "default";
-    case "Rejected":
-      return "destructive";
-    default:
-      return "outline";
-  }
-};
-
-/**
- * Formats ISO date string to user-friendly format (e.g., "Jan 15, 2024")
- */
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString("en-US", {
+const formatDate = (dateString: string) =>
+  new Date(dateString).toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
   });
-};
-
-/**
- * Reusable Card wrapper component to reduce code duplication
- * Provides consistent header and styling for all card states
- */
-const StatusCard = ({ children }: { children: ReactNode }) => (
-  <Card>
-    <CardHeader>
-      <CardTitle>Organization Status</CardTitle>
-    </CardHeader>
-    <CardContent>{children}</CardContent>
-  </Card>
-);
 
 export default function OrgStatusCard({ userId }: OrgStatusCardProps) {
   const router = useRouter();
@@ -99,31 +55,13 @@ export default function OrgStatusCard({ userId }: OrgStatusCardProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  /**
-   * Handle click on membership container
-   */
-  const handleMembershipClick = (membership: OrgMembership) => {
-    router.push(`/protected/org/${membership.org_id}`);
-  };
-
-  /**
-   * Handle click on application container
-   */
-  const handleApplicationClick = (application: OrgApplication) => {
-    router.push(`/protected/org/${application.org_id}`);
-  };
-
   useEffect(() => {
     async function fetchOrgData() {
       try {
         setLoading(true);
         setError(null);
-
         const response = await fetch("/api/user/org-status");
-        if (!response.ok) {
-          throw new Error("Failed to fetch organization data");
-        }
-
+        if (!response.ok) throw new Error("Failed to fetch organization data");
         const data: OrgData = await response.json();
         setOrgData(data);
       } catch (err) {
@@ -135,138 +73,143 @@ export default function OrgStatusCard({ userId }: OrgStatusCardProps) {
         setLoading(false);
       }
     }
-
-    // Only fetch data if userId is provided
-    if (userId) {
-      fetchOrgData();
-    }
+    if (userId) fetchOrgData();
   }, [userId]);
 
-  // Render loading state with spinner
-  if (loading) {
-    return (
-      <StatusCard>
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          <span className="ml-2 text-muted-foreground">Loading...</span>
-        </div>
-      </StatusCard>
-    );
-  }
+  const cardContent = () => {
+    if (loading) {
+      return (
+        <Group gap="sm" justify="center" py="xl">
+          <Loader size="sm" />
+          <Text size="sm" c="dimmed">
+            Loading...
+          </Text>
+        </Group>
+      );
+    }
 
-  // Render error state with user-friendly message
-  if (error) {
-    return (
-      <StatusCard>
-        <div className="text-center py-8">
-          <p className="text-destructive mb-2">
+    if (error) {
+      return (
+        <Box ta="center" py="xl">
+          <Text c="red" mb="xs">
             Error loading organization data
-          </p>
-          <p className="text-sm text-muted-foreground">{error}</p>
-        </div>
-      </StatusCard>
-    );
-  }
+          </Text>
+          <Text size="sm" c="dimmed">
+            {error}
+          </Text>
+        </Box>
+      );
+    }
 
-  const hasNoData =
-    orgData.memberships.length === 0 && orgData.applications.length === 0;
-
-  // Render empty state when user has no org data
-  if (hasNoData) {
-    return (
-      <StatusCard>
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">
+    const hasNoData =
+      orgData.memberships.length === 0 && orgData.applications.length === 0;
+    if (hasNoData) {
+      return (
+        <Box ta="center" py="xl">
+          <Text c="dimmed">
             No organization memberships or applications found.
-          </p>
-        </div>
-      </StatusCard>
-    );
-  }
+          </Text>
+        </Box>
+      );
+    }
 
-  // Render main content with memberships and applications
-  return (
-    <StatusCard>
-      <div className="space-y-6">
-        {/* Active Memberships Section */}
+    return (
+      <Stack gap="lg">
         {orgData.memberships.length > 0 && (
-          <div>
-            <h3 className="font-semibold text-lg mb-3">Memberships</h3>
-            <div className="space-y-3">
-              {orgData.memberships.map((membership) => (
-                <div
-                  key={`${membership.org_id}-${membership.role}`}
-                  className="flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-all duration-200 hover:bg-muted/50 hover:border-primary/50 hover:shadow-sm"
-                  onClick={() => handleMembershipClick(membership)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      handleMembershipClick(membership);
-                    }
-                  }}
-                >
-                  <div className="flex-1">
-                    <p className="font-medium">
+          <Stack gap="sm">
+            <Text fw={600} size="lg">
+              Memberships
+            </Text>
+            {orgData.memberships.map((membership) => (
+              <Box
+                key={`${membership.org_id}-${membership.role}`}
+                p="sm"
+                style={{
+                  border: "1px solid var(--mantine-color-gray-2)",
+                  borderRadius: "var(--mantine-radius-md)",
+                  cursor: "pointer",
+                }}
+                onClick={() =>
+                  router.push(`/protected/org/${membership.org_id}`)
+                }
+              >
+                <Group justify="space-between">
+                  <Box>
+                    <Text fw={500}>
                       {membership.org_name || "Unknown Organization"}
-                    </p>
+                    </Text>
                     {membership.created_at && (
-                      <p className="text-xs text-muted-foreground">
+                      <Text size="xs" c="dimmed">
                         Joined: {formatDate(membership.created_at)}
-                      </p>
+                      </Text>
                     )}
-                  </div>
-                  <Badge variant="default">
+                  </Box>
+                  <Badge color="owlTeal" variant="filled">
                     {membership.role === "admin" ? "Admin" : "Reviewer"}
                   </Badge>
-                </div>
-              ))}
-            </div>
-          </div>
+                </Group>
+              </Box>
+            ))}
+          </Stack>
         )}
 
-        {/* Pending Applications Section */}
         {orgData.applications.length > 0 && (
-          <div>
-            <h3 className="font-semibold text-lg mb-3">Applications</h3>
-            <div className="space-y-3">
-              {orgData.applications.map((application) => (
-                <div
-                  key={`${application.opening_id}-${application.created_at}`}
-                  className="flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-all duration-200 hover:bg-muted/50 hover:border-primary/50 hover:shadow-sm"
-                  onClick={() => handleApplicationClick(application)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      handleApplicationClick(application);
-                    }
-                  }}
-                >
-                  <div className="flex-1">
-                    <p className="font-medium">
+          <Stack gap="sm">
+            <Text fw={600} size="lg">
+              Applications
+            </Text>
+            {orgData.applications.map((application) => (
+              <Box
+                key={`${application.opening_id}-${application.created_at}`}
+                p="sm"
+                style={{
+                  border: "1px solid var(--mantine-color-gray-2)",
+                  borderRadius: "var(--mantine-radius-md)",
+                  cursor: "pointer",
+                }}
+                onClick={() =>
+                  router.push(`/protected/org/${application.org_id}`)
+                }
+              >
+                <Group justify="space-between">
+                  <Box>
+                    <Text fw={500}>
                       {application.org_name || "Unknown Organization"}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
+                    </Text>
+                    <Text size="sm" c="dimmed">
                       Position: {application.opening_title || "Not specified"}
-                    </p>
+                    </Text>
                     {application.created_at && (
-                      <p className="text-xs text-muted-foreground">
+                      <Text size="xs" c="dimmed">
                         Applied: {formatDate(application.created_at)}
-                      </p>
+                      </Text>
                     )}
-                  </div>
-                  <Badge variant={getStatusBadgeVariant(application.status)}>
+                  </Box>
+                  <Badge
+                    color={getApplicationStatusColor(
+                      application.status as Parameters<
+                        typeof getApplicationStatusColor
+                      >[0],
+                    )}
+                    variant="light"
+                  >
                     {application.status ?? "No Status"}
                   </Badge>
-                </div>
-              ))}
-            </div>
-          </div>
+                </Group>
+              </Box>
+            ))}
+          </Stack>
         )}
-      </div>
-    </StatusCard>
+      </Stack>
+    );
+  };
+
+  return (
+    <Card withBorder radius="md" p="lg">
+      <Text fw={700} size="lg" mb="md">
+        Organization Status
+      </Text>
+      {cardContent()}
+    </Card>
   );
 }

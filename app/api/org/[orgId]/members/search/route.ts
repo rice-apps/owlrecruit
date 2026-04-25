@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import { NextResponse } from "next/server";
+import { ok, err } from "@/lib/api-response";
+import { requireOrgMember } from "@/lib/auth";
 
 export async function GET(
   request: Request,
@@ -7,27 +8,22 @@ export async function GET(
 ) {
   try {
     const { orgId } = await params;
+    const supabase = await createClient();
+
+    await requireOrgMember(supabase, orgId);
+
     const { searchParams } = new URL(request.url);
     const searchQuery = searchParams.get("q") || "";
 
-    const supabase = await createClient();
-
-    // First get all current members of the org
     const { data: members, error: membersError } = await supabase
       .from("org_members")
       .select("user_id")
       .eq("org_id", orgId);
 
-    if (membersError) {
-      return NextResponse.json(
-        { error: membersError.message },
-        { status: 500 },
-      );
-    }
+    if (membersError) return err(membersError.message, 500);
 
-    const memberIds = members?.map((m) => m.user_id) || [];
+    const memberIds = members?.map((m) => m.user_id) ?? [];
 
-    // Then search for users not in that list
     let query = supabase.from("users").select("id, name, email");
 
     if (memberIds.length > 0) {
@@ -40,17 +36,12 @@ export async function GET(
       );
     }
 
-    const { data: users, error: usersError } = await query.limit(5);
+    const { data: users, error: usersError } = await query.limit(10);
 
-    if (usersError) {
-      return NextResponse.json({ error: usersError.message }, { status: 500 });
-    }
-
-    return NextResponse.json(users);
-  } catch {
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 },
-    );
+    if (usersError) return err(usersError.message, 500);
+    return ok(users);
+  } catch (e) {
+    if (e instanceof Response) return e;
+    return err("Internal Server Error", 500);
   }
 }
