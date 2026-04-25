@@ -1,10 +1,10 @@
-import { Badge, Box, Card, Group, Text } from "@mantine/core";
+import { Avatar, Card, Text, Badge } from "@mantine/core";
 import { Application, Opening, Org } from "@/types/app";
 import { getApplicationStatusColor } from "@/lib/status";
 
 export interface ApplicationWithDetails extends Application {
   opening: Pick<Opening, "title" | "closes_at"> & {
-    org: Pick<Org, "name">;
+    org: Pick<Org, "name"> & { logo_url?: string | null };
   };
 }
 
@@ -16,66 +16,54 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
   const { opening, status } = application;
   const { org } = opening;
 
+  const isPending = status === "No Status" || !status;
+
   return (
     <Card
-      withBorder
-      radius="md"
+      radius="lg"
+      shadow="sm"
       p="md"
       style={{ display: "flex", flexDirection: "column", height: "100%" }}
     >
-      <Box
-        style={{
-          width: 48,
-          height: 48,
-          borderRadius: "var(--mantine-radius-md)",
-          background: "#db2777",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "white",
-          fontWeight: 700,
-          fontSize: 20,
-          marginBottom: 8,
-        }}
+      {/* Org logo */}
+      <Avatar
+        src={org.logo_url || undefined}
+        radius="md"
+        size={48}
+        color="gray"
       >
-        {org.name.charAt(0)}
-      </Box>
+        {org.name.charAt(0).toUpperCase()}
+      </Avatar>
 
-      <Text fw={700} size="lg" lh={1.2} mb={4}>
+      <Text fw={700} size="lg" lh={1.2} mt="sm" mb={4}>
         {opening.title}
       </Text>
-      <Text size="sm" c="dimmed" mb="sm">
+      <Text size="sm" c="dimmed" mb="xs">
         {org.name}
       </Text>
 
-      <Box style={{ flex: 1 }}>
-        <Badge
-          color={getApplicationStatusColor(
-            status as Parameters<typeof getApplicationStatusColor>[0],
-          )}
-          variant="light"
-          size="sm"
-        >
-          {status || "Pending"}
-        </Badge>
-      </Box>
-
-      <Group
-        justify="space-between"
-        mt="md"
-        pt="md"
-        style={{ borderTop: "1px solid var(--mantine-color-gray-2)" }}
+      <Badge
+        color={getApplicationStatusColor(
+          status as Parameters<typeof getApplicationStatusColor>[0],
+        )}
+        variant={isPending ? "outline" : "filled"}
+        radius="xl"
+        size="sm"
+        mt="xs"
+        w="fit-content"
       >
-        <Text size="xs" c="dimmed">
-          {opening.closes_at
-            ? `Due ${new Date(opening.closes_at).toLocaleDateString("en-US", {
-                month: "2-digit",
-                day: "2-digit",
-                year: "numeric",
-              })}`
-            : "No deadline"}
-        </Text>
-      </Group>
+        {status || "No Status"}
+      </Badge>
+
+      <Text size="xs" c="dimmed" mt="auto" pt="xs">
+        {opening.closes_at
+          ? `Due ${new Date(opening.closes_at).toLocaleDateString("en-US", {
+              month: "2-digit",
+              day: "2-digit",
+              year: "numeric",
+            })}`
+          : "No deadline"}
+      </Text>
     </Card>
   );
 }

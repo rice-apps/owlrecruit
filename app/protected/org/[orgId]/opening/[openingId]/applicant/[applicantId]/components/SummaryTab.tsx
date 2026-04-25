@@ -300,7 +300,7 @@ export function SummaryTab({
                 }}
               >
                 <Group gap="sm" align="flex-start" wrap="wrap">
-                  <Avatar size={36} color="owlPurple" radius="md">
+                  <Avatar size={36} color="owlTeal" radius="md">
                     {getInitials(feedback.author)}
                   </Avatar>
                   <Box style={{ flex: 1, minWidth: 0 }}>
@@ -423,7 +423,7 @@ export function SummaryTab({
               style={{
                 fontSize: 14,
                 fontWeight: 600,
-                color: "var(--mantine-color-owlPurple-6)",
+                color: "var(--mantine-color-owlTeal-5)",
               }}
             >
               Open original file
@@ -442,7 +442,7 @@ export function SummaryTab({
               style={{
                 fontSize: 14,
                 fontWeight: 600,
-                color: "var(--mantine-color-owlPurple-6)",
+                color: "var(--mantine-color-owlTeal-5)",
               }}
             >
               Open resume

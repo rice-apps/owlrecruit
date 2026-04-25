@@ -1,4 +1,4 @@
-import { Avatar, Badge, Card, Group, ScrollArea, Text } from "@mantine/core";
+import { Avatar, Badge, Divider, Group, Stack, Text } from "@mantine/core";
 
 export type OrgMemberRecord = {
   id: string;
@@ -25,38 +25,48 @@ export function MembersStrip({ members }: MembersStripProps) {
   }
 
   return (
-    <ScrollArea>
-      <Group gap="md" wrap="nowrap" pb="xs">
-        {members.map((member) => {
-          const displayName =
-            member.users?.name?.trim() || member.users?.email || "Unknown";
-          const initial = displayName.charAt(0).toUpperCase() || "U";
+    <Stack gap={0}>
+      {members.map((member, i) => {
+        const displayName =
+          member.users?.name?.trim() || member.users?.email || "Unknown";
+        const email = member.users?.email || "";
+        const initial = displayName.charAt(0).toUpperCase() || "U";
+        const isAdmin = member.role === "admin";
 
-          return (
-            <Card
-              key={member.id}
-              withBorder
-              radius="md"
-              p="md"
-              style={{ minWidth: 180, maxWidth: 240, flexShrink: 0 }}
-            >
+        return (
+          <div key={member.id}>
+            <Group justify="space-between" align="center" py="xs">
+              {/* Left: avatar + name + email */}
               <Group gap="sm">
-                <Avatar color="owlPurple" radius="md">
+                <Avatar radius="xl" size={40} color="gray">
                   {initial}
                 </Avatar>
-                <div style={{ minWidth: 0 }}>
-                  <Text size="sm" fw={600} truncate="end">
+                <Stack gap={0}>
+                  <Text size="sm" fw={600}>
                     {displayName}
                   </Text>
-                  <Badge variant="light" color="owlPurple" size="xs" mt={2}>
-                    {member.role === "admin" ? "Admin" : "Reviewer"}
-                  </Badge>
-                </div>
+                  {email && (
+                    <Text size="xs" c="dimmed">
+                      {email}
+                    </Text>
+                  )}
+                </Stack>
               </Group>
-            </Card>
-          );
-        })}
-      </Group>
-    </ScrollArea>
+
+              {/* Right: role badge */}
+              <Badge
+                color={isAdmin ? "owlTeal" : "gray"}
+                variant={isAdmin ? "filled" : "outline"}
+                radius="xl"
+                size="sm"
+              >
+                {isAdmin ? "Admin" : "Reviewer"}
+              </Badge>
+            </Group>
+            {i < members.length - 1 && <Divider />}
+          </div>
+        );
+      })}
+    </Stack>
   );
 }

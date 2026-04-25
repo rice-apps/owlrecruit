@@ -185,7 +185,7 @@ function QuestionCard({
                 <Button
                   variant="subtle"
                   size="xs"
-                  color="owlPurple"
+                  color="owlTeal"
                   onClick={() =>
                     onChange({ ...q, options: [...q.options, ""] })
                   }

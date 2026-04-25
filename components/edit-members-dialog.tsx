@@ -335,7 +335,7 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
                     }}
                   >
                     <Group gap="sm">
-                      <Avatar size={32} radius="md" color="owlPurple">
+                      <Avatar size={32} radius="md" color="owlTeal">
                         {user.name.charAt(0).toUpperCase()}
                       </Avatar>
                       <div>
@@ -403,12 +403,12 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
                       borderRadius: 8,
                       opacity: isPendingRemoval ? 0.5 : 1,
                       background: isPendingAdd
-                        ? "var(--mantine-color-owlPurple-0)"
+                        ? "var(--mantine-color-owlTeal-0)"
                         : "transparent",
                     }}
                   >
                     <Group gap="sm">
-                      <Avatar size={40} radius="md" color="owlPurple">
+                      <Avatar size={40} radius="md" color="owlTeal">
                         {member.users.name?.charAt(0).toUpperCase() || "U"}
                       </Avatar>
                       <div>
@@ -425,7 +425,7 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
                             {member.users.name || "Unknown"}
                           </Text>
                           {isPendingAdd && (
-                            <Badge size="xs" variant="light" color="owlPurple">
+                            <Badge size="xs" variant="filled" color="owlTeal">
                               New
                             </Badge>
                           )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { TextInput, Group, Button, Stack } from "@mantine/core";
+import { Anchor, Button, Group, Stack, TextInput } from "@mantine/core";
 import { createClient } from "@/lib/supabase/client";
 import OrganizationsSection, {
   type OrgMembership,
@@ -100,10 +100,15 @@ export default function ProfileForm({
       <OrganizationsSection memberships={orgMemberships} userId={userId} />
 
       <Group justify="flex-end">
-        <Button variant="default" onClick={handleReset} disabled={saving}>
+        <Anchor
+          onClick={handleReset}
+          c="dimmed"
+          size="sm"
+          style={{ cursor: "pointer" }}
+        >
           Reset
-        </Button>
-        <Button onClick={handleSave} loading={saving}>
+        </Anchor>
+        <Button onClick={handleSave} loading={saving} color="dark" radius="xl">
           Save changes
         </Button>
       </Group>

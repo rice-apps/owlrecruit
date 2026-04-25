@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import Link from "next/link";
-import { Button, Text, Alert } from "@mantine/core";
-import { Plus } from "@untitled-ui/icons-react";
+import { Text, Alert, ActionIcon } from "@mantine/core";
+import { Edit02 } from "@untitled-ui/icons-react";
 import { EditMembersDialog } from "@/components/edit-members-dialog";
 import {
   MembersStrip,
@@ -9,10 +8,10 @@ import {
 } from "@/components/org/members-strip";
 import { OrgPageHeader } from "@/components/org/org-page-header";
 import { SectionShell } from "@/components/org/section-shell";
-import { OrgSectionNav } from "@/components/org-section-nav";
 import { LeaveOrgButton } from "@/components/leave-org-button";
 import { logger } from "@/lib/logger";
 import { OpeningsGrid } from "./components/openings-grid";
+import Link from "next/link";
 
 interface ReviewerOrgPageProps {
   params: Promise<{ orgId: string }>;
@@ -99,25 +98,8 @@ export default async function ReviewerOrgPage({
   });
 
   const displayOrgName = orgData?.name || "Organization";
-  const roleLabel = membershipError
-    ? "ROLE UNAVAILABLE"
-    : membershipRole === "admin"
-      ? "ADMIN"
-      : membershipRole === "reviewer"
-        ? "REVIEWER"
-        : "ROLE UNKNOWN";
-
-  const memberCountLabel = membersError
-    ? "Members unavailable"
-    : members.length
-      ? `${members.length} ${members.length === 1 ? "collaborator" : "collaborators"}`
-      : "No members yet";
-
-  const memberSectionSubtitle = membersError
-    ? "Could not load the roster right now"
-    : members.length
-      ? "Current roster of reviewers and admins"
-      : "Invite collaborators via Edit Members";
+  const openPositionCount =
+    openings?.filter((o) => o.status === "open").length ?? 0;
 
   return (
     <div
@@ -136,24 +118,23 @@ export default async function ReviewerOrgPage({
         orgId={orgId}
         displayOrgName={displayOrgName}
         orgDescription={orgData?.description ?? null}
-        roleLabel={roleLabel}
         isAdmin={isAdmin}
         hasRoleError={Boolean(membershipError)}
         logoUrl={orgData?.logo_url ?? null}
-      />
-
-      <OrgSectionNav
-        sections={[
-          { id: "about", label: "About" },
-          { id: "positions", label: "Positions" },
-          { id: "members", label: "Members" },
-        ]}
+        memberCount={members.length}
+        openPositionCount={openPositionCount}
       />
 
       <SectionShell
         id="about"
         title="About"
-        subtitle="Summary and current context"
+        actions={
+          isAdmin ? (
+            <ActionIcon variant="subtle" color="gray" aria-label="Edit about">
+              <Edit02 width={16} height={16} />
+            </ActionIcon>
+          ) : undefined
+        }
       >
         <Text size="md" c="dimmed" style={{ lineHeight: 1.7 }}>
           {orgData?.description ||
@@ -164,20 +145,19 @@ export default async function ReviewerOrgPage({
       <SectionShell
         id="positions"
         title="Positions"
-        subtitle="Open roles for this organization"
         actions={
           isAdmin ? (
             <Link
               href={`/protected/org/${orgId}/new-opening`}
               style={{ textDecoration: "none" }}
             >
-              <Button
-                size="xs"
-                variant="light"
-                leftSection={<Plus width={14} height={14} />}
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                aria-label="Add position"
               >
-                Add position
-              </Button>
+                <span style={{ fontSize: 18, lineHeight: 1 }}>+</span>
+              </ActionIcon>
             </Link>
           ) : null
         }
@@ -193,22 +173,7 @@ export default async function ReviewerOrgPage({
       <SectionShell
         id="members"
         title="Members"
-        subtitle={memberSectionSubtitle}
-        actions={
-          <div
-            style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}
-          >
-            <Text
-              size="xs"
-              fw={600}
-              c="dimmed"
-              style={{ textTransform: "uppercase", letterSpacing: "0.1em" }}
-            >
-              {memberCountLabel}
-            </Text>
-            {isAdmin && <EditMembersDialog orgId={orgId} />}
-          </div>
-        }
+        actions={isAdmin ? <EditMembersDialog orgId={orgId} /> : undefined}
       >
         {membersError ? (
           <Alert color="yellow">

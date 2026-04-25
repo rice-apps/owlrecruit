@@ -25,7 +25,7 @@ const buttonLabel: Record<OpeningStatus, string> = {
 };
 
 const buttonColor: Record<OpeningStatus, string> = {
-  draft: "owlPurple",
+  draft: "owlTeal",
   open: "red",
   closed: "green",
 };

@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
-import { AppShell, AppShellMain } from "@mantine/core";
 import { createClient } from "@/lib/supabase/server";
-import { AppNavbar } from "@/components/AppNavbar";
+import { AppShellWrapper } from "@/components/AppShellWrapper";
 import type { OrgWithRole } from "@/types/app";
 import { logger } from "@/lib/logger";
 
@@ -22,6 +21,7 @@ export default async function ProtectedLayout({
     full_name?: string;
     name?: string;
     email?: string;
+    avatar_url?: string;
   };
 
   const { data: memberships, error: membershipsError } = await supabase
@@ -65,12 +65,12 @@ export default async function ProtectedLayout({
   const user = {
     name: userRecord?.name || userMetadata.full_name || "User",
     email: userMetadata.email || "",
+    avatarUrl: userMetadata.avatar_url || "",
   };
 
   return (
-    <AppShell navbar={{ width: 240, breakpoint: "sm" }} padding="md">
-      <AppNavbar orgs={orgs} user={user} />
-      <AppShellMain bg="gray.0">{children}</AppShellMain>
-    </AppShell>
+    <AppShellWrapper orgs={orgs} user={user}>
+      {children}
+    </AppShellWrapper>
   );
 }

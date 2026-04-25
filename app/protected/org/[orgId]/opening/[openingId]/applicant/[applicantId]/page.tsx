@@ -2,7 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Alert, Box, Button, Group, Loader, Stack, Text } from "@mantine/core";
+import {
+  Alert,
+  Box,
+  Button,
+  Card,
+  Group,
+  Loader,
+  Stack,
+  Text,
+} from "@mantine/core";
 import { ArrowLeft } from "@untitled-ui/icons-react";
 import { Json } from "@/types/supabase";
 import { createClient } from "@/lib/supabase/client";
@@ -400,20 +409,24 @@ export default function ApplicantReviewPage() {
           Back to Opening
         </Button>
 
-        <Box>
-          <Text size="xl" fw={700} mb={4}>
-            {applicantName}
-          </Text>
-          <Group gap="xs">
-            <Text size="md" c="dimmed">
-              {applicantEmail}
-            </Text>
-            <Text c="dimmed">•</Text>
-            <Text size="md" c="dimmed">
-              {applicantMajor}
-            </Text>
+        <Card radius="lg" shadow="sm" p="xl">
+          <Group justify="space-between" align="flex-start">
+            <Box>
+              <Text size="xl" fw={700} mb={4}>
+                {applicantName}
+              </Text>
+              <Group gap="xs">
+                <Text size="md" c="dimmed">
+                  {applicantEmail}
+                </Text>
+                <Text c="dimmed">•</Text>
+                <Text size="md" c="dimmed">
+                  {applicantMajor}
+                </Text>
+              </Group>
+            </Box>
           </Group>
-        </Box>
+        </Card>
 
         {loading ? (
           <Box ta="center" py="xl">

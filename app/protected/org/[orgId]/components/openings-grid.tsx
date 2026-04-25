@@ -3,17 +3,20 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  Badge,
+  Avatar,
+  Button,
   Card,
   Group,
   SimpleGrid,
   Text,
-  Box,
   Stack,
-  Button,
+  Menu,
+  ActionIcon,
 } from "@mantine/core";
-import { getOpeningStatusColor, getOpeningStatusLabel } from "@/lib/status";
+import { DotsVertical } from "@untitled-ui/icons-react";
+import { getOpeningStatusLabel } from "@/lib/status";
 import { formatDate } from "@/lib/utils";
+import { OpeningStatusBadge } from "@/components/StatusBadge";
 
 interface OpeningItem {
   id: string;
@@ -43,14 +46,12 @@ export function OpeningsGrid({
   orgName,
   isAdmin,
 }: OpeningsGridProps) {
-  const [selectedStatus, setSelectedStatus] = useState<FilterStatus | null>(
-    null,
-  );
+  const [selectedStatus, setSelectedStatus] = useState<FilterStatus>("open");
 
-  const filteredOpenings = useMemo(() => {
-    if (!selectedStatus) return openings;
-    return openings.filter((o) => (o.status ?? "draft") === selectedStatus);
-  }, [openings, selectedStatus]);
+  const filteredOpenings = useMemo(
+    () => openings.filter((o) => (o.status ?? "draft") === selectedStatus),
+    [openings, selectedStatus],
+  );
 
   if (!openings.length) {
     return (
@@ -69,18 +70,16 @@ export function OpeningsGrid({
 
   return (
     <Stack gap="md">
+      {/* Open / Closed toggle */}
       <Group gap="xs">
         {FILTER_OPTIONS.map((option) => (
           <Button
             key={option.value}
             size="xs"
+            radius="xl"
             variant={selectedStatus === option.value ? "filled" : "outline"}
-            color={selectedStatus === option.value ? "cyan" : "gray"}
-            onClick={() =>
-              setSelectedStatus((cur) =>
-                cur === option.value ? null : option.value,
-              )
-            }
+            color={selectedStatus === option.value ? "dark" : "gray"}
+            onClick={() => setSelectedStatus(option.value)}
           >
             {option.label}
           </Button>
@@ -90,87 +89,78 @@ export function OpeningsGrid({
       {filteredOpenings.length > 0 ? (
         <SimpleGrid cols={{ base: 1, sm: 2, lg: 3, xl: 4 }} spacing="md">
           {filteredOpenings.map((opening) => (
-            <Link
+            <Card
               key={opening.id}
-              href={`/protected/org/${orgId}/opening/${opening.id}`}
-              style={{ textDecoration: "none" }}
+              radius="lg"
+              shadow="sm"
+              p="md"
+              style={{ position: "relative" }}
             >
-              <Card
-                withBorder
-                radius="lg"
-                padding={0}
-                style={{ minHeight: 250, overflow: "hidden" }}
+              {/* ⋮ menu */}
+              {isAdmin && (
+                <div
+                  style={{ position: "absolute", top: 12, right: 12 }}
+                  onClick={(e) => e.preventDefault()}
+                >
+                  <Menu position="bottom-end" withArrow shadow="sm">
+                    <Menu.Target>
+                      <ActionIcon
+                        variant="subtle"
+                        color="gray"
+                        size="sm"
+                        aria-label="Opening options"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <DotsVertical width={16} height={16} />
+                      </ActionIcon>
+                    </Menu.Target>
+                    <Menu.Dropdown>
+                      <Menu.Item>Edit</Menu.Item>
+                      <Menu.Item>
+                        {opening.status === "open"
+                          ? "Close position"
+                          : "Open position"}
+                      </Menu.Item>
+                      <Menu.Item color="red">Delete</Menu.Item>
+                    </Menu.Dropdown>
+                  </Menu>
+                </div>
+              )}
+
+              <Link
+                href={`/protected/org/${orgId}/opening/${opening.id}`}
+                style={{ textDecoration: "none", color: "inherit" }}
               >
-                <Box
-                  h={64}
-                  style={{ background: "var(--mantine-color-red-3)" }}
+                {/* Org initial as avatar */}
+                <Avatar radius="md" size={48} color="gray">
+                  {(opening.title || orgName || "O").charAt(0).toUpperCase()}
+                </Avatar>
+
+                <Text fw={700} size="md" mt="sm" lineClamp={2}>
+                  {opening.title || "Untitled Opening"}
+                </Text>
+
+                <Text size="sm" c="dimmed" mb="xs">
+                  {orgName}
+                </Text>
+
+                <OpeningStatusBadge
+                  status={opening.status ?? "draft"}
+                  size="sm"
                 />
 
-                <Box
-                  style={{
-                    position: "absolute",
-                    top: 44,
-                    left: 16,
-                    width: 48,
-                    height: 48,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderRadius: 8,
-                    border: "1px solid var(--mantine-color-gray-2)",
-                    background: "white",
-                  }}
-                >
-                  <Text fw={600} c="red">
-                    {(opening.title || "O").charAt(0).toUpperCase()}
-                  </Text>
-                </Box>
-
-                <Stack gap="xs" p="md" pt={36}>
-                  <Group justify="space-between" align="flex-start" gap="xs">
-                    <Text fw={700} size="md" lineClamp={2} style={{ flex: 1 }}>
-                      {opening.title || "Untitled Opening"}
-                    </Text>
-                    <Badge
-                      variant="light"
-                      color={getOpeningStatusColor(opening.status ?? "draft")}
-                      size="sm"
-                    >
-                      {getOpeningStatusLabel(opening.status ?? "draft")}
-                    </Badge>
-                  </Group>
-
-                  <Text size="sm" c="dimmed">
-                    {orgName}
-                  </Text>
-
-                  {opening.description && (
-                    <Text size="xs" c="dimmed" lineClamp={2}>
-                      {opening.description}
-                    </Text>
-                  )}
-
-                  <Text
-                    size="xs"
-                    c="dimmed"
-                    mt="auto"
-                    pt="xs"
-                    style={{
-                      borderTop: "1px solid var(--mantine-color-gray-2)",
-                    }}
-                  >
-                    {opening.closes_at
-                      ? `Due ${formatDate(opening.closes_at)}`
-                      : "No deadline"}
-                  </Text>
-                </Stack>
-              </Card>
-            </Link>
+                <Text size="xs" c="dimmed" mt="xs">
+                  {opening.closes_at
+                    ? `Due ${formatDate(opening.closes_at)}`
+                    : "No deadline"}
+                </Text>
+              </Link>
+            </Card>
           ))}
         </SimpleGrid>
       ) : (
         <Text size="sm" c="dimmed" ta="center" py="lg">
-          No positions match this status filter.
+          No {getOpeningStatusLabel(selectedStatus).toLowerCase()} positions.
         </Text>
       )}
     </Stack>

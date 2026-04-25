@@ -44,7 +44,7 @@ export default async function RubricPage({ params }: RubricPageProps) {
           href={`/protected/org/${orgId}`}
           style={{
             fontSize: 14,
-            color: "var(--mantine-color-owlPurple-6)",
+            color: "var(--mantine-color-owlTeal-5)",
             textDecoration: "none",
           }}
         >
@@ -59,7 +59,7 @@ export default async function RubricPage({ params }: RubricPageProps) {
           href={`/protected/org/${orgId}/opening/${openingId}?tab=overview`}
           style={{
             fontSize: 14,
-            color: "var(--mantine-color-owlPurple-6)",
+            color: "var(--mantine-color-owlTeal-5)",
             textDecoration: "none",
           }}
         >

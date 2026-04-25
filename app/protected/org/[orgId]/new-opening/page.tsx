@@ -16,11 +16,16 @@ import {
   ActionIcon,
   Table,
   Box,
+  Card,
+  Badge,
+  Anchor,
+  Title,
 } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
 import { notifications } from "@mantine/notifications";
-import { AlertCircle, ArrowLeft, Trash01 } from "@untitled-ui/icons-react";
+import { AlertCircle, Trash01 } from "@untitled-ui/icons-react";
 import { logger } from "@/lib/logger";
+import { Breadcrumb } from "@/components/Breadcrumb";
 
 export default async function NewOpeningPage({ params }: NewOpeningPageProps) {
   const { orgId } = await params;
@@ -188,296 +193,321 @@ export default function NewOpeningPage() {
   };
 
   return (
-    <Stack maw={640} gap="xl">
-      <div>
-        <Button
-          variant="subtle"
-          color="gray"
-          leftSection={<ArrowLeft width={16} height={16} />}
-          onClick={() => router.back()}
-          mb="sm"
-        >
-          Back
-        </Button>
-        <Text size="xl" fw={600}>
-          Create New Opening
+    <Stack gap="xl" maw={800}>
+      <Breadcrumb
+        items={[
+          { label: orgName || "Organization", href: `/protected/org/${orgId}` },
+          { label: "Create position" },
+        ]}
+      />
+
+      <Card radius="lg" shadow="sm" p="xl">
+        <Title order={2} mb={4}>
+          Create position
+        </Title>
+        <Text c="dimmed" size="sm" mb="lg">
+          Add an opening to your organization.
         </Text>
-        {orgName && (
-          <Text size="sm" c="dimmed">
-            {orgName}
-          </Text>
-        )}
-      </div>
 
-      <form onSubmit={handleSubmit}>
-        <Stack gap="lg">
-          {/* Title */}
-          <TextInput
-            label="Position Title"
-            required
-            value={title}
-            onChange={(e) => setTitle(e.currentTarget.value)}
-            placeholder="e.g. Software Developer"
-          />
-
-          {/* Application Method */}
-          <div>
-            <Text size="sm" fw={500} mb="xs">
-              Application Method
-            </Text>
-            <SegmentedControl
-              value={applicationMethod}
-              onChange={(val) => {
-                setApplicationMethod(val as "native" | "external");
-                if (val === "native") setApplicationLink("");
-                else if (!applicationLink) setApplicationLink("https://");
-              }}
-              data={[
-                { label: "Native Form", value: "native" },
-                { label: "External Link", value: "external" },
-              ]}
+        <form onSubmit={handleSubmit}>
+          <Stack gap="lg">
+            {/* Title */}
+            <TextInput
+              label="Position Title"
+              required
+              value={title}
+              onChange={(e) => setTitle(e.currentTarget.value)}
+              placeholder="e.g. Software Developer"
             />
-            {applicationMethod === "native" ? (
-              <Text size="xs" c="dimmed" mt="xs">
-                Build a form in the Questions tab after creating this opening.
+
+            {/* Application Method */}
+            <div>
+              <Text size="sm" fw={500} mb="xs">
+                Application Method
               </Text>
-            ) : (
-              <TextInput
-                type="url"
-                value={applicationLink}
-                onChange={(e) => setApplicationLink(e.currentTarget.value)}
-                placeholder="https://forms.google.com/..."
-                mt="xs"
+              <SegmentedControl
+                value={applicationMethod}
+                onChange={(val) => {
+                  setApplicationMethod(val as "native" | "external");
+                  if (val === "native") setApplicationLink("");
+                  else if (!applicationLink) setApplicationLink("https://");
+                }}
+                data={[
+                  { label: "Native Form", value: "native" },
+                  { label: "External Link", value: "external" },
+                ]}
               />
-            )}
-          </div>
+              {applicationMethod === "native" ? (
+                <Text size="xs" c="dimmed" mt="xs">
+                  Build a form in the Questions tab after creating this opening.
+                </Text>
+              ) : (
+                <TextInput
+                  type="url"
+                  value={applicationLink}
+                  onChange={(e) => setApplicationLink(e.currentTarget.value)}
+                  placeholder="https://forms.google.com/..."
+                  mt="xs"
+                />
+              )}
+            </div>
 
-          {/* Description */}
-          <Textarea
-            label="Description"
-            value={description}
-            onChange={(e) => setDescription(e.currentTarget.value)}
-            placeholder="Describe the position and responsibilities..."
-            minRows={3}
-            autosize
-          />
-
-          {/* Due Date */}
-          <DateTimePicker
-            label="Due Date"
-            placeholder="Select date and time"
-            value={closesAt}
-            onChange={setClosesAt}
-            clearable
-          />
-
-          {/* Opening Status */}
-          <div>
-            <Text size="sm" fw={500} mb="xs">
-              Opening Status
-            </Text>
-            <SegmentedControl
-              value={status}
-              onChange={(val) => setStatus(val as "draft" | "open" | "closed")}
-              data={[
-                { label: "Draft", value: "draft" },
-                { label: "Open", value: "open" },
-                { label: "Closed", value: "closed" },
-              ]}
+            {/* Description */}
+            <Textarea
+              label="Description"
+              value={description}
+              onChange={(e) => setDescription(e.currentTarget.value)}
+              placeholder="Describe the position and responsibilities..."
+              minRows={3}
+              autosize
             />
-          </div>
 
-          {/* Assign Reviewers */}
-          {reviewerOptions.length > 0 && (
-            <MultiSelect
-              label="Assign Reviewers"
-              placeholder="Select reviewers..."
-              data={reviewerOptions}
-              value={selectedReviewers}
-              onChange={setSelectedReviewers}
-              searchable
+            {/* Due Date */}
+            <DateTimePicker
+              label="Due Date"
+              placeholder="Select date and time"
+              value={closesAt}
+              onChange={setClosesAt}
               clearable
             />
-          )}
 
-          {/* Rubric */}
-          <div>
-            <Button
-              type="button"
-              variant="subtle"
-              color="owlPurple"
-              size="sm"
-              onClick={() => {
-                if (rubricOpen) {
-                  setRubric([]);
-                  setRubricOpen(false);
-                } else {
-                  setRubricOpen(true);
-                  if (rubric.length === 0) {
-                    setRubric([{ name: "", max_val: 10, description: "" }]);
-                  }
+            {/* Opening Status */}
+            <div>
+              <Text size="sm" fw={500} mb="xs">
+                Opening Status
+              </Text>
+              <SegmentedControl
+                value={status}
+                onChange={(val) =>
+                  setStatus(val as "draft" | "open" | "closed")
                 }
-              }}
-            >
-              {rubricOpen ? "Delete Rubric" : "Add Rubric"}
-            </Button>
+                data={[
+                  { label: "Draft", value: "draft" },
+                  { label: "Open", value: "open" },
+                  { label: "Closed", value: "closed" },
+                ]}
+              />
+            </div>
 
-            {rubricOpen && (
-              <Box
-                mt="sm"
-                style={{
-                  border: "1px solid var(--mantine-color-gray-3)",
-                  borderRadius: 12,
-                  padding: "1rem",
+            {/* Assign Reviewers */}
+            {reviewerOptions.length > 0 && (
+              <MultiSelect
+                label="Assign Reviewers"
+                placeholder="Select reviewers..."
+                data={reviewerOptions}
+                value={selectedReviewers}
+                onChange={setSelectedReviewers}
+                searchable
+                clearable
+              />
+            )}
+
+            {/* Rubric */}
+            <div>
+              <Button
+                type="button"
+                variant="subtle"
+                color="owlTeal"
+                size="sm"
+                onClick={() => {
+                  if (rubricOpen) {
+                    setRubric([]);
+                    setRubricOpen(false);
+                  } else {
+                    setRubricOpen(true);
+                    if (rubric.length === 0) {
+                      setRubric([{ name: "", max_val: 10, description: "" }]);
+                    }
+                  }
                 }}
               >
-                <Table>
-                  <Table.Thead>
-                    <Table.Tr>
-                      <Table.Th>
-                        <Text size="sm" fw={600}>
-                          Criteria *
-                        </Text>
-                        <Text size="xs" c="dimmed">
-                          e.g. &quot;Experience, Teamwork&quot;
-                        </Text>
-                      </Table.Th>
-                      <Table.Th style={{ width: 140 }}>
-                        <Text size="sm" fw={600}>
-                          Max Score *
-                        </Text>
-                        <Text size="xs" c="dimmed">
-                          Highest rating
-                        </Text>
-                      </Table.Th>
-                      <Table.Th>
-                        <Text size="sm" fw={600}>
-                          Description
-                        </Text>
-                        <Text size="xs" c="dimmed">
-                          Describe this criterion
-                        </Text>
-                      </Table.Th>
-                      <Table.Th style={{ width: 40 }} />
-                    </Table.Tr>
-                  </Table.Thead>
-                  <Table.Tbody>
-                    {rubric.map((item, index) => (
-                      <Table.Tr key={index}>
-                        <Table.Td>
-                          <TextInput
-                            value={item.name}
-                            onChange={(e) => {
-                              const updated = [...rubric];
-                              updated[index] = {
-                                ...updated[index],
-                                name: e.currentTarget.value,
-                              };
-                              setRubric(updated);
-                            }}
-                            placeholder="e.g. Teamwork"
-                            size="xs"
-                          />
-                        </Table.Td>
-                        <Table.Td>
-                          <NumberInput
-                            value={
-                              item.max_val === "" ? "" : Number(item.max_val)
-                            }
-                            min={1}
-                            max={MAX_RUBRIC_SCORE}
-                            onChange={(val) => {
-                              const updated = [...rubric];
-                              updated[index] = {
-                                ...updated[index],
-                                max_val: val,
-                              };
-                              setRubric(updated);
-                            }}
-                            size="xs"
-                          />
-                        </Table.Td>
-                        <Table.Td>
-                          <TextInput
-                            value={item.description}
-                            onChange={(e) => {
-                              const updated = [...rubric];
-                              updated[index] = {
-                                ...updated[index],
-                                description: e.currentTarget.value,
-                              };
-                              setRubric(updated);
-                            }}
-                            placeholder="Describe this criterion..."
-                            size="xs"
-                          />
-                        </Table.Td>
-                        <Table.Td>
-                          <ActionIcon
-                            variant="subtle"
-                            color="red"
-                            onClick={() =>
-                              setRubric(rubric.filter((_, i) => i !== index))
-                            }
-                          >
-                            <Trash01 width={14} height={14} />
-                          </ActionIcon>
-                        </Table.Td>
+                {rubricOpen ? "Delete Rubric" : "Add Rubric"}
+              </Button>
+
+              {rubricOpen && (
+                <Box
+                  mt="sm"
+                  style={{
+                    border: "1px solid var(--mantine-color-gray-3)",
+                    borderRadius: 12,
+                    padding: "1rem",
+                  }}
+                >
+                  <Table>
+                    <Table.Thead>
+                      <Table.Tr>
+                        <Table.Th>
+                          <Text size="sm" fw={600}>
+                            Criteria *
+                          </Text>
+                          <Text size="xs" c="dimmed">
+                            e.g. &quot;Experience, Teamwork&quot;
+                          </Text>
+                        </Table.Th>
+                        <Table.Th style={{ width: 140 }}>
+                          <Text size="sm" fw={600}>
+                            Max Score *
+                          </Text>
+                          <Text size="xs" c="dimmed">
+                            Highest rating
+                          </Text>
+                        </Table.Th>
+                        <Table.Th>
+                          <Text size="sm" fw={600}>
+                            Description
+                          </Text>
+                          <Text size="xs" c="dimmed">
+                            Describe this criterion
+                          </Text>
+                        </Table.Th>
+                        <Table.Th style={{ width: 40 }} />
                       </Table.Tr>
-                    ))}
-                  </Table.Tbody>
-                </Table>
+                    </Table.Thead>
+                    <Table.Tbody>
+                      {rubric.map((item, index) => (
+                        <Table.Tr key={index}>
+                          <Table.Td>
+                            <TextInput
+                              value={item.name}
+                              onChange={(e) => {
+                                const updated = [...rubric];
+                                updated[index] = {
+                                  ...updated[index],
+                                  name: e.currentTarget.value,
+                                };
+                                setRubric(updated);
+                              }}
+                              placeholder="e.g. Teamwork"
+                              size="xs"
+                            />
+                          </Table.Td>
+                          <Table.Td>
+                            <NumberInput
+                              value={
+                                item.max_val === "" ? "" : Number(item.max_val)
+                              }
+                              min={1}
+                              max={MAX_RUBRIC_SCORE}
+                              onChange={(val) => {
+                                const updated = [...rubric];
+                                updated[index] = {
+                                  ...updated[index],
+                                  max_val: val,
+                                };
+                                setRubric(updated);
+                              }}
+                              size="xs"
+                            />
+                          </Table.Td>
+                          <Table.Td>
+                            <TextInput
+                              value={item.description}
+                              onChange={(e) => {
+                                const updated = [...rubric];
+                                updated[index] = {
+                                  ...updated[index],
+                                  description: e.currentTarget.value,
+                                };
+                                setRubric(updated);
+                              }}
+                              placeholder="Describe this criterion..."
+                              size="xs"
+                            />
+                          </Table.Td>
+                          <Table.Td>
+                            <ActionIcon
+                              variant="subtle"
+                              color="red"
+                              onClick={() =>
+                                setRubric(rubric.filter((_, i) => i !== index))
+                              }
+                            >
+                              <Trash01 width={14} height={14} />
+                            </ActionIcon>
+                          </Table.Td>
+                        </Table.Tr>
+                      ))}
+                    </Table.Tbody>
+                  </Table>
 
-                <Group justify="space-between" mt="sm">
-                  <Text size="sm" fw={600}>
-                    Total Score:{" "}
-                    <Text component="span" c="dimmed" fw={400}>
-                      {rubric.reduce(
-                        (sum, r) => sum + (Number(r.max_val) || 0),
-                        0,
-                      )}
+                  <Group justify="space-between" mt="sm">
+                    <Text size="sm" fw={600}>
+                      Total Score:{" "}
+                      <Text component="span" c="dimmed" fw={400}>
+                        {rubric.reduce(
+                          (sum, r) => sum + (Number(r.max_val) || 0),
+                          0,
+                        )}
+                      </Text>
                     </Text>
-                  </Text>
-                  <Button
-                    type="button"
-                    variant="subtle"
-                    color="owlPurple"
-                    size="xs"
-                    onClick={() =>
-                      setRubric([
-                        ...rubric,
-                        { name: "", max_val: 10, description: "" },
-                      ])
-                    }
+                    <Button
+                      type="button"
+                      variant="subtle"
+                      color="owlTeal"
+                      size="xs"
+                      onClick={() =>
+                        setRubric([
+                          ...rubric,
+                          { name: "", max_val: 10, description: "" },
+                        ])
+                      }
+                    >
+                      Add criterion +
+                    </Button>
+                  </Group>
+                </Box>
+              )}
+            </div>
+
+            {/* Applicant Stages — display only for MVP */}
+            <Box>
+              <Text size="sm" fw={500} mb="xs">
+                Applicant Stages
+              </Text>
+              <Group gap="xs" mb="xs">
+                {[
+                  { label: "Interview", color: "yellow" },
+                  { label: "Rejected", color: "red" },
+                  { label: "Accepted", color: "green" },
+                  { label: "Pending", color: "gray" },
+                ].map((stage) => (
+                  <Badge
+                    key={stage.label}
+                    color={stage.color}
+                    variant={stage.label === "Pending" ? "outline" : "filled"}
+                    radius="xl"
                   >
-                    Add criterion +
-                  </Button>
-                </Group>
-              </Box>
+                    {stage.label}
+                  </Badge>
+                ))}
+              </Group>
+              <Button size="xs" color="dark" radius="xl" variant="filled">
+                Add stage +
+              </Button>
+            </Box>
+
+            {error && (
+              <Alert color="red" icon={<AlertCircle width={16} height={16} />}>
+                {error}
+              </Alert>
             )}
-          </div>
 
-          {error && (
-            <Alert color="red" icon={<AlertCircle width={16} height={16} />}>
-              {error}
-            </Alert>
-          )}
-
-          <Group justify="flex-end" pt="md">
-            <Button
-              type="button"
-              variant="default"
-              onClick={() => router.back()}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" loading={isSubmitting}>
-              Create opening
-            </Button>
-          </Group>
-        </Stack>
-      </form>
+            <Group justify="space-between" pt="md">
+              <Anchor onClick={() => router.back()} c="dimmed" size="sm">
+                Cancel
+              </Anchor>
+              <Button
+                type="submit"
+                loading={isSubmitting}
+                color="dark"
+                radius="xl"
+              >
+                Create position
+              </Button>
+            </Group>
+          </Stack>
+        </form>
+      </Card>
     </Stack>
   );
 }

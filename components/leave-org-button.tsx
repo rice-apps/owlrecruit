@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Text } from "@mantine/core";
+import { Button, Menu, Text } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { logger } from "@/lib/logger";
@@ -12,6 +12,7 @@ interface LeaveOrgButtonProps {
   userId: string;
   isAdmin: boolean;
   orgName: string;
+  asMenuItem?: boolean;
 }
 
 export function LeaveOrgButton({
@@ -19,6 +20,7 @@ export function LeaveOrgButton({
   userId,
   isAdmin,
   orgName,
+  asMenuItem = false,
 }: LeaveOrgButtonProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -46,24 +48,32 @@ export function LeaveOrgButton({
 
   return (
     <>
-      <Button
-        variant="subtle"
-        color="red"
-        size="sm"
-        disabled={isAdmin}
-        onClick={() => setOpen(true)}
-        title={
-          isAdmin
-            ? "Admins cannot leave. Transfer admin rights first."
-            : undefined
-        }
-      >
-        Leave
-      </Button>
-      {isAdmin && (
-        <Text size="xs" c="dimmed">
-          Transfer admin role first
-        </Text>
+      {asMenuItem ? (
+        <Menu.Item color="red" disabled={isAdmin} onClick={() => setOpen(true)}>
+          {isAdmin ? "Leave (transfer admin first)" : "Leave organization"}
+        </Menu.Item>
+      ) : (
+        <>
+          <Button
+            variant="subtle"
+            color="red"
+            size="sm"
+            disabled={isAdmin}
+            onClick={() => setOpen(true)}
+            title={
+              isAdmin
+                ? "Admins cannot leave. Transfer admin rights first."
+                : undefined
+            }
+          >
+            Leave
+          </Button>
+          {isAdmin && (
+            <Text size="xs" c="dimmed">
+              Transfer admin role first
+            </Text>
+          )}
+        </>
       )}
       <ConfirmModal
         opened={open}

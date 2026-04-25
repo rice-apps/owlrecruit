@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Sans } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import { ColorSchemeScript, MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import { theme } from "./theme";
@@ -16,8 +16,8 @@ export const metadata: Metadata = {
     "A centralized recruitment platform for organizations at Rice University.",
 };
 
-const dmSans = DM_Sans({
-  variable: "--font-dm-sans",
+const plusJakartaSans = Plus_Jakarta_Sans({
+  variable: "--font-plus-jakarta",
   display: "swap",
   subsets: ["latin"],
 });
@@ -28,11 +28,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={plusJakartaSans.variable}
+    >
       <head>
         <ColorSchemeScript />
       </head>
-      <body className={dmSans.variable}>
+      <body className={plusJakartaSans.variable}>
         <MantineProvider theme={theme}>
           <Notifications position="top-right" />
           {children}

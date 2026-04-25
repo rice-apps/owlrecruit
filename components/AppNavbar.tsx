@@ -4,156 +4,252 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   AppShellNavbar,
-  NavLink,
-  Accordion,
   Avatar,
-  Text,
-  Group,
-  Stack,
-  ActionIcon,
-  Divider,
-  Box,
+  Tooltip,
   UnstyledButton,
+  Divider,
+  Stack,
+  Box,
+  ActionIcon,
+  Text,
 } from "@mantine/core";
 import {
   SearchMd,
-  Folder,
-  AlignJustify,
-  Plus,
+  File02,
+  Users01,
+  Bell01,
+  LayoutLeft,
   LogOut01,
 } from "@untitled-ui/icons-react";
 import type { OrgWithRole } from "@/types/app";
 
 interface AppNavbarProps {
   orgs: OrgWithRole[];
-  user: { name: string; email: string };
+  user: { name: string; email: string; avatarUrl?: string };
+  collapsed: boolean;
+  onToggle: () => void;
 }
 
-export function AppNavbar({ orgs, user }: AppNavbarProps) {
+interface NavItemProps {
+  icon: React.ReactNode;
+  label: string;
+  href: string;
+  active: boolean;
+  collapsed: boolean;
+}
+
+function NavItem({ icon, label, href, active, collapsed }: NavItemProps) {
+  const color = active
+    ? "var(--mantine-color-owlTeal-4)"
+    : "var(--mantine-color-dark-2)";
+
+  const button = (
+    <UnstyledButton
+      component={Link}
+      href={href}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: collapsed ? "center" : "flex-start",
+        gap: "var(--mantine-spacing-sm)",
+        width: "100%",
+        height: 44,
+        paddingInline: collapsed ? 0 : "var(--mantine-spacing-sm)",
+        borderRadius: "var(--mantine-radius-md)",
+        color,
+        transition: "color 150ms",
+      }}
+    >
+      {icon}
+      {!collapsed && (
+        <Text size="sm" fw={500} c="inherit" style={{ whiteSpace: "nowrap" }}>
+          {label}
+        </Text>
+      )}
+    </UnstyledButton>
+  );
+
+  if (collapsed) {
+    return (
+      <Tooltip label={label} position="right" withArrow>
+        {button}
+      </Tooltip>
+    );
+  }
+  return button;
+}
+
+export function AppNavbar({ orgs, user, collapsed, onToggle }: AppNavbarProps) {
   const pathname = usePathname();
 
-  const isActive = (path: string) => pathname.startsWith(path);
+  const initials =
+    user.name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "?";
 
-  const initial = user.name.charAt(0).toUpperCase();
+  const orgHref =
+    orgs.length > 0 ? `/protected/org/${orgs[0].id}` : "/protected/createorg";
 
   return (
     <AppShellNavbar
-      p="md"
-      style={{ display: "flex", flexDirection: "column", gap: 0 }}
+      bg="dark.8"
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: collapsed ? "center" : "stretch",
+        paddingTop: "var(--mantine-spacing-md)",
+        paddingBottom: "var(--mantine-spacing-md)",
+        paddingInline: collapsed ? 0 : "var(--mantine-spacing-xs)",
+        gap: 0,
+        overflow: "hidden",
+      }}
     >
-      {/* Logo */}
-      <Box mb="lg">
-        <UnstyledButton component={Link} href="/protected/discover">
-          <Text fw={700} size="xl" c="owlPurple.5">
-            owlrecruit.
-          </Text>
-        </UnstyledButton>
-      </Box>
-
-      {/* Nav links */}
-      <Stack gap={4} style={{ flex: 1 }}>
-        <NavLink
-          component={Link}
-          href="/protected/discover"
-          label="Discover"
-          leftSection={<SearchMd width={18} height={18} />}
-          active={isActive("/protected/discover")}
-          variant="subtle"
-          fw={500}
-        />
-        <NavLink
-          component={Link}
-          href="/protected/applications"
-          label="My Applications"
-          leftSection={<Folder width={18} height={18} />}
-          active={isActive("/protected/applications")}
-          variant="subtle"
-          fw={500}
-        />
-
-        {/* Organizations accordion */}
-        <Accordion
-          variant="default"
-          defaultValue={isActive("/protected/org") ? "orgs" : undefined}
-          styles={{
-            item: { border: "none" },
-            control: { padding: "6px 12px", borderRadius: 6 },
-          }}
+      {/* Toggle button */}
+      <Tooltip
+        label="Toggle sidebar"
+        position="right"
+        withArrow
+        disabled={!collapsed}
+      >
+        <ActionIcon
+          variant="transparent"
+          color="dark.2"
+          size="lg"
+          mb="md"
+          aria-label="Toggle sidebar"
+          onClick={onToggle}
+          style={{ alignSelf: collapsed ? "center" : "flex-start" }}
         >
-          <Accordion.Item value="orgs">
-            <Accordion.Control icon={<AlignJustify width={18} height={18} />}>
-              <Text size="sm" fw={500}>
-                My Organizations
-              </Text>
-            </Accordion.Control>
-            <Accordion.Panel>
-              <Stack
-                gap={2}
-                pl="sm"
-                style={{ borderLeft: "2px solid var(--mantine-color-gray-2)" }}
-              >
-                {orgs.map((org) => (
-                  <NavLink
-                    key={org.id}
-                    component={Link}
-                    href={`/protected/org/${org.id}`}
-                    label={org.name}
-                    active={pathname.startsWith(`/protected/org/${org.id}`)}
-                    variant="subtle"
-                    style={{ borderRadius: 6 }}
-                  />
-                ))}
-                <NavLink
-                  component={Link}
-                  href="/protected/createorg"
-                  label="Add new"
-                  leftSection={<Plus width={14} height={14} />}
-                  c="owlPurple.5"
-                  variant="subtle"
-                  style={{ borderRadius: 6 }}
-                />
-              </Stack>
-            </Accordion.Panel>
-          </Accordion.Item>
-        </Accordion>
+          <LayoutLeft width={20} height={20} />
+        </ActionIcon>
+      </Tooltip>
+
+      {/* Nav items */}
+      <Stack
+        gap="xs"
+        style={{ flex: 1 }}
+        align={collapsed ? "center" : "stretch"}
+      >
+        <NavItem
+          icon={<SearchMd width={20} height={20} />}
+          label="Discover"
+          href="/protected/discover"
+          active={pathname.startsWith("/protected/discover")}
+          collapsed={collapsed}
+        />
+        <NavItem
+          icon={<File02 width={20} height={20} />}
+          label="My Applications"
+          href="/protected/applications"
+          active={pathname.startsWith("/protected/applications")}
+          collapsed={collapsed}
+        />
+        <NavItem
+          icon={<Users01 width={20} height={20} />}
+          label="My Organizations"
+          href={orgHref}
+          active={pathname.startsWith("/protected/org")}
+          collapsed={collapsed}
+        />
+        <NavItem
+          icon={<Bell01 width={20} height={20} />}
+          label="Notifications"
+          href="#"
+          active={false}
+          collapsed={collapsed}
+        />
       </Stack>
 
-      {/* User footer */}
-      <Box>
-        <Divider mb="sm" />
-        <Group justify="space-between" wrap="nowrap">
-          <UnstyledButton
-            component={Link}
-            href="/protected/profile"
-            style={{ flex: 1, minWidth: 0 }}
-          >
-            <Group wrap="nowrap" gap="sm">
-              <Avatar radius="xl" size="sm" color="owlPurple">
-                {initial}
-              </Avatar>
-              <Box style={{ minWidth: 0 }}>
-                <Text size="sm" fw={500} truncate>
-                  {user.name}
-                </Text>
-                <Text size="xs" c="dimmed" truncate>
-                  {user.email}
-                </Text>
-              </Box>
-            </Group>
-          </UnstyledButton>
-          <form action="/auth/signout" method="post">
-            <ActionIcon
-              type="submit"
-              variant="subtle"
-              color="gray"
-              title="Sign out"
-              aria-label="Sign out"
-            >
-              <LogOut01 width={16} height={16} />
-            </ActionIcon>
-          </form>
-        </Group>
+      {/* Bottom: divider + sign-out + avatar */}
+      <Box style={{ width: "100%" }} px="xs">
+        <Divider color="dark.6" my="xs" />
       </Box>
+
+      {/* Sign out */}
+      <form
+        action="/auth/signout"
+        method="post"
+        style={{ width: collapsed ? "auto" : "100%" }}
+      >
+        <Tooltip
+          label="Sign out"
+          position="right"
+          withArrow
+          disabled={!collapsed}
+        >
+          <UnstyledButton
+            type="submit"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: collapsed ? "center" : "flex-start",
+              gap: "var(--mantine-spacing-sm)",
+              width: collapsed ? 44 : "100%",
+              height: 44,
+              paddingInline: collapsed ? 0 : "var(--mantine-spacing-sm)",
+              borderRadius: "var(--mantine-radius-md)",
+              color: "var(--mantine-color-dark-2)",
+              transition: "color 150ms",
+            }}
+          >
+            <LogOut01 width={20} height={20} />
+            {!collapsed && (
+              <Text
+                size="sm"
+                fw={500}
+                c="inherit"
+                style={{ whiteSpace: "nowrap" }}
+              >
+                Sign out
+              </Text>
+            )}
+          </UnstyledButton>
+        </Tooltip>
+      </form>
+
+      {/* Profile avatar + name */}
+      <Tooltip label="Profile" position="right" withArrow disabled={!collapsed}>
+        <UnstyledButton
+          component={Link}
+          href="/protected/profile"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "var(--mantine-spacing-sm)",
+            width: collapsed ? "auto" : "100%",
+            paddingInline: collapsed ? 0 : "var(--mantine-spacing-xs)",
+            paddingBlock: "var(--mantine-spacing-xs)",
+            borderRadius: "var(--mantine-radius-md)",
+          }}
+        >
+          <Avatar
+            src={user.avatarUrl}
+            radius="xl"
+            size={36}
+            color="owlTeal"
+            style={{ flexShrink: 0 }}
+          >
+            {initials}
+          </Avatar>
+          {!collapsed && (
+            <Text
+              size="sm"
+              fw={500}
+              c="dark.2"
+              style={{
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {user.name}
+            </Text>
+          )}
+        </UnstyledButton>
+      </Tooltip>
     </AppShellNavbar>
   );
 }

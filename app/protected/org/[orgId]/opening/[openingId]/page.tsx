@@ -6,9 +6,7 @@
 
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
-import Link from "next/link";
-import { Box, Group, Stack, Text } from "@mantine/core";
-import { ArrowLeft } from "@untitled-ui/icons-react";
+import { Box, Card, Group, Stack, Text } from "@mantine/core";
 import { EditOpeningDialog } from "@/components/edit-opening-dialog";
 import { OpeningStatusButton } from "@/components/opening-status-button";
 import { OpeningTabs } from "./components/OpeningTabs";
@@ -18,6 +16,7 @@ import { UploadTab } from "./components/UploadTab";
 import { QuestionsTab } from "./components/QuestionsTab";
 import type { ApplicationStatus } from "@/types/app";
 import { logger } from "@/lib/logger";
+import { Breadcrumb } from "@/components/Breadcrumb";
 
 interface OpeningOverviewPageProps {
   params: Promise<{ orgId: string; openingId: string }>;
@@ -153,32 +152,34 @@ export default async function OpeningOverviewPage({
 
   return (
     <Stack gap="lg" style={{ flex: 1, width: "100%", maxWidth: 1024 }}>
-      {/* Back link */}
-      <Link
-        href={`/protected/org/${orgId}`}
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 8,
-          fontSize: 14,
-          color: "var(--mantine-color-gray-6)",
-          textDecoration: "none",
-        }}
-      >
-        <ArrowLeft width={16} height={16} />
-        Back to Openings
-      </Link>
+      {/* Breadcrumb */}
+      <Breadcrumb
+        items={[
+          {
+            label: orgData?.name || "Organization",
+            href: `/protected/org/${orgId}`,
+          },
+          { label: openingData?.title || "Opening" },
+        ]}
+      />
 
-      {/* Header */}
-      <Group justify="space-between" align="flex-start" gap="md" wrap="wrap">
-        <Box>
-          <Text size="sm" c="dimmed" mb={4}>
-            {orgData?.name}
-          </Text>
-          <Group gap="sm" align="center">
-            <Text size="xl" fw={700}>
+      {/* Header card */}
+      <Card radius="lg" shadow="sm" p="xl">
+        <Group justify="space-between" align="flex-start">
+          <Stack gap="xs" style={{ flex: 1 }}>
+            <Text fw={700} size="xl">
               {openingData?.title || "Untitled Opening"}
             </Text>
+            {openingData?.description && (
+              <Text c="dimmed">{openingData.description}</Text>
+            )}
+          </Stack>
+          <Group gap="xs">
+            <OpeningStatusButton
+              orgId={orgId}
+              openingId={openingId}
+              status={openingData?.status || "draft"}
+            />
             <EditOpeningDialog
               orgId={orgId}
               openingId={openingId}
@@ -191,18 +192,8 @@ export default async function OpeningOverviewPage({
               }}
             />
           </Group>
-          {openingData?.description && (
-            <Text c="dimmed" mt="xs" style={{ maxWidth: 512 }}>
-              {openingData.description}
-            </Text>
-          )}
-        </Box>
-        <OpeningStatusButton
-          orgId={orgId}
-          openingId={openingId}
-          status={openingData?.status || "draft"}
-        />
-      </Group>
+        </Group>
+      </Card>
 
       {/* Tabs */}
       <Suspense fallback={<Box h={48} />}>

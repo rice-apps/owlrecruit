@@ -190,7 +190,7 @@ export function RubricSettingsForm({
 
         <Button
           variant="subtle"
-          color="owlPurple"
+          color="owlTeal"
           size="xs"
           mt="md"
           onClick={handleAdd}

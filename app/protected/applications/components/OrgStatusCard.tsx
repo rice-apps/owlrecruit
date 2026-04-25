@@ -144,7 +144,7 @@ export default function OrgStatusCard({ userId }: OrgStatusCardProps) {
                       </Text>
                     )}
                   </Box>
-                  <Badge color="owlPurple" variant="light">
+                  <Badge color="owlTeal" variant="filled">
                     {membership.role === "admin" ? "Admin" : "Reviewer"}
                   </Badge>
                 </Group>

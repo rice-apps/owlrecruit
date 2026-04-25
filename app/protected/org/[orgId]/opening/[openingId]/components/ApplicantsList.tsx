@@ -2,33 +2,10 @@
 
 import * as React from "react";
 import Link from "next/link";
-import {
-  Button,
-  Group,
-  Select,
-  Stack,
-  Table,
-  Text,
-  TextInput,
-} from "@mantine/core";
+import { Button, Group, Stack, Table, Text, TextInput } from "@mantine/core";
 import { ApplicationStatusBadge } from "@/components/StatusBadge";
-import {
-  Eye,
-  EyeOff,
-  ArrowUp,
-  ArrowDown,
-  SearchMd,
-} from "@untitled-ui/icons-react";
+import { SearchMd } from "@untitled-ui/icons-react";
 import type { ApplicationStatus } from "@/types/app";
-
-const ALL_STATUSES: ApplicationStatus[] = [
-  "No Status",
-  "Applied",
-  "Interviewing",
-  "Offer",
-  "Accepted Offer",
-  "Rejected",
-];
 
 type SortField = "name" | "email" | "status" | "date";
 type SortDirection = "asc" | "desc";
@@ -56,7 +33,7 @@ export function ApplicantsList({
 }: ApplicantsListProps) {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [anonymousView, setAnonymousView] = React.useState(false);
-  const [statusFilter, setStatusFilter] = React.useState<string | null>(null);
+
   const [sortField, setSortField] = React.useState<SortField>("name");
   const [sortDirection, setSortDirection] =
     React.useState<SortDirection>("asc");
@@ -72,10 +49,6 @@ export function ApplicantsList({
 
   const filteredApplicants = React.useMemo(() => {
     let result = applicants;
-
-    if (statusFilter) {
-      result = result.filter((a) => a.status === statusFilter);
-    }
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
@@ -107,22 +80,14 @@ export function ApplicantsList({
     });
 
     return result;
-  }, [applicants, searchQuery, statusFilter, sortField, sortDirection]);
+  }, [applicants, searchQuery, sortField, sortDirection]);
 
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) return null;
-    return sortDirection === "asc" ? (
-      <ArrowUp
-        width={12}
-        height={12}
-        style={{ marginLeft: 4, display: "inline" }}
-      />
-    ) : (
-      <ArrowDown
-        width={12}
-        height={12}
-        style={{ marginLeft: 4, display: "inline" }}
-      />
+    return (
+      <span style={{ marginLeft: 4, fontSize: 10 }}>
+        {sortDirection === "asc" ? "▲" : "▼"}
+      </span>
     );
   };
 
@@ -134,38 +99,29 @@ export function ApplicantsList({
 
   return (
     <Stack gap="md">
-      {/* Search and filters bar */}
-      <Group gap="sm" wrap="wrap">
+      {/* Toolbar */}
+      <Group gap="sm" wrap="nowrap">
         <TextInput
-          placeholder="Search by name, netid, email..."
+          placeholder="Search applicants by name..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.currentTarget.value)}
           leftSection={<SearchMd width={16} height={16} />}
-          style={{ flex: 1, minWidth: 200 }}
+          style={{ flex: 1 }}
         />
-        <Button
-          variant="default"
-          size="sm"
-          leftSection={
-            anonymousView ? (
-              <EyeOff width={16} height={16} />
-            ) : (
-              <Eye width={16} height={16} />
-            )
-          }
-          onClick={() => setAnonymousView(!anonymousView)}
-        >
-          Anonymous View
+        <Group gap="xs" wrap="nowrap">
+          <Text size="sm" c="dimmed" style={{ whiteSpace: "nowrap" }}>
+            Anonymous view
+          </Text>
+          <input
+            type="checkbox"
+            checked={anonymousView}
+            onChange={(e) => setAnonymousView(e.target.checked)}
+            style={{ cursor: "pointer" }}
+          />
+        </Group>
+        <Button color="dark" radius="xl" size="sm">
+          Submit results
         </Button>
-        <Select
-          placeholder="All Statuses"
-          data={ALL_STATUSES.map((s) => ({ value: s, label: s }))}
-          value={statusFilter}
-          onChange={setStatusFilter}
-          clearable
-          size="sm"
-          style={{ width: 180 }}
-        />
       </Group>
 
       {/* Applicants table */}
@@ -191,7 +147,7 @@ export function ApplicantsList({
             <Table.Tr>
               <Table.Td colSpan={4}>
                 <Text ta="center" py="xl" c="dimmed" size="sm">
-                  {searchQuery || statusFilter
+                  {searchQuery
                     ? "No applicants match your filters."
                     : "No applicants yet."}
                 </Text>

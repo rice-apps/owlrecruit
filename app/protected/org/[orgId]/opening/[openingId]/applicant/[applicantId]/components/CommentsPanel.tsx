@@ -166,7 +166,7 @@ export function CommentsPanel({ orgId, applicantId }: CommentsPanelProps) {
                   }}
                 >
                   <Group gap="sm" align="flex-start" mb="xs">
-                    <Avatar size={32} color="owlPurple" radius="xl">
+                    <Avatar size={32} color="owlTeal" radius="xl">
                       {(comment.userName || "U")
                         .split(" ")
                         .map((n) => n[0])

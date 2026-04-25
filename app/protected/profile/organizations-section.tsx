@@ -1,6 +1,16 @@
 "use client";
 
-import { Group, Avatar, Text, Badge, Stack, Box } from "@mantine/core";
+import {
+  Group,
+  Avatar,
+  Text,
+  Badge,
+  Stack,
+  Box,
+  Button,
+  Menu,
+} from "@mantine/core";
+import { ChevronDown } from "@untitled-ui/icons-react";
 import { LeaveOrgButton } from "@/components/leave-org-button";
 import type { Enums } from "@/types/supabase";
 
@@ -43,28 +53,47 @@ export default function OrganizationsSection({
           <Group
             key={m.id}
             justify="space-between"
-            p="sm"
+            py="sm"
             style={{ borderBottom: "1px solid var(--mantine-color-gray-2)" }}
           >
             <Group gap="sm">
-              <Avatar radius="md" color="owlPurple" size={40}>
+              <Avatar radius="md" color="gray" size={40}>
                 {m.org_name.charAt(0).toUpperCase()}
               </Avatar>
-              <Box>
-                <Text size="sm" fw={500}>
-                  {m.org_name}
-                </Text>
-                <Badge variant="light" color="owlPurple" size="xs" mt={2}>
-                  {m.role.charAt(0).toUpperCase() + m.role.slice(1)}
-                </Badge>
-              </Box>
+              <Text size="sm" fw={600}>
+                {m.org_name}
+              </Text>
             </Group>
-            <LeaveOrgButton
-              orgId={m.org_id}
-              userId={userId}
-              isAdmin={m.role === "admin"}
-              orgName={m.org_name}
-            />
+
+            <Group gap="xs">
+              {m.role === "admin" && (
+                <Badge color="owlTeal" variant="filled" radius="xl" size="sm">
+                  Admin
+                </Badge>
+              )}
+              <Menu withinPortal position="bottom-end">
+                <Menu.Target>
+                  <Button
+                    variant="outline"
+                    color="gray"
+                    radius="xl"
+                    size="xs"
+                    rightSection={<ChevronDown width={14} height={14} />}
+                  >
+                    Joined
+                  </Button>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <LeaveOrgButton
+                    orgId={m.org_id}
+                    userId={userId}
+                    isAdmin={m.role === "admin"}
+                    orgName={m.org_name}
+                    asMenuItem
+                  />
+                </Menu.Dropdown>
+              </Menu>
+            </Group>
           </Group>
         ))}
       </Stack>

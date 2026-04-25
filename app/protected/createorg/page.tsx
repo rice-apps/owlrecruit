@@ -10,9 +10,14 @@ import {
   Group,
   Alert,
   Title,
+  Text,
+  Card,
+  Center,
+  Anchor,
 } from "@mantine/core";
+import { Dropzone, IMAGE_MIME_TYPE } from "@mantine/dropzone";
+import { UploadCloud01, AlertCircle } from "@untitled-ui/icons-react";
 import { notifications } from "@mantine/notifications";
-import { AlertCircle } from "@untitled-ui/icons-react";
 import { logger } from "@/lib/logger";
 
 export default function NewOrgPage() {
@@ -72,48 +77,79 @@ export default function NewOrgPage() {
   };
 
   return (
-    <Stack maw={560} gap="lg">
-      <Title order={2}>Create new organization</Title>
+    <Center py="xl">
+      <Card radius="lg" shadow="sm" p="xl" maw={700} w="100%">
+        <Title order={2} mb="xs">
+          Create new organization
+        </Title>
 
-      <form onSubmit={handleSubmit}>
-        <Stack gap="md">
-          <TextInput
-            label="Organization name"
-            required
-            value={name}
-            onChange={(e) => setName(e.currentTarget.value)}
-            placeholder="e.g. RiceApps"
-          />
+        <form onSubmit={handleSubmit}>
+          <Stack gap="md">
+            <TextInput
+              label="Organization Name*"
+              required
+              value={name}
+              onChange={(e) => setName(e.currentTarget.value)}
+              placeholder="e.g. RiceApps"
+            />
 
-          <Textarea
-            label="Description"
-            value={description}
-            onChange={(e) => setDescription(e.currentTarget.value)}
-            placeholder="What does your organization do?"
-            minRows={3}
-            autosize
-          />
+            <Textarea
+              label="Description*"
+              value={description}
+              onChange={(e) => setDescription(e.currentTarget.value)}
+              placeholder="What does your organization do?"
+              minRows={3}
+              autosize
+            />
 
-          {error && (
-            <Alert color="red" icon={<AlertCircle width={16} height={16} />}>
-              {error}
-            </Alert>
-          )}
+            {/* Logo upload — no-op for MVP */}
+            <div>
+              <Text size="sm" fw={500} mb="xs">
+                Logo
+              </Text>
+              <Dropzone
+                onDrop={() => {}}
+                accept={IMAGE_MIME_TYPE}
+                radius="md"
+                styles={{
+                  root: { minHeight: 140 },
+                }}
+              >
+                <Stack align="center" justify="center" gap="xs" py="lg">
+                  <UploadCloud01
+                    width={32}
+                    height={32}
+                    color="var(--mantine-color-gray-4)"
+                  />
+                  <Text size="sm" c="dimmed" ta="center">
+                    Drag and drop or upload from computer
+                  </Text>
+                </Stack>
+              </Dropzone>
+            </div>
 
-          <Group justify="flex-end" mt="sm">
-            <Button
-              variant="default"
-              onClick={() => router.back()}
-              disabled={submitting}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" loading={submitting}>
-              Create organization
-            </Button>
-          </Group>
-        </Stack>
-      </form>
-    </Stack>
+            {error && (
+              <Alert color="red" icon={<AlertCircle width={16} height={16} />}>
+                {error}
+              </Alert>
+            )}
+
+            <Group justify="space-between" mt="sm">
+              <Anchor onClick={() => router.back()} c="dimmed" size="sm">
+                Cancel
+              </Anchor>
+              <Button
+                type="submit"
+                loading={submitting}
+                color="dark"
+                radius="xl"
+              >
+                Create organization
+              </Button>
+            </Group>
+          </Stack>
+        </form>
+      </Card>
+    </Center>
   );
 }

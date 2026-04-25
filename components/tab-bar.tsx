@@ -34,10 +34,10 @@ export function TabBar({ tabs, currentTab, buildHref }: TabBarProps) {
                 fontSize: "1rem",
                 fontWeight: 600,
                 borderBottom: isActive
-                  ? "2px solid var(--mantine-color-owlPurple-6)"
+                  ? "2px solid var(--mantine-color-owlTeal-5)"
                   : "2px solid transparent",
                 color: isActive
-                  ? "var(--mantine-color-owlPurple-6)"
+                  ? "var(--mantine-color-owlTeal-6)"
                   : "var(--mantine-color-gray-6)",
                 transition: "color 150ms, border-color 150ms",
                 textDecoration: "none",

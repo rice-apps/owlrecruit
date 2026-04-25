@@ -14,14 +14,15 @@ export function ApplicationStatusBadge({
   status,
   size = "sm",
 }: ApplicationStatusBadgeProps) {
+  const isPending = status === "No Status" || !status;
   return (
     <Badge
       color={getApplicationStatusColor(status)}
-      variant="light"
+      variant={isPending ? "outline" : "filled"}
       size={size}
-      radius="sm"
+      radius="xl"
     >
-      {status}
+      {status || "No Status"}
     </Badge>
   );
 }
@@ -35,12 +36,13 @@ export function OpeningStatusBadge({
   status,
   size = "sm",
 }: OpeningStatusBadgeProps) {
+  const isPending = status === "draft" || !status;
   return (
     <Badge
       color={getOpeningStatusColor(status)}
-      variant="light"
+      variant={isPending ? "outline" : "filled"}
       size={size}
-      radius="sm"
+      radius="xl"
     >
       {getOpeningStatusLabel(status)}
     </Badge>

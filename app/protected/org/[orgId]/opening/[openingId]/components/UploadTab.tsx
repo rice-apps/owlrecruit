@@ -41,7 +41,7 @@ export function UploadTab() {
             transform: "translateY(-50%)",
             height: 2,
             width: `${progressPct}%`,
-            background: "var(--mantine-color-owlPurple-6)",
+            background: "var(--mantine-color-owlTeal-5)",
             transition: "width 300ms ease",
           }}
         />
@@ -61,10 +61,10 @@ export function UploadTab() {
                   justifyContent: "center",
                   fontSize: 14,
                   fontWeight: 500,
-                  border: `2px solid ${isActive || isCompleted ? "var(--mantine-color-owlPurple-6)" : "var(--mantine-color-gray-3)"}`,
+                  border: `2px solid ${isActive || isCompleted ? "var(--mantine-color-owlTeal-5)" : "var(--mantine-color-gray-3)"}`,
                   background:
                     isActive || isCompleted
-                      ? "var(--mantine-color-owlPurple-6)"
+                      ? "var(--mantine-color-owlTeal-5)"
                       : "var(--mantine-color-gray-0)",
                   color:
                     isActive || isCompleted
@@ -189,14 +189,14 @@ export function UploadTab() {
 
             <Box
               style={{
-                border: `2px dashed ${wizard.isDragOver ? "var(--mantine-color-owlPurple-6)" : "var(--mantine-color-gray-3)"}`,
+                border: `2px dashed ${wizard.isDragOver ? "var(--mantine-color-owlTeal-4)" : "var(--mantine-color-gray-3)"}`,
                 borderRadius: "var(--mantine-radius-md)",
                 padding: "3rem 1.5rem",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
                 background: wizard.isDragOver
-                  ? "var(--mantine-color-owlPurple-0)"
+                  ? "var(--mantine-color-owlTeal-0)"
                   : "var(--mantine-color-gray-0)",
                 transition: "border-color 150ms, background 150ms",
               }}
@@ -228,7 +228,7 @@ export function UploadTab() {
                   >
                     <UploadCloud01 width={24} height={24} />
                   </Box>
-                  <Text size="sm" c="owlPurple" fw={500}>
+                  <Text size="sm" c="owlTeal" fw={500}>
                     Choose CSV file or drag and drop
                   </Text>
                   <Button
@@ -245,11 +245,11 @@ export function UploadTab() {
                       width: 48,
                       height: 48,
                       borderRadius: "50%",
-                      background: "var(--mantine-color-owlPurple-0)",
+                      background: "var(--mantine-color-owlTeal-0)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      color: "var(--mantine-color-owlPurple-6)",
+                      color: "var(--mantine-color-owlTeal-5)",
                     }}
                   >
                     <File01 width={24} height={24} />
@@ -292,6 +292,8 @@ export function UploadTab() {
                 disabled={!wizard.file}
                 rightSection={<ChevronRight width={16} height={16} />}
                 style={{ width: 96 }}
+                color="dark"
+                radius="xl"
               >
                 Next
               </Button>
@@ -425,6 +427,8 @@ export function UploadTab() {
               <Button
                 onClick={wizard.handleFinishSetup}
                 loading={wizard.isUploading}
+                color="dark"
+                radius="xl"
               >
                 Finish Setup
               </Button>

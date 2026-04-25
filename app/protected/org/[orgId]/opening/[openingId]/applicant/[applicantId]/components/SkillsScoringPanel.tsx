@@ -195,8 +195,14 @@ export function SkillsScoringPanel({
               </Text>
             </Group>
           </Group>
-          <Button fullWidth loading={savingScore} onClick={handleSaveScore}>
-            Submit Score
+          <Button
+            fullWidth
+            loading={savingScore}
+            onClick={handleSaveScore}
+            color="dark"
+            radius="xl"
+          >
+            Submit rubric
           </Button>
         </Box>
       </Box>
@@ -209,7 +215,7 @@ export function SkillsScoringPanel({
             initialRubric={rubrics}
             onSuccess={(updatedRubric) => setRubrics(updatedRubric)}
             trigger={
-              <Button variant="subtle" size="xs" color="owlPurple">
+              <Button variant="subtle" size="xs" color="owlTeal">
                 Rubric Details
               </Button>
             }

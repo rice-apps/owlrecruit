@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { Avatar, Title, Stack, Box } from "@mantine/core";
+import { Avatar, Title, Stack, Text } from "@mantine/core";
 import ProfileForm from "./profileForm";
 import type { OrgMembership } from "./organizations-section";
 
@@ -42,18 +42,21 @@ export default async function ProfilePage() {
 
   return (
     <Stack maw={640}>
-      <Title order={2}>Profile Information</Title>
+      <div>
+        <Title order={2}>Profile</Title>
+        <Text c="dimmed" size="sm">
+          Manage your personal information and organization membership.
+        </Text>
+      </div>
 
-      <Box>
-        <Avatar
-          src={avatarUrl || undefined}
-          size={80}
-          radius="xl"
-          color="owlPurple"
-        >
-          {initials}
-        </Avatar>
-      </Box>
+      <Avatar
+        src={avatarUrl || undefined}
+        size={80}
+        radius="xl"
+        color="owlTeal"
+      >
+        {initials}
+      </Avatar>
 
       <ProfileForm
         firstName={firstName}

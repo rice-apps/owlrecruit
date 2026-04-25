@@ -146,7 +146,7 @@ export function ColumnMappingStep({
             <Button
               variant="subtle"
               size="xs"
-              color="owlPurple"
+              color="owlTeal"
               onClick={() => setIsModalOpen(true)}
             >
               Add question
@@ -204,6 +204,8 @@ export function ColumnMappingStep({
           disabled={!isStep3Valid}
           rightSection={<ChevronRight width={16} height={16} />}
           style={{ width: 96 }}
+          color="dark"
+          radius="xl"
         >
           Next
         </Button>
@@ -232,7 +234,9 @@ export function ColumnMappingStep({
             <Button variant="default" onClick={() => setIsModalOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleAdd}>Add Question</Button>
+            <Button onClick={handleAdd} color="dark" radius="xl">
+              Add Question
+            </Button>
           </Group>
         </Stack>
       </Modal>

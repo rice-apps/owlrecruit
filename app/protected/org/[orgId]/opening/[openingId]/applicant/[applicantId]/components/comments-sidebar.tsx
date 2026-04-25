@@ -18,7 +18,7 @@ export function CommentsSidebar({
   openingId,
   orgId,
 }: CommentsSidebarProps) {
-  const [activeTab, setActiveTab] = useState<"comments" | "skills">("comments");
+  const [activeTab, setActiveTab] = useState<"comments" | "skills">("skills");
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
@@ -70,7 +70,7 @@ export function CommentsSidebar({
           <ActionIcon
             variant={activeTab === "skills" ? "white" : "transparent"}
             size="sm"
-            color={activeTab === "skills" ? "owlPurple" : "gray"}
+            color={activeTab === "skills" ? "owlTeal" : "gray"}
             onClick={() => setActiveTab("skills")}
             title="Skills & Rubric"
           >
@@ -79,7 +79,7 @@ export function CommentsSidebar({
           <ActionIcon
             variant={activeTab === "comments" ? "white" : "transparent"}
             size="sm"
-            color={activeTab === "comments" ? "owlPurple" : "gray"}
+            color={activeTab === "comments" ? "owlTeal" : "gray"}
             onClick={() => setActiveTab("comments")}
             title="Comments"
           >

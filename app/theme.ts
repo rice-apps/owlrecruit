@@ -14,29 +14,48 @@ const owlPurple: MantineColorsTuple = [
   "#24228d",
 ];
 
+// owl-teal: #13C9C0 accent
+const owlTeal: MantineColorsTuple = [
+  "#e6faf9",
+  "#b3f0ed",
+  "#80e5e1",
+  "#4ddad5",
+  "#1acfc9",
+  "#13c9c0",
+  "#10b3ab",
+  "#0d9d97",
+  "#0a8782",
+  "#07716d",
+];
+
 export const theme = createTheme({
-  primaryColor: "owlPurple",
+  primaryColor: "owlTeal",
   colors: {
     owlPurple,
+    owlTeal,
   },
-  fontFamily: "var(--font-dm-sans), DM Sans, sans-serif",
+  fontFamily: 'var(--font-plus-jakarta), "Plus Jakarta Sans", sans-serif',
+  headings: {
+    fontFamily: 'var(--font-plus-jakarta), "Plus Jakarta Sans", sans-serif',
+  },
   defaultRadius: "md",
   components: {
     Button: {
       defaultProps: {
-        radius: "md",
+        radius: "xl",
+        color: "dark",
       },
     },
     Card: {
       defaultProps: {
-        radius: "md",
+        radius: "lg",
         shadow: "sm",
-        withBorder: true,
+        withBorder: false,
       },
     },
     Badge: {
       defaultProps: {
-        radius: "sm",
+        radius: "xl",
       },
     },
     TextInput: {
