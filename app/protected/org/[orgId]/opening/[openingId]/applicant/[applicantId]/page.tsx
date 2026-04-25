@@ -12,13 +12,15 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-import { ArrowLeft } from "@untitled-ui/icons-react";
 import { Json } from "@/types/supabase";
+import { Breadcrumb } from "@/components/Breadcrumb";
 import { createClient } from "@/lib/supabase/client";
 import { logger } from "@/lib/logger";
 import { ApplicantTabs } from "./components/ApplicantTabs";
 import { CommentsSidebar } from "@/app/protected/org/[orgId]/opening/[openingId]/applicant/[applicantId]/components/comments-sidebar";
 import { InterviewTab } from "@/app/protected/org/[orgId]/opening/[openingId]/applicant/[applicantId]/components/InterviewTab";
+import { ApplicationStatusBadge } from "@/components/StatusBadge";
+import type { ApplicationStatus } from "@/types/app";
 import {
   computeRubricSummary,
   type ReviewerFeedbackPreview,
@@ -30,6 +32,7 @@ import {
 interface ApplicationData {
   form_responses: Json;
   resume_url: string | null;
+  status: ApplicationStatus;
 }
 
 interface ReviewerScoreSummary {
@@ -124,6 +127,8 @@ export default function ApplicantReviewPage() {
   const [applicationData, setApplicationData] =
     useState<ApplicationData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [orgName, setOrgName] = useState<string>("");
+  const [openingTitle, setOpeningTitle] = useState<string>("");
   const [summaryData, setSummaryData] = useState<SummaryTabState | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState<string | null>(null);
@@ -133,14 +138,25 @@ export default function ApplicantReviewPage() {
     async function fetchApplicationData() {
       try {
         const supabase = createClient();
-        const { data, error } = await supabase
-          .from("applications")
-          .select("form_responses, resume_url")
-          .eq("id", applicantId)
-          .single();
+        const [{ data, error }, { data: orgData }, { data: openingData }] =
+          await Promise.all([
+            supabase
+              .from("applications")
+              .select("form_responses, resume_url, status")
+              .eq("id", applicantId)
+              .single(),
+            supabase.from("orgs").select("name").eq("id", orgId).single(),
+            supabase
+              .from("openings")
+              .select("title")
+              .eq("id", openingId)
+              .single(),
+          ]);
 
         if (error) throw error;
         setApplicationData(data);
+        if (orgData) setOrgName(orgData.name);
+        if (openingData) setOpeningTitle(openingData.title);
       } catch (err) {
         logger.error("Error fetching application data:", err);
       } finally {
@@ -148,7 +164,7 @@ export default function ApplicantReviewPage() {
       }
     }
     fetchApplicationData();
-  }, [applicantId]);
+  }, [applicantId, orgId, openingId]);
 
   useEffect(() => {
     setSummaryData(null);
@@ -397,24 +413,31 @@ export default function ApplicantReviewPage() {
       }}
     >
       <Stack gap="lg" style={{ flex: 1, overflowY: "auto" }}>
-        <Button
-          variant="subtle"
-          color="gray"
-          leftSection={<ArrowLeft width={16} height={16} />}
-          onClick={() =>
-            router.push(`/protected/org/${orgId}/opening/${openingId}`)
-          }
-          style={{ alignSelf: "flex-start" }}
-        >
-          Back to Opening
-        </Button>
+        <Breadcrumb
+          items={[
+            {
+              label: orgName || "Organization",
+              href: `/protected/org/${orgId}`,
+            },
+            {
+              label: openingTitle || "Opening",
+              href: `/protected/org/${orgId}/opening/${openingId}`,
+            },
+            { label: applicantName },
+          ]}
+        />
 
         <Card radius="lg" shadow="sm" withBorder={false} p="xl">
           <Group justify="space-between" align="flex-start">
             <Box>
-              <Text size="xl" fw={700} mb={4}>
-                {applicantName}
-              </Text>
+              <Group gap="sm" align="center" mb={4}>
+                <Text size="xl" fw={700}>
+                  {applicantName}
+                </Text>
+                {applicationData?.status && (
+                  <ApplicationStatusBadge status={applicationData.status} />
+                )}
+              </Group>
               <Group gap="xs" wrap="wrap">
                 <Text size="sm" c="dimmed">
                   {applicantEmail}

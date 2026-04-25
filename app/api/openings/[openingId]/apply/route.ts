@@ -104,6 +104,7 @@ export async function POST(request: Request, { params }: { params: Params }) {
     {
       opening_id: openingId,
       applicant_id: applicant.id,
+      users_id: user.id,
       form_responses: enrichedResponses,
       status: "Applied",
     },

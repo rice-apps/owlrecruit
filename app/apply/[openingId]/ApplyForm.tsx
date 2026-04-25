@@ -282,10 +282,10 @@ export function ApplyForm({
         <Box
           p="xl"
           ta="center"
+          bg="white"
           style={{
             border: "1px solid var(--mantine-color-gray-2)",
             borderRadius: "var(--mantine-radius-md)",
-            background: "white",
           }}
         >
           <Text size="sm" c="dimmed" mb="md">
@@ -345,10 +345,10 @@ export function ApplyForm({
         <Box
           p="xl"
           ta="center"
+          bg="white"
           style={{
             border: "1px solid var(--mantine-color-gray-2)",
             borderRadius: "var(--mantine-radius-md)",
-            background: "white",
           }}
         >
           <Text size="sm" c="dimmed">
@@ -360,8 +360,8 @@ export function ApplyForm({
           component="form"
           onSubmit={handleSubmit}
           p="xl"
+          bg="white"
           style={{
-            background: "white",
             border: "1px solid var(--mantine-color-gray-2)",
             borderRadius: "var(--mantine-radius-md)",
           }}

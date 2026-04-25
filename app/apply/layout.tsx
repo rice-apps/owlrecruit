@@ -1,15 +1,67 @@
+import { createClient } from "@/lib/supabase/server";
+import { AppShellWrapper } from "@/components/AppShellWrapper";
 import { Box } from "@mantine/core";
+import type { OrgWithRole } from "@/types/app";
 
-export default function ApplyLayout({
+export default async function ApplyLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const supabase = await createClient();
+  const { data: authData } = await supabase.auth.getClaims();
+
+  let orgs: OrgWithRole[] = [];
+  let user = { name: "", email: "", avatarUrl: "" };
+
+  if (authData?.claims) {
+    const userId = authData.claims.sub;
+    const userMetadata = authData.claims.user_metadata as {
+      full_name?: string;
+      email?: string;
+      avatar_url?: string;
+    };
+
+    const { data: memberships } = await supabase
+      .from("org_members")
+      .select(
+        `
+        role,
+        orgs (
+          id,
+          name,
+          description,
+          created_at,
+          updated_at,
+          social_links,
+          logo_url
+        )
+      `,
+      )
+      .eq("user_id", userId);
+
+    orgs = (memberships ?? [])
+      .filter(
+        (m): m is typeof m & { orgs: NonNullable<typeof m.orgs> } =>
+          m.orgs !== null,
+      )
+      .map((m) => {
+        const orgData = Array.isArray(m.orgs) ? m.orgs[0] : m.orgs;
+        return { ...orgData, role: m.role };
+      });
+
+    user = {
+      name: userMetadata.full_name || "User",
+      email: userMetadata.email || "",
+      avatarUrl: userMetadata.avatar_url || "",
+    };
+  }
+
   return (
-    <Box bg="gray.1" style={{ minHeight: "100vh" }} py="xl" px="md">
+    <AppShellWrapper orgs={orgs} user={user}>
       <Box maw={672} mx="auto">
         {children}
       </Box>
-    </Box>
+    </AppShellWrapper>
   );
 }

@@ -86,7 +86,7 @@ export default async function MyOrgsPage() {
               href={`/protected/org/${org.id}`}
               style={{ textDecoration: "none" }}
             >
-              <Card radius="lg" withBorder>
+              <Card radius="lg" withBorder={false} shadow="sm">
                 <Group gap="sm" mb="sm">
                   <Avatar radius="md" size={44} color="gray">
                     {org.name.charAt(0).toUpperCase()}
