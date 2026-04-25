@@ -43,9 +43,16 @@ export function OrgPageHeader({
             {orgInitial}
           </Avatar>
           <Stack gap={4}>
-            <Text fw={700} size="xl">
-              {displayOrgName}
-            </Text>
+            <Group gap="sm" align="center">
+              <Text fw={700} size="xl">
+                {displayOrgName}
+              </Text>
+              {isAdmin && !hasRoleError && (
+                <Badge color="owlTeal" variant="filled" radius="xl">
+                  Admin
+                </Badge>
+              )}
+            </Group>
             <Group gap="xs">
               <Users01
                 width={14}
@@ -71,9 +78,6 @@ export function OrgPageHeader({
         {/* Right: admin controls */}
         {isAdmin && !hasRoleError && (
           <Group gap="xs">
-            <Badge color="owlTeal" variant="filled" radius="xl">
-              Admin
-            </Badge>
             <Button
               variant="outline"
               radius="xl"

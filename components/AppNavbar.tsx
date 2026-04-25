@@ -4,22 +4,22 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
+  ActionIcon,
   AppShellNavbar,
   Avatar,
-  Tooltip,
-  UnstyledButton,
+  Box,
   Divider,
   Stack,
-  Box,
-  ActionIcon,
   Text,
+  Tooltip,
+  UnstyledButton,
 } from "@mantine/core";
 import {
-  File02,
-  Users01,
   Bell01,
+  File02,
   LayoutLeft,
   LogOut01,
+  Users01,
 } from "@untitled-ui/icons-react";
 import type { OrgWithRole } from "@/types/app";
 
@@ -79,7 +79,7 @@ function NavItem({ icon, label, href, active, collapsed }: NavItemProps) {
   return button;
 }
 
-export function AppNavbar({ orgs, user, collapsed, onToggle }: AppNavbarProps) {
+export function AppNavbar({ user, collapsed, onToggle }: AppNavbarProps) {
   const pathname = usePathname();
 
   const initials =
@@ -90,8 +90,7 @@ export function AppNavbar({ orgs, user, collapsed, onToggle }: AppNavbarProps) {
       .slice(0, 2)
       .toUpperCase() || "?";
 
-  const orgHref =
-    orgs.length > 0 ? `/protected/org/${orgs[0].id}` : "/protected/createorg";
+  const orgHref = "/protected/orgs";
 
   return (
     <AppShellNavbar

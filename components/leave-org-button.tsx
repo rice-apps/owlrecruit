@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Menu, Text } from "@mantine/core";
+import { Button, Menu, Text, Group } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { logger } from "@/lib/logger";
@@ -53,7 +53,7 @@ export function LeaveOrgButton({
           {isAdmin ? "Leave (transfer admin first)" : "Leave organization"}
         </Menu.Item>
       ) : (
-        <>
+        <Group gap="sm">
           <Button
             variant="subtle"
             color="red"
@@ -66,14 +66,14 @@ export function LeaveOrgButton({
                 : undefined
             }
           >
-            Leave
+            Leave organization
           </Button>
           {isAdmin && (
-            <Text size="xs" c="dimmed">
-              Transfer admin role first
+            <Text size="sm" c="dimmed">
+              Transfer admin role first to leave
             </Text>
           )}
-        </>
+        </Group>
       )}
       <ConfirmModal
         opened={open}

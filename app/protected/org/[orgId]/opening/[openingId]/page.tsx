@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Box, Card, Group, Stack, Text } from "@mantine/core";
 import { EditOpeningDialog } from "@/components/edit-opening-dialog";
 import { OpeningStatusButton } from "@/components/opening-status-button";
+import { OpeningStatusBadge } from "@/components/StatusBadge";
 import { OpeningTabs } from "./components/OpeningTabs";
 import { ApplicantsList } from "./components/ApplicantsList";
 import { OverviewTab } from "./components/OverviewTab";
@@ -167,9 +168,12 @@ export default async function OpeningOverviewPage({
       <Card radius="lg" shadow="sm" withBorder={false} p="xl">
         <Group justify="space-between" align="flex-start">
           <Stack gap="xs" style={{ flex: 1 }}>
-            <Text fw={700} size="xl">
-              {openingData?.title || "Untitled Opening"}
-            </Text>
+            <Group gap="sm" align="center">
+              <Text fw={700} size="xl">
+                {openingData?.title || "Untitled Opening"}
+              </Text>
+              <OpeningStatusBadge status={openingData?.status || "draft"} />
+            </Group>
             {openingData?.description && (
               <Text c="dimmed">{openingData.description}</Text>
             )}

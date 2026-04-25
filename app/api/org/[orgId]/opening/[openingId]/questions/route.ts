@@ -75,17 +75,31 @@ export async function PATCH(request: Request, { params }: { params: Params }) {
     );
   }
 
-  // Atomically delete existing and insert new questions
+  // Delete existing questions first
+  const { error: deleteError } = await supabase
+    .from("questions")
+    .delete()
+    .eq("opening_id", openingId);
+
+  if (deleteError) {
+    return NextResponse.json({ error: deleteError.message }, { status: 500 });
+  }
+
+  if (questions.length === 0) {
+    return NextResponse.json({ questions: [] });
+  }
+
   const records = questions.map((q, i) => ({
+    opening_id: openingId,
     question_text: q.question_text,
     is_required: q.is_required ?? null,
     sort_order: i,
   }));
 
-  const { data, error } = await supabase.rpc("replace_opening_questions", {
-    target_opening_id: openingId,
-    questions_json: records,
-  });
+  const { data, error } = await supabase
+    .from("questions")
+    .insert(records)
+    .select();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

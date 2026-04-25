@@ -58,17 +58,14 @@ export function OpeningStatusButton({
   };
 
   return (
-    <Group gap="sm" align="center">
-      <OpeningStatusBadge status={currentStatus} />
-      <Button
-        size="sm"
-        color={buttonColor[currentStatus]}
-        variant="light"
-        loading={loading}
-        onClick={handleClick}
-      >
-        {buttonLabel[currentStatus]}
-      </Button>
-    </Group>
+    <Button
+      size="sm"
+      color={buttonColor[currentStatus]}
+      variant="light"
+      loading={loading}
+      onClick={handleClick}
+    >
+      {buttonLabel[currentStatus]}
+    </Button>
   );
 }

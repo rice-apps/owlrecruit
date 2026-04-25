@@ -3,20 +3,20 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Stack,
-  TextInput,
-  Textarea,
-  Button,
-  Group,
   Alert,
-  Title,
-  Text,
+  Anchor,
+  Button,
   Card,
   Center,
-  Anchor,
+  Group,
+  Stack,
+  Text,
+  Textarea,
+  TextInput,
+  Title,
 } from "@mantine/core";
 import { Dropzone, IMAGE_MIME_TYPE } from "@mantine/dropzone";
-import { UploadCloud01, AlertCircle } from "@untitled-ui/icons-react";
+import { AlertCircle, UploadCloud01 } from "@untitled-ui/icons-react";
 import { notifications } from "@mantine/notifications";
 import { logger } from "@/lib/logger";
 
@@ -86,7 +86,7 @@ export default function NewOrgPage() {
         <form onSubmit={handleSubmit}>
           <Stack gap="md">
             <TextInput
-              label="Organization Name*"
+              label="Organization Name"
               required
               value={name}
               onChange={(e) => setName(e.currentTarget.value)}
@@ -94,7 +94,7 @@ export default function NewOrgPage() {
             />
 
             <Textarea
-              label="Description*"
+              label="Description"
               value={description}
               onChange={(e) => setDescription(e.currentTarget.value)}
               placeholder="What does your organization do?"
