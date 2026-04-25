@@ -119,6 +119,8 @@ export default async function OpeningOverviewPage({
             applicants={applicants}
             orgId={orgId}
             openingId={openingId}
+            openingStatus={openingData?.status ?? null}
+            applicationLink={openingData?.application_link ?? null}
           />
         );
       case "applicants":
