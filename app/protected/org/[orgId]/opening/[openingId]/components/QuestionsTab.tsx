@@ -7,27 +7,27 @@ import {
   ChevronRight,
   Plus,
   Trash01,
-  GridDotsVerticalCenter,
+  ArrowUp,
+  ArrowDown,
 } from "@untitled-ui/icons-react";
 import { parseQuestionText, encodeQuestionText } from "@/lib/question-utils";
 import type { FieldType } from "@/lib/question-utils";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
-  DndContext,
-  closestCenter,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-  useSortable,
-  arrayMove,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+  ActionIcon,
+  Alert,
+  Box,
+  Button,
+  Card,
+  Checkbox,
+  Collapse,
+  Group,
+  Loader,
+  Select,
+  SegmentedControl,
+  Stack,
+  Text,
+  TextInput,
+} from "@mantine/core";
 
 interface Question {
   id: string;
@@ -37,7 +37,6 @@ interface Question {
 }
 
 interface DraftQuestion {
-  /** Temp id for new questions not yet saved, or DB id for existing ones */
   tempId: string;
   dbId: string | null;
   label: string;
@@ -66,148 +65,158 @@ const FIELD_TYPES: { value: FieldType; label: string }[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// Sortable question card
+// Question card (edit mode) — up/down buttons instead of drag
 // ---------------------------------------------------------------------------
 
-function SortableQuestionCard({
+function QuestionCard({
   q,
   index,
+  total,
   onChange,
   onDelete,
+  onMove,
 }: {
   q: DraftQuestion;
   index: number;
+  total: number;
   onChange: (updated: DraftQuestion) => void;
   onDelete: () => void;
+  onMove: (dir: "up" | "down") => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: q.tempId });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
   const needsOptions = q.type === "select" || q.type === "checkbox";
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className="border border-gray-200 rounded-lg p-4 bg-white space-y-3"
-    >
-      <div className="flex items-start gap-2">
-        {/* Drag handle */}
-        <button
-          type="button"
-          {...attributes}
-          {...listeners}
-          className="mt-2 cursor-grab text-gray-400 hover:text-gray-600 shrink-0"
-          aria-label="Drag to reorder"
-        >
-          <GridDotsVerticalCenter className="w-4 h-4" />
-        </button>
-
-        <div className="flex-1 space-y-2">
-          <div className="flex gap-2 items-center">
-            <span className="text-xs text-gray-400 shrink-0">Q{index + 1}</span>
-            <Input
-              value={q.label}
-              onChange={(e) => onChange({ ...q, label: e.target.value })}
-              placeholder="Question text"
-              className="flex-1"
-            />
-          </div>
-
-          <div className="flex gap-2 items-center flex-wrap">
-            <select
-              value={q.type}
-              onChange={(e) =>
-                onChange({
-                  ...q,
-                  type: e.target.value as FieldType,
-                  options: [],
-                })
-              }
-              className="text-sm border border-gray-200 rounded-md px-2 py-1.5 bg-white"
+    <Card withBorder radius="md" p="md">
+      <Stack gap="sm">
+        <Group gap="sm" align="flex-start">
+          {/* Reorder buttons */}
+          <Stack gap={2} style={{ flexShrink: 0 }}>
+            <ActionIcon
+              variant="subtle"
+              size="xs"
+              disabled={index === 0}
+              onClick={() => onMove("up")}
+              aria-label="Move up"
             >
-              {FIELD_TYPES.map((ft) => (
-                <option key={ft.value} value={ft.value}>
-                  {ft.label}
-                </option>
-              ))}
-            </select>
+              <ArrowUp width={12} height={12} />
+            </ActionIcon>
+            <ActionIcon
+              variant="subtle"
+              size="xs"
+              disabled={index === total - 1}
+              onClick={() => onMove("down")}
+              aria-label="Move down"
+            >
+              <ArrowDown width={12} height={12} />
+            </ActionIcon>
+          </Stack>
 
-            <label className="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer">
-              <input
-                type="checkbox"
+          <Stack gap="sm" style={{ flex: 1 }}>
+            <Group gap="sm" align="center">
+              <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>
+                Q{index + 1}
+              </Text>
+              <TextInput
+                value={q.label}
+                onChange={(e) =>
+                  onChange({ ...q, label: e.currentTarget.value })
+                }
+                placeholder="Question text"
+                style={{ flex: 1 }}
+              />
+            </Group>
+
+            <Group gap="sm" wrap="wrap">
+              <Select
+                data={FIELD_TYPES.map((ft) => ({
+                  value: ft.value,
+                  label: ft.label,
+                }))}
+                value={q.type}
+                onChange={(val) =>
+                  onChange({
+                    ...q,
+                    type: (val as FieldType) ?? "text",
+                    options: [],
+                  })
+                }
+                size="sm"
+                style={{ width: 160 }}
+              />
+              <Checkbox
+                label="Required"
                 checked={q.is_required}
                 onChange={(e) =>
-                  onChange({ ...q, is_required: e.target.checked })
+                  onChange({ ...q, is_required: e.currentTarget.checked })
                 }
-                className="w-3.5 h-3.5"
+                size="sm"
               />
-              Required
-            </label>
-          </div>
+            </Group>
 
-          {/* Options editor for select/checkbox */}
-          {needsOptions && (
-            <div className="space-y-1.5 pl-1">
-              {q.options.map((opt, oi) => (
-                <div key={oi} className="flex gap-1.5 items-center">
-                  <Input
-                    value={opt}
-                    onChange={(e) => {
-                      const next = [...q.options];
-                      next[oi] = e.target.value;
-                      onChange({ ...q, options: next });
-                    }}
-                    placeholder={`Option ${oi + 1}`}
-                    className="text-sm h-8"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const next = q.options.filter((_, i) => i !== oi);
-                      onChange({ ...q, options: next });
-                    }}
-                    className="text-gray-400 hover:text-red-500"
-                    aria-label="Remove option"
-                  >
-                    <Trash01 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={() => onChange({ ...q, options: [...q.options, ""] })}
-                className="text-xs text-owl-purple hover:underline"
-              >
-                + Add option
-              </button>
-            </div>
-          )}
-        </div>
+            {needsOptions && (
+              <Stack gap="xs" pl="xs">
+                {q.options.map((opt, oi) => (
+                  <Group key={oi} gap="xs">
+                    <TextInput
+                      value={opt}
+                      onChange={(e) => {
+                        const next = [...q.options];
+                        next[oi] = e.currentTarget.value;
+                        onChange({ ...q, options: next });
+                      }}
+                      placeholder={`Option ${oi + 1}`}
+                      size="xs"
+                      style={{ flex: 1 }}
+                    />
+                    <ActionIcon
+                      variant="subtle"
+                      color="red"
+                      size="sm"
+                      onClick={() => {
+                        const next = q.options.filter((_, i) => i !== oi);
+                        onChange({ ...q, options: next });
+                      }}
+                      aria-label="Remove option"
+                    >
+                      <Trash01 width={12} height={12} />
+                    </ActionIcon>
+                  </Group>
+                ))}
+                <Button
+                  variant="subtle"
+                  size="xs"
+                  color="owlPurple"
+                  onClick={() =>
+                    onChange({ ...q, options: [...q.options, ""] })
+                  }
+                >
+                  + Add option
+                </Button>
+              </Stack>
+            )}
+          </Stack>
 
-        <button
-          type="button"
-          onClick={onDelete}
-          className="mt-1 text-gray-400 hover:text-red-500 shrink-0"
-          aria-label="Delete question"
-        >
-          <Trash01 className="w-4 h-4" />
-        </button>
-      </div>
-    </div>
+          <ActionIcon
+            variant="subtle"
+            color="red"
+            size="sm"
+            onClick={onDelete}
+            aria-label="Delete question"
+            style={{ flexShrink: 0 }}
+          >
+            <Trash01 width={16} height={16} />
+          </ActionIcon>
+        </Group>
+      </Stack>
+    </Card>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Google Forms mode panel
+// External link mode panel
 // ---------------------------------------------------------------------------
 
-function GoogleFormsMode({
+function ExternalLinkMode({
   applicationLink,
   openingId,
 }: {
@@ -233,27 +242,29 @@ function GoogleFormsMode({
   };
 
   return (
-    <div className="py-8 space-y-4">
-      <p className="text-sm text-gray-500">
-        Paste your Google Forms link below. Applicants will be directed to this
-        URL, and you can upload responses via the Upload Data tab.
-      </p>
-      <div className="flex gap-2 items-center max-w-xl">
-        <Input
+    <Stack gap="md" py="lg">
+      <Text size="sm" c="dimmed">
+        Paste your external application link below. Applicants will be directed
+        to this URL, and you can upload responses via the Upload Data tab.
+      </Text>
+      <Group gap="sm" align="flex-end" style={{ maxWidth: 480 }}>
+        <TextInput
           value={link}
-          onChange={(e) => setLink(e.target.value)}
+          onChange={(e) => setLink(e.currentTarget.value)}
           placeholder="https://docs.google.com/forms/..."
           type="url"
+          style={{ flex: 1 }}
         />
         <Button
           size="sm"
           onClick={saveLink}
-          disabled={saving || link === applicationLink}
+          loading={saving}
+          disabled={link === applicationLink}
         >
-          {saving ? "Saving…" : "Save"}
+          Save
         </Button>
-      </div>
-    </div>
+      </Group>
+    </Stack>
   );
 }
 
@@ -274,17 +285,13 @@ export function QuestionsTab({
     null,
   );
 
-  // Mode: null/empty = native form, URL = Google Forms
   const isNativeForm = !applicationLink;
   const [switchingMode, setSwitchingMode] = useState(false);
 
-  // Builder state
   const [isEditMode, setIsEditMode] = useState(false);
   const [draftQuestions, setDraftQuestions] = useState<DraftQuestion[]>([]);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-
-  const sensors = useSensors(useSensor(PointerSensor));
 
   const toggleMode = async (toNative: boolean) => {
     setSwitchingMode(true);
@@ -292,9 +299,7 @@ export function QuestionsTab({
       const supabase = createClient();
       const { error } = await supabase
         .from("openings")
-        .update({
-          application_link: toNative ? null : "",
-        })
+        .update({ application_link: toNative ? null : "" })
         .eq("id", openingId);
       if (!error) router.refresh();
     } finally {
@@ -328,12 +333,6 @@ export function QuestionsTab({
     fetchData();
   }, [openingId]);
 
-  const handleQuestionClick = (questionId: string) => {
-    setSelectedQuestionId(
-      selectedQuestionId === questionId ? null : questionId,
-    );
-  };
-
   const getResponsesForQuestion = (questionText: string) => {
     const { label } = parseQuestionText(questionText);
     return applications
@@ -346,10 +345,6 @@ export function QuestionsTab({
           response !== undefined && response !== null && response !== "",
       );
   };
-
-  // ---------------------------------------------------------------------------
-  // Builder helpers
-  // ---------------------------------------------------------------------------
 
   const enterEditMode = () => {
     setDraftQuestions(
@@ -368,15 +363,13 @@ export function QuestionsTab({
     setIsEditMode(true);
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      setDraftQuestions((items) => {
-        const oldIndex = items.findIndex((i) => i.tempId === active.id);
-        const newIndex = items.findIndex((i) => i.tempId === over.id);
-        return arrayMove(items, oldIndex, newIndex);
-      });
-    }
+  const moveQuestion = (index: number, dir: "up" | "down") => {
+    setDraftQuestions((prev) => {
+      const next = [...prev];
+      const swapIndex = dir === "up" ? index - 1 : index + 1;
+      [next[index], next[swapIndex]] = [next[swapIndex], next[index]];
+      return next;
+    });
   };
 
   const addQuestion = () => {
@@ -438,151 +431,115 @@ export function QuestionsTab({
     }
   };
 
-  // ---------------------------------------------------------------------------
-  // Render
-  // ---------------------------------------------------------------------------
-
   if (loading) {
     return (
-      <div className="py-12 text-center text-gray-500">
-        <p>Loading questions...</p>
-      </div>
+      <Box py="xl" ta="center">
+        <Loader size="sm" />
+      </Box>
     );
   }
 
-  // Mode toggle bar (shared between edit & view)
-  const modeToggle = (
-    <div className="flex items-center gap-2 text-sm">
-      <span className="text-gray-500">Mode:</span>
-      <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden">
-        <button
-          type="button"
-          onClick={() => !isNativeForm && toggleMode(true)}
-          disabled={switchingMode}
-          className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-            isNativeForm
-              ? "bg-owl-purple text-white"
-              : "bg-white text-gray-600 hover:bg-gray-50"
-          }`}
-        >
-          Native Form
-        </button>
-        <button
-          type="button"
-          onClick={() => isNativeForm && toggleMode(false)}
-          disabled={switchingMode}
-          className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-            !isNativeForm
-              ? "bg-owl-purple text-white"
-              : "bg-white text-gray-600 hover:bg-gray-50"
-          }`}
-        >
-          Google Forms
-        </button>
-      </div>
-    </div>
+  const modeControl = (
+    <SegmentedControl
+      value={isNativeForm ? "native" : "external"}
+      onChange={(val) => toggleMode(val === "native")}
+      disabled={switchingMode}
+      data={[
+        { label: "Native Form", value: "native" },
+        { label: "External Link", value: "external" },
+      ]}
+      size="sm"
+    />
   );
 
-  // Edit mode (native form only)
+  // Edit mode
   if (isEditMode) {
     return (
-      <div className="py-4 space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-gray-700">Edit Form</h2>
-          <div className="flex gap-2">
+      <Stack gap="md" py="md">
+        <Group justify="space-between" align="center">
+          <Text size="sm" fw={600} c="dimmed">
+            Edit Form
+          </Text>
+          <Group gap="xs">
             <Button
-              variant="outline"
+              variant="default"
               size="sm"
+              disabled={saving}
               onClick={() => {
                 setIsEditMode(false);
                 setSaveError(null);
               }}
-              disabled={saving}
             >
               Cancel
             </Button>
-            <Button size="sm" onClick={saveForm} disabled={saving}>
-              {saving ? "Saving…" : "Save Form"}
+            <Button size="sm" loading={saving} onClick={saveForm}>
+              Save Form
             </Button>
-          </div>
-        </div>
+          </Group>
+        </Group>
 
-        {saveError && (
-          <p className="text-sm text-red-600 bg-red-50 rounded-lg px-4 py-3">
-            {saveError}
-          </p>
-        )}
+        {saveError && <Alert color="red">{saveError}</Alert>}
 
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext
-            items={draftQuestions.map((q) => q.tempId)}
-            strategy={verticalListSortingStrategy}
-          >
-            <div className="space-y-2">
-              {draftQuestions.map((q, i) => (
-                <SortableQuestionCard
-                  key={q.tempId}
-                  q={q}
-                  index={i}
-                  onChange={(updated) =>
-                    setDraftQuestions((prev) =>
-                      prev.map((item) =>
-                        item.tempId === updated.tempId ? updated : item,
-                      ),
-                    )
-                  }
-                  onDelete={() =>
-                    setDraftQuestions((prev) =>
-                      prev.filter((item) => item.tempId !== q.tempId),
-                    )
-                  }
-                />
-              ))}
-            </div>
-          </SortableContext>
-        </DndContext>
+        <Stack gap="xs">
+          {draftQuestions.map((q, i) => (
+            <QuestionCard
+              key={q.tempId}
+              q={q}
+              index={i}
+              total={draftQuestions.length}
+              onChange={(updated) =>
+                setDraftQuestions((prev) =>
+                  prev.map((item) =>
+                    item.tempId === updated.tempId ? updated : item,
+                  ),
+                )
+              }
+              onDelete={() =>
+                setDraftQuestions((prev) =>
+                  prev.filter((item) => item.tempId !== q.tempId),
+                )
+              }
+              onMove={(dir) => moveQuestion(i, dir)}
+            />
+          ))}
+        </Stack>
 
         <Button
           variant="outline"
-          size="sm"
+          leftSection={<Plus width={16} height={16} />}
           onClick={addQuestion}
-          className="w-full border-dashed"
+          style={{ borderStyle: "dashed" }}
         >
-          <Plus className="w-4 h-4 mr-1" />
           Add Question
         </Button>
-      </div>
+      </Stack>
     );
   }
 
   // View mode
   return (
-    <div className="py-4 space-y-1">
-      <div className="flex items-center justify-between mb-2">
-        {modeToggle}
+    <Stack gap="sm" py="md">
+      <Group justify="space-between" align="center" mb="xs">
+        {modeControl}
         {isNativeForm && (
           <Button variant="outline" size="sm" onClick={enterEditMode}>
             Edit Form
           </Button>
         )}
-      </div>
+      </Group>
 
       {!isNativeForm ? (
-        <GoogleFormsMode
+        <ExternalLinkMode
           applicationLink={applicationLink ?? ""}
           openingId={openingId}
         />
       ) : questions.length === 0 ? (
-        <div className="py-12 text-center text-gray-500">
-          <p>
+        <Box py="xl" ta="center">
+          <Text c="dimmed" size="sm">
             No questions configured. Click &ldquo;Edit Form&rdquo; to build your
             form.
-          </p>
-        </div>
+          </Text>
+        </Box>
       ) : (
         questions.map((question, index) => {
           const { label } = parseQuestionText(question.question_text);
@@ -590,51 +547,74 @@ export function QuestionsTab({
           const isExpanded = selectedQuestionId === question.id;
 
           return (
-            <div key={question.id}>
-              <div
-                className="py-3 px-2 hover:bg-gray-50 transition-colors cursor-pointer rounded-sm border-b border-gray-100"
-                onClick={() => handleQuestionClick(question.id)}
+            <Box
+              key={question.id}
+              style={{ borderBottom: "1px solid var(--mantine-color-gray-2)" }}
+            >
+              <Box
+                py="sm"
+                px="xs"
+                style={{ cursor: "pointer" }}
+                onClick={() =>
+                  setSelectedQuestionId(isExpanded ? null : question.id)
+                }
               >
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="text-xs text-gray-500 mb-1">
+                <Group justify="space-between" gap="md">
+                  <Box style={{ flex: 1 }}>
+                    <Text size="xs" c="dimmed" mb={4}>
                       Question {index + 1} of {questions.length}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-base font-medium">{label}</h2>
+                    </Text>
+                    <Group gap="xs" align="center">
+                      <Text size="sm" fw={500}>
+                        {label}
+                      </Text>
                       {question.is_required && (
-                        <span className="text-xs text-red-600">*</span>
+                        <Text size="xs" c="red">
+                          *
+                        </Text>
                       )}
-                    </div>
-                  </div>
+                    </Group>
+                  </Box>
                   <ChevronRight
-                    className={`h-5 w-5 text-gray-400 shrink-0 transition-transform ${isExpanded ? "rotate-90" : ""}`}
+                    width={18}
+                    height={18}
+                    style={{
+                      color: "var(--mantine-color-gray-5)",
+                      flexShrink: 0,
+                      transform: isExpanded ? "rotate(90deg)" : "none",
+                      transition: "transform 150ms",
+                    }}
                   />
-                </div>
-              </div>
+                </Group>
+              </Box>
 
-              {isExpanded && (
-                <div className="py-3 px-4 bg-gray-50/50 space-y-3">
+              <Collapse expanded={isExpanded}>
+                <Stack gap="xs" px="md" pb="sm">
                   {responses.length > 0 ? (
                     responses.map((response, idx) => (
-                      <div
+                      <Box
                         key={idx}
-                        className="py-3 px-4 bg-white/80 backdrop-blur-sm rounded-lg text-sm text-gray-800 shadow-sm hover:shadow-md transition-shadow"
+                        p="sm"
+                        style={{
+                          background: "var(--mantine-color-gray-0)",
+                          borderRadius: "var(--mantine-radius-md)",
+                          fontSize: 14,
+                        }}
                       >
                         {String(response)}
-                      </div>
+                      </Box>
                     ))
                   ) : (
-                    <div className="py-3 text-sm text-gray-400 text-center italic">
+                    <Text size="sm" c="dimmed" ta="center" py="sm" fs="italic">
                       No responses yet
-                    </div>
+                    </Text>
                   )}
-                </div>
-              )}
-            </div>
+                </Stack>
+              </Collapse>
+            </Box>
           );
         })
       )}
-    </div>
+    </Stack>
   );
 }

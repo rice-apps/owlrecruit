@@ -7,7 +7,9 @@
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { ArrowLeft, Pencil01 } from "@untitled-ui/icons-react";
+import { Box, Group, Stack, Text } from "@mantine/core";
+import { ArrowLeft } from "@untitled-ui/icons-react";
+import { EditOpeningDialog } from "@/components/edit-opening-dialog";
 import { OpeningStatusButton } from "@/components/opening-status-button";
 import { OpeningTabs } from "./components/OpeningTabs";
 import { ApplicantsList } from "./components/ApplicantsList";
@@ -49,21 +51,18 @@ export default async function OpeningOverviewPage({
   const { tab = "overview" } = await searchParams;
   const supabase = await createClient();
 
-  // Fetch the organization name
   const { data: orgData } = await supabase
     .from("orgs")
     .select("name")
     .eq("id", orgId)
     .single();
 
-  // Fetch the opening details
   const { data: openingData } = await supabase
     .from("openings")
     .select("title, description, status, application_link, closes_at")
     .eq("id", openingId)
     .single();
 
-  // Fetch applications with user data for this specific opening
   const { data: applications, error: appError } = (await supabase
     .from("applications")
     .select(
@@ -94,8 +93,6 @@ export default async function OpeningOverviewPage({
     logger.error("Error fetching applications:", appError);
   }
 
-  // Transform applications to applicants list format
-  // Prefer user info if users_id is not empty, otherwise use applicant info
   const applicants = (applications || [])
     .map((app) => {
       const userData = app.user || app.applicant;
@@ -155,51 +152,65 @@ export default async function OpeningOverviewPage({
   };
 
   return (
-    <div className="flex-1 w-full max-w-5xl flex flex-col gap-6">
+    <Stack gap="lg" style={{ flex: 1, width: "100%", maxWidth: 1024 }}>
       {/* Back link */}
       <Link
         href={`/protected/org/${orgId}`}
-        className="flex items-center gap-2 w-fit text-sm text-gray-500 hover:text-gray-700 transition-colors"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
+          fontSize: 14,
+          color: "var(--mantine-color-gray-6)",
+          textDecoration: "none",
+        }}
       >
-        <ArrowLeft className="w-4 h-4" />
+        <ArrowLeft width={16} height={16} />
         Back to Openings
       </Link>
 
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm text-gray-500 mb-1">{orgData?.name}</p>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold">
+      <Group justify="space-between" align="flex-start" gap="md" wrap="wrap">
+        <Box>
+          <Text size="sm" c="dimmed" mb={4}>
+            {orgData?.name}
+          </Text>
+          <Group gap="sm" align="center">
+            <Text size="xl" fw={700}>
               {openingData?.title || "Untitled Opening"}
-            </h1>
-            <Link
-              href={`/protected/org/${orgId}/opening/${openingId}/edit`}
-              className="rounded-md p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800"
-              aria-label="Edit opening"
-              title="Edit opening"
-            >
-              <Pencil01 className="h-4 w-4" />
-            </Link>
-          </div>
-          <p className="text-gray-600 mt-2 max-w-2xl">
-            {openingData?.description}
-          </p>
-        </div>
+            </Text>
+            <EditOpeningDialog
+              orgId={orgId}
+              openingId={openingId}
+              initialData={{
+                title: openingData?.title || "",
+                description: openingData?.description || undefined,
+                application_link: openingData?.application_link || undefined,
+                closes_at: openingData?.closes_at || undefined,
+                status: openingData?.status || "draft",
+              }}
+            />
+          </Group>
+          {openingData?.description && (
+            <Text c="dimmed" mt="xs" style={{ maxWidth: 512 }}>
+              {openingData.description}
+            </Text>
+          )}
+        </Box>
         <OpeningStatusButton
           orgId={orgId}
           openingId={openingId}
           status={openingData?.status || "draft"}
         />
-      </div>
+      </Group>
 
       {/* Tabs */}
-      <Suspense fallback={<div className="h-12" />}>
+      <Suspense fallback={<Box h={48} />}>
         <OpeningTabs useNativeForm={!openingData?.application_link} />
       </Suspense>
 
       {/* Tab content */}
-      <div className="flex-1">{renderTabContent()}</div>
-    </div>
+      <Box style={{ flex: 1 }}>{renderTabContent()}</Box>
+    </Stack>
   );
 }

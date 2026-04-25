@@ -2,19 +2,19 @@
 
 import { useState } from "react";
 import { logger } from "@/lib/logger";
-import { toast } from "sonner";
+import { notifications } from "@mantine/notifications";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Loading01, Plus, Trash01 } from "@untitled-ui/icons-react";
+  Modal,
+  Button,
+  TextInput,
+  NumberInput,
+  Group,
+  Stack,
+  Alert,
+  ActionIcon,
+  Text,
+} from "@mantine/core";
+import { AlertCircle, Plus, Trash01 } from "@untitled-ui/icons-react";
 
 interface Rubric {
   name: string;
@@ -41,40 +41,15 @@ export function RubricEditorDialog({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleOpenChange = (isOpen: boolean) => {
-    if (isOpen) {
-      setRubric(initialRubric); // Reset on open
-      setError(null);
-    }
-    setOpen(isOpen);
-  };
-
-  const handleAddSkill = () => {
-    setRubric([...rubric, { name: "", max_val: 10 }]);
-  };
-
-  const handleUpdateSkill = (
-    index: number,
-    field: keyof Rubric,
-    value: string | number,
-  ) => {
-    const newRubric = [...rubric];
-    if (field === "max_val") {
-      newRubric[index] = { ...newRubric[index], [field]: Number(value) };
-    } else {
-      newRubric[index] = { ...newRubric[index], [field]: value as string };
-    }
-    setRubric(newRubric);
-  };
-
-  const handleRemoveSkill = (index: number) => {
-    setRubric(rubric.filter((_, i) => i !== index));
+  const handleOpen = () => {
+    setRubric(initialRubric);
+    setError(null);
+    setOpen(true);
   };
 
   const handleSave = async () => {
     setError(null);
 
-    // Validation
     if (rubric.some((r) => !r.name.trim())) {
       setError("All skills must have a name.");
       return;
@@ -100,7 +75,7 @@ export function RubricEditorDialog({
       setOpen(false);
     } catch (err) {
       logger.error("Error saving rubric:", err);
-      toast.error("Failed to save changes. Please try again.");
+      notifications.show({ color: "red", message: "Failed to save changes." });
       setError("Failed to save changes. Please try again.");
     } finally {
       setIsSaving(false);
@@ -108,87 +83,102 @@ export function RubricEditorDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Edit Scoring Rubric</DialogTitle>
-          <DialogDescription className="sr-only">
-            Define the skills and maximum scores for evaluating candidates.
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <span onClick={handleOpen} style={{ cursor: "pointer" }}>
+        {trigger}
+      </span>
 
-        <div className="space-y-4 py-4">
-          <p className="text-sm text-muted-foreground">
+      <Modal
+        opened={open}
+        onClose={() => setOpen(false)}
+        title="Edit Scoring Rubric"
+        size="md"
+      >
+        <Stack gap="md">
+          <Text size="sm" c="dimmed">
             Define the skills and maximum scores for evaluating candidates.
-          </p>
+          </Text>
 
-          <div className="space-y-3">
+          <Stack gap="xs">
+            {rubric.length > 0 && (
+              <Group gap="xs">
+                <Text size="xs" c="dimmed" style={{ flex: 1 }}>
+                  Skill Name
+                </Text>
+                <Text size="xs" c="dimmed" style={{ width: 80 }}>
+                  Max Score
+                </Text>
+                <div style={{ width: 36 }} />
+              </Group>
+            )}
             {rubric.map((item, index) => (
-              <div key={index} className="flex gap-2 items-start">
-                <div className="flex-1 space-y-1">
-                  {index === 0 && (
-                    <Label className="text-xs text-muted-foreground">
-                      Skill Name
-                    </Label>
-                  )}
-                  <Input
-                    value={item.name}
-                    onChange={(e) =>
-                      handleUpdateSkill(index, "name", e.target.value)
-                    }
-                    placeholder="e.g. Communication"
-                  />
-                </div>
-                <div className="w-20 space-y-1">
-                  {index === 0 && (
-                    <Label className="text-xs text-muted-foreground">Max</Label>
-                  )}
-                  <Input
-                    type="number"
-                    min="1"
-                    value={item.max_val}
-                    onChange={(e) =>
-                      handleUpdateSkill(index, "max_val", e.target.value)
-                    }
-                  />
-                </div>
-                <div className={index === 0 ? "pt-6" : ""}>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-muted-foreground hover:text-destructive"
-                    onClick={() => handleRemoveSkill(index)}
-                  >
-                    <Trash01 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+              <Group key={index} gap="xs" align="flex-start">
+                <TextInput
+                  style={{ flex: 1 }}
+                  value={item.name}
+                  onChange={(e) => {
+                    const next = [...rubric];
+                    next[index] = {
+                      ...next[index],
+                      name: e.currentTarget.value,
+                    };
+                    setRubric(next);
+                  }}
+                  placeholder="e.g. Communication"
+                />
+                <NumberInput
+                  style={{ width: 80 }}
+                  min={1}
+                  value={item.max_val}
+                  onChange={(val) => {
+                    const next = [...rubric];
+                    next[index] = { ...next[index], max_val: Number(val) || 0 };
+                    setRubric(next);
+                  }}
+                />
+                <ActionIcon
+                  variant="subtle"
+                  color="red"
+                  mt={6}
+                  onClick={() =>
+                    setRubric(rubric.filter((_, i) => i !== index))
+                  }
+                >
+                  <Trash01 width={16} height={16} />
+                </ActionIcon>
+              </Group>
             ))}
-          </div>
+          </Stack>
 
           <Button
             variant="outline"
-            onClick={handleAddSkill}
-            className="w-full border-dashed"
+            leftSection={<Plus width={16} height={16} />}
+            onClick={() => setRubric([...rubric, { name: "", max_val: 10 }])}
+            style={{ borderStyle: "dashed" }}
           >
-            <Plus className="h-4 w-4 mr-2" />
             Add Skill
           </Button>
 
-          {error && <p className="text-sm text-destructive">{error}</p>}
-        </div>
+          {error && (
+            <Alert color="red" icon={<AlertCircle width={16} height={16} />}>
+              {error}
+            </Alert>
+          )}
 
-        <div className="flex justify-end gap-3 pt-4 border-t">
-          <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving && <Loading01 className="mr-2 h-4 w-4 animate-spin" />}
-            Save Changes
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+          <Group
+            justify="flex-end"
+            pt="xs"
+            style={{ borderTop: "1px solid var(--mantine-color-gray-2)" }}
+          >
+            <Button variant="default" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} loading={isSaving}>
+              Save Changes
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+    </>
   );
 }

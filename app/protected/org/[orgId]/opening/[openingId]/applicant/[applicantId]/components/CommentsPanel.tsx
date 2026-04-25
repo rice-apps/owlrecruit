@@ -1,17 +1,21 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { toast } from "sonner";
+import { notifications } from "@mantine/notifications";
 import { logger } from "@/lib/logger";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { formatRelativeTime } from "@/lib/date-utils";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Loading01, ArrowUp } from "@untitled-ui/icons-react";
+  Avatar,
+  Box,
+  Collapse,
+  Group,
+  Loader,
+  Stack,
+  Text,
+  Textarea,
+  ActionIcon,
+} from "@mantine/core";
+import { formatRelativeTime } from "@/lib/utils";
+import { ArrowUp, ChevronDown } from "@untitled-ui/icons-react";
 
 interface Comment {
   id: string;
@@ -29,7 +33,7 @@ export function CommentsPanel({ orgId, applicantId }: CommentsPanelProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isCommentsOpen, setIsCommentsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(true);
 
   const fetchComments = useCallback(async () => {
     try {
@@ -38,7 +42,7 @@ export function CommentsPanel({ orgId, applicantId }: CommentsPanelProps) {
       );
       if (res.ok) {
         const data = await res.json();
-        setComments(data.comments);
+        setComments(data.comments ?? []);
       } else {
         logger.warn("Failed to fetch comments, API might be missing");
       }
@@ -52,10 +56,10 @@ export function CommentsPanel({ orgId, applicantId }: CommentsPanelProps) {
   }, [applicantId, fetchComments]);
 
   useEffect(() => {
-    if (isCommentsOpen) {
+    if (isOpen) {
       fetchComments();
     }
-  }, [isCommentsOpen, applicantId, fetchComments]);
+  }, [isOpen, applicantId, fetchComments]);
 
   const handlePostComment = async () => {
     if (!newComment.trim()) return;
@@ -73,97 +77,121 @@ export function CommentsPanel({ orgId, applicantId }: CommentsPanelProps) {
 
       if (res.ok) {
         setNewComment("");
-        toast.success("Comment successfully posted!");
+        notifications.show({ color: "green", message: "Comment posted!" });
         fetchComments();
       }
     } catch (error) {
       logger.error("Error posting comment:", error);
-      toast.error("Error posting comment.");
+      notifications.show({ color: "red", message: "Error posting comment." });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="p-4 flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <div className="relative w-full">
-          <input
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            className="w-full pl-4 pr-10 py-3 rounded-full text-sm bg-white border border-input text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-owl-purple/50"
-            placeholder="Add comment..."
-            onKeyDown={(e) => e.key === "Enter" && handlePostComment()}
-          />
-          <button
-            onClick={handlePostComment}
-            disabled={loading || !newComment.trim()}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-owl-purple disabled:opacity-30 transition-colors"
-          >
-            {loading ? (
-              <Loading01 className="h-5 w-5 animate-spin" />
-            ) : (
-              <div className="bg-muted rounded-full p-1">
-                <ArrowUp className="h-4 w-4" />
-              </div>
-            )}
-          </button>
-        </div>
-      </div>
+    <Stack gap="md" p="md">
+      {/* Comment input */}
+      <Box style={{ position: "relative" }}>
+        <Textarea
+          value={newComment}
+          onChange={(e) => setNewComment(e.currentTarget.value)}
+          placeholder="Add comment..."
+          autosize
+          minRows={1}
+          maxRows={4}
+          radius="xl"
+          styles={{ input: { paddingRight: 40 } }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              handlePostComment();
+            }
+          }}
+        />
+        <ActionIcon
+          variant="subtle"
+          size="sm"
+          disabled={loading || !newComment.trim()}
+          onClick={handlePostComment}
+          style={{
+            position: "absolute",
+            right: 8,
+            bottom: 8,
+          }}
+          aria-label="Post comment"
+        >
+          {loading ? <Loader size={14} /> : <ArrowUp width={16} height={16} />}
+        </ActionIcon>
+      </Box>
 
-      <Accordion
-        type="single"
-        collapsible
-        className="w-full"
-        value={isCommentsOpen ? "item-1" : ""}
-        onValueChange={(val) => setIsCommentsOpen(val === "item-1")}
-      >
-        <AccordionItem value="item-1" className="border-none">
-          <AccordionTrigger className="py-2 hover:no-underline font-semibold text-lg text-foreground">
+      {/* Comments accordion */}
+      <Box>
+        <Group
+          justify="space-between"
+          align="center"
+          mb="xs"
+          style={{ cursor: "pointer" }}
+          onClick={() => setIsOpen((v) => !v)}
+        >
+          <Text fw={600} size="lg">
             Comments
-          </AccordionTrigger>
-          <AccordionContent>
-            <div className="flex flex-col gap-3 py-2">
-              {comments.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No comments yet.
-                </p>
-              ) : (
-                comments.map((comment, i) => (
-                  <div
-                    key={comment.id || i}
-                    className="bg-white p-4 rounded-xl border shadow-sm"
-                  >
-                    <div className="flex items-start gap-3 mb-2">
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback className="bg-muted text-muted-foreground text-xs">
-                          {(comment.userName || "User")
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")
-                            .substring(0, 2)
-                            .toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col">
-                        <span className="font-semibold text-sm text-foreground">
-                          {comment.userName || "Unknown User"}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {formatRelativeTime(comment.createdAt)}
-                        </span>
-                      </div>
-                    </div>
-                    <p className="text-sm text-foreground pl-11">
-                      {comment.content}
-                    </p>
-                  </div>
-                ))
-              )}
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-    </div>
+          </Text>
+          <ChevronDown
+            width={18}
+            height={18}
+            style={{
+              color: "var(--mantine-color-gray-5)",
+              transform: isOpen ? "rotate(180deg)" : "none",
+              transition: "transform 150ms",
+            }}
+          />
+        </Group>
+
+        <Collapse expanded={isOpen}>
+          <Stack gap="sm" pt="xs">
+            {comments.length === 0 ? (
+              <Text size="sm" c="dimmed" ta="center" py="md">
+                No comments yet.
+              </Text>
+            ) : (
+              comments.map((comment, i) => (
+                <Box
+                  key={comment.id || i}
+                  p="md"
+                  style={{
+                    background: "white",
+                    border: "1px solid var(--mantine-color-gray-2)",
+                    borderRadius: "var(--mantine-radius-md)",
+                    boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                  }}
+                >
+                  <Group gap="sm" align="flex-start" mb="xs">
+                    <Avatar size={32} color="owlPurple" radius="xl">
+                      {(comment.userName || "U")
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .substring(0, 2)
+                        .toUpperCase()}
+                    </Avatar>
+                    <Box>
+                      <Text size="sm" fw={600}>
+                        {comment.userName || "Unknown User"}
+                      </Text>
+                      <Text size="xs" c="dimmed">
+                        {formatRelativeTime(comment.createdAt)}
+                      </Text>
+                    </Box>
+                  </Group>
+                  <Text size="sm" pl={44}>
+                    {comment.content}
+                  </Text>
+                </Box>
+              ))
+            )}
+          </Stack>
+        </Collapse>
+      </Box>
+    </Stack>
   );
 }

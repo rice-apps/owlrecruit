@@ -1,32 +1,30 @@
-/**
- * My Applications Page
- *
- * Displays user's applications as cards with position, organization, status, and due date
- * Includes active applications and past applications sections
- */
 "use client";
 
 import { useEffect, useState } from "react";
-import { ApplicationCard } from "./components";
-import { SearchInput } from "@/components/search-input";
-import type { Enums } from "@/types/supabase";
+import {
+  SimpleGrid,
+  Stack,
+  Text,
+  Title,
+  Loader,
+  Center,
+  Alert,
+} from "@mantine/core";
+import { AlertCircle } from "@untitled-ui/icons-react";
+import ApplicationCard from "./components/ApplicationCard";
+import { SearchInput } from "@/components/SearchInput";
 import { logger } from "@/lib/logger";
-
-type ApplicationStatus = Enums<"status">;
+import type { Enums } from "@/types/supabase";
 
 interface Application {
   org_id: string;
   opening_id: string;
-  status: ApplicationStatus | null;
+  status: Enums<"status"> | null;
   created_at: string | null;
   opening_title?: string;
   org_name?: string;
   closes_at?: string | null;
   opening_status?: Enums<"opening_status">;
-}
-
-interface ApplicationsData {
-  applications: Application[];
 }
 
 export default function MyApplicationsPage() {
@@ -39,15 +37,10 @@ export default function MyApplicationsPage() {
     async function fetchApplications() {
       try {
         setLoading(true);
-        setError(null);
-
-        const response = await fetch("/api/user/org-status");
-        if (!response.ok) {
-          throw new Error("Failed to fetch applications");
-        }
-
-        const data: ApplicationsData = await response.json();
-        setApplications(data.applications || []);
+        const res = await fetch("/api/user/org-status");
+        if (!res.ok) throw new Error("Failed to fetch applications");
+        const json = await res.json();
+        setApplications(json.applications ?? []);
       } catch (err) {
         logger.error("Error fetching applications:", err);
         setError(
@@ -57,119 +50,106 @@ export default function MyApplicationsPage() {
         setLoading(false);
       }
     }
-
     fetchApplications();
   }, []);
 
-  // Filter applications based on search query
-  const filteredApplications = applications.filter((app) => {
-    const query = searchQuery.toLowerCase();
+  const filtered = applications.filter((app) => {
+    const q = searchQuery.toLowerCase();
     return (
-      app.opening_title?.toLowerCase().includes(query) ||
-      app.org_name?.toLowerCase().includes(query)
+      app.opening_title?.toLowerCase().includes(q) ||
+      app.org_name?.toLowerCase().includes(q)
     );
   });
 
-  // Separate active and past applications
-  const activeApplications = filteredApplications.filter((app) => {
-    // Active if not rejected/accepted offer, opening is not explicitly closed, and (no due date OR due date is in the future)
+  const active = filtered.filter((app) => {
     if (
       app.status === "Rejected" ||
       app.status === "Accepted Offer" ||
       app.opening_status === "closed"
     )
       return false;
-    if (!app.closes_at) return true;
-    return new Date(app.closes_at) >= new Date();
+    return !app.closes_at || new Date(app.closes_at) >= new Date();
   });
 
-  const pastApplications = filteredApplications.filter((app) => {
-    // Past if rejected/accepted offer, explicitly closed opening OR due date has passed
+  const past = filtered.filter((app) => {
     if (
       app.status === "Rejected" ||
       app.status === "Accepted Offer" ||
       app.opening_status === "closed"
     )
       return true;
-    if (!app.closes_at) return false;
-    return new Date(app.closes_at) < new Date();
+    return app.closes_at != null && new Date(app.closes_at) < new Date();
   });
 
   return (
-    <div className="w-full flex flex-col gap-6 max-w-7xl">
-      {/* Search Bar */}
+    <Stack gap="lg">
       <SearchInput
         value={searchQuery}
         onChange={setSearchQuery}
         placeholder="Search organizations, positions..."
       />
-      {/* Loading State */}
+
       {loading && (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-owl-purple"></div>
-          <span className="ml-2 text-muted-foreground">Loading...</span>
-        </div>
+        <Center py="xl">
+          <Loader size="sm" />
+        </Center>
       )}
 
-      {/* Error State */}
       {error && (
-        <div className="text-center py-12">
-          <p className="text-destructive mb-2">Error loading applications</p>
-          <p className="text-sm text-muted-foreground">{error}</p>
-        </div>
+        <Alert
+          color="red"
+          title="Error loading applications"
+          icon={<AlertCircle width={16} height={16} />}
+        >
+          {error}
+        </Alert>
       )}
 
-      {/* Applications Content */}
       {!loading && !error && (
-        <>
-          {/* My Applications Section */}
-          <div>
-            <h2 className="text-xl font-semibold mb-4">My Applications</h2>
-            {activeApplications.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {activeApplications.map((app) => (
+        <Stack gap="xl">
+          <Stack gap="md">
+            <Title order={3}>My Applications</Title>
+            {active.length > 0 ? (
+              <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing="md">
+                {active.map((app) => (
                   <ApplicationCard
                     key={`${app.opening_id}-${app.created_at}`}
                     application={app}
                   />
                 ))}
-              </div>
+              </SimpleGrid>
             ) : (
-              <p className="text-muted-foreground py-8">
+              <Text c="dimmed">
                 {searchQuery
                   ? "No active applications match your search."
                   : "No active applications found."}
-              </p>
+              </Text>
             )}
-          </div>
+          </Stack>
 
-          {/* Past Applications Section */}
-          {pastApplications.length > 0 && (
-            <div className="mt-8">
-              <h2 className="text-xl font-semibold mb-4">Past Applications</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {pastApplications.map((app) => (
+          {past.length > 0 && (
+            <Stack gap="md">
+              <Title order={3}>Past Applications</Title>
+              <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing="md">
+                {past.map((app) => (
                   <ApplicationCard
                     key={`${app.opening_id}-${app.created_at}`}
                     application={app}
                   />
                 ))}
-              </div>
-            </div>
+              </SimpleGrid>
+            </Stack>
           )}
 
-          {/* Empty State */}
-          {activeApplications.length === 0 &&
-            pastApplications.length === 0 &&
-            !searchQuery && (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">
-                  You haven&apos;t submitted any applications yet.
-                </p>
-              </div>
-            )}
-        </>
+          {active.length === 0 && past.length === 0 && !searchQuery && (
+            <Center py="xl">
+              <Text c="dimmed">
+                You haven&apos;t submitted any applications yet.
+              </Text>
+            </Center>
+          )}
+        </Stack>
       )}
-    </div>
+    </Stack>
   );
 }

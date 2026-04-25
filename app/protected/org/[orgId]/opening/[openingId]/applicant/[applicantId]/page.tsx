@@ -2,22 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { Alert, Box, Button, Group, Loader, Stack, Text } from "@mantine/core";
 import { ArrowLeft } from "@untitled-ui/icons-react";
 import { Json } from "@/types/supabase";
 import { createClient } from "@/lib/supabase/client";
 import { logger } from "@/lib/logger";
 import { ApplicantTabs } from "./components/ApplicantTabs";
 import { CommentsSidebar } from "@/app/protected/org/[orgId]/opening/[openingId]/applicant/[applicantId]/components/comments-sidebar";
+import { InterviewTab } from "@/app/protected/org/[orgId]/opening/[openingId]/applicant/[applicantId]/components/InterviewTab";
 import {
   SummaryTab,
-  type ReviewerFeedbackPreview,
-} from "@/app/protected/org/[orgId]/opening/[openingId]/applicant/[applicantId]/components/SummaryTab";
-import {
   computeRubricSummary,
+  type ReviewerFeedbackPreview,
   type RubricCriterion,
   type RubricSummaryMetrics,
-} from "@/app/protected/org/[orgId]/opening/[openingId]/applicant/[applicantId]/components/summary-metrics";
+} from "@/app/protected/org/[orgId]/opening/[openingId]/applicant/[applicantId]/components/SummaryTab";
 
 interface ApplicationData {
   form_responses: Json;
@@ -41,22 +40,6 @@ interface ReviewsSummaryResponse {
   } | null;
 }
 
-const UNKNOWN_REVIEWER = "Unknown Reviewer";
-
-const parseScoreValue = (value: unknown, maxScore: number): number | null => {
-  const numeric = typeof value === "number" ? value : Number(value);
-
-  if (!Number.isFinite(numeric)) {
-    return null;
-  }
-
-  if (numeric < 0 || numeric > maxScore) {
-    return null;
-  }
-
-  return numeric;
-};
-
 interface SummaryTabState {
   rubricSummary: RubricSummaryMetrics | null;
   reviewerFeedback: ReviewerFeedbackPreview[];
@@ -70,21 +53,25 @@ interface FormResponse {
   [key: string]: string | number | boolean | null | undefined;
 }
 
-interface ResumeViewerProps {
-  resumeUrl: string | null;
-}
+const UNKNOWN_REVIEWER = "Unknown Reviewer";
 
-function ResumeViewer({ resumeUrl }: ResumeViewerProps) {
+const parseScoreValue = (value: unknown, maxScore: number): number | null => {
+  const numeric = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(numeric)) return null;
+  if (numeric < 0 || numeric > maxScore) return null;
+  return numeric;
+};
+
+function ResumeViewer({ resumeUrl }: { resumeUrl: string | null }) {
   if (!resumeUrl) {
-    return <div className="text-gray-500">No resume available</div>;
+    return (
+      <Text c="dimmed" size="sm">
+        No resume available
+      </Text>
+    );
   }
 
-  // Convert Google Drive URL to preview URL
   const getPreviewUrl = (url: string): string => {
-    // Extract file ID from various Google Drive URL formats
-    // Format 1: https://drive.google.com/open?id=FILE_ID
-    // Format 2: https://drive.google.com/file/d/FILE_ID/view
-    // Format 3: https://drive.google.com/uc?id=FILE_ID
     let fileId = "";
     if (url.includes("/open?id=")) {
       fileId = url.split("/open?id=")[1].split("&")[0];
@@ -95,16 +82,21 @@ function ResumeViewer({ resumeUrl }: ResumeViewerProps) {
     }
     return `https://drive.google.com/file/d/${fileId}/preview`;
   };
-  const previewUrl = getPreviewUrl(resumeUrl);
+
   return (
-    <div className="w-full h-[800px]">
+    <Box style={{ width: "100%", height: 800 }}>
       <iframe
-        src={previewUrl}
-        className="w-full h-full border rounded-lg"
+        src={getPreviewUrl(resumeUrl)}
+        style={{
+          width: "100%",
+          height: "100%",
+          border: "1px solid var(--mantine-color-gray-2)",
+          borderRadius: "var(--mantine-radius-md)",
+        }}
         title="Applicant Resume"
         allow="autoplay"
       />
-    </div>
+    </Box>
   );
 }
 
@@ -119,7 +111,7 @@ export default function ApplicantReviewPage() {
   };
 
   const tab = searchParams.get("tab") || "submission";
-  const showReviewSidebar = tab !== "summary";
+  const showReviewSidebar = tab !== "summary" && tab !== "interview";
   const [applicationData, setApplicationData] =
     useState<ApplicationData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -157,9 +149,7 @@ export default function ApplicantReviewPage() {
   }, [applicantId, orgId]);
 
   useEffect(() => {
-    if (tab !== "summary" || summaryFetchAttempted) {
-      return;
-    }
+    if (tab !== "summary" || summaryFetchAttempted) return;
 
     const controller = new AbortController();
     let isMounted = true;
@@ -180,9 +170,7 @@ export default function ApplicantReviewPage() {
 
         const payload: ReviewsSummaryResponse = await response.json();
 
-        if (!isMounted) {
-          return;
-        }
+        if (!isMounted) return;
 
         const rubricSummary = payload.summary?.rubric
           ? computeRubricSummary(
@@ -203,11 +191,7 @@ export default function ApplicantReviewPage() {
               scoreSkills[criterion.name],
               criterion.max_val,
             );
-
-            if (parsedValue === null) {
-              return [];
-            }
-
+            if (parsedValue === null) return [];
             return [
               {
                 name: criterion.name,
@@ -217,16 +201,11 @@ export default function ApplicantReviewPage() {
             ];
           });
 
-          if (rubricScores.length === 0) {
-            return [];
-          }
+          if (rubricScores.length === 0) return [];
 
-          const totalScore = rubricScores.reduce(
-            (sum, rubricScore) => sum + rubricScore.score,
-            0,
-          );
+          const totalScore = rubricScores.reduce((sum, s) => sum + s.score, 0);
           const totalMaxScore = rubricScores.reduce(
-            (sum, rubricScore) => sum + rubricScore.maxScore,
+            (sum, s) => sum + s.maxScore,
             0,
           );
 
@@ -257,15 +236,11 @@ export default function ApplicantReviewPage() {
           resumeUrl: payload.summary?.resumeUrl ?? null,
         });
       } catch (error) {
-        if (error instanceof DOMException && error.name === "AbortError") {
+        if (error instanceof DOMException && error.name === "AbortError")
           return;
-        }
-
         logger.error("Error fetching summary data:", error);
-
-        if (isMounted) {
+        if (isMounted)
           setSummaryError("Unable to load summary data. Please try again.");
-        }
       } finally {
         if (isMounted) {
           setSummaryFetchAttempted(true);
@@ -287,18 +262,15 @@ export default function ApplicantReviewPage() {
     applicationData?.form_responses
       ? (applicationData.form_responses as FormResponse)
       : {};
+
   const toDisplayString = (value: unknown): string | undefined => {
-    if (value === null || value === undefined) {
-      return undefined;
-    }
-    if (typeof value === "string") {
-      return value;
-    }
-    if (typeof value === "number" || typeof value === "boolean") {
+    if (value === null || value === undefined) return undefined;
+    if (typeof value === "string") return value;
+    if (typeof value === "number" || typeof value === "boolean")
       return String(value);
-    }
     return undefined;
   };
+
   const applicantName =
     toDisplayString(formData["Name"]) ||
     toDisplayString(formData["name"]) ||
@@ -322,40 +294,39 @@ export default function ApplicantReviewPage() {
     switch (tab) {
       case "submission":
         return (
-          <div className="space-y-4">
+          <Stack gap="sm">
             {applicationData?.form_responses &&
               typeof applicationData.form_responses === "object" &&
-              !Array.isArray(applicationData.form_responses) && (
-                <div>
-                  {Object.entries(applicationData.form_responses).map(
-                    ([key, value]) => (
-                      <div key={key} className="w-fit border-b border-gray-300">
-                        <p>
-                          <br />
-                          <strong>{key} </strong>
-                          <br />
-                          <span style={{ textDecorationColor: "gray" }}>
-                            {typeof value === "object"
-                              ? JSON.stringify(value)
-                              : String(value)}
-                          </span>
-                        </p>
-                      </div>
-                    ),
-                  )}
-                </div>
+              !Array.isArray(applicationData.form_responses) &&
+              Object.entries(applicationData.form_responses).map(
+                ([key, value]) => (
+                  <Box
+                    key={key}
+                    pb="sm"
+                    style={{
+                      borderBottom: "1px solid var(--mantine-color-gray-2)",
+                    }}
+                  >
+                    <Text fw={600} mb={2}>
+                      {key}
+                    </Text>
+                    <Text c="dimmed">
+                      {typeof value === "object"
+                        ? JSON.stringify(value)
+                        : String(value)}
+                    </Text>
+                  </Box>
+                ),
               )}
-          </div>
+          </Stack>
         );
       case "files":
         return (
-          <div className="space-y-4">
+          <Stack gap="md">
             {applicationData?.resume_url && (
-              <div>
-                <ResumeViewer resumeUrl={applicationData.resume_url} />
-              </div>
+              <ResumeViewer resumeUrl={applicationData.resume_url} />
             )}
-          </div>
+          </Stack>
         );
       case "summary": {
         const summaryResumeUrl =
@@ -363,28 +334,28 @@ export default function ApplicantReviewPage() {
 
         if (summaryLoading || !summaryFetchAttempted) {
           return (
-            <div className="rounded-2xl border border-dashed bg-muted/20 p-6 text-center text-sm text-muted-foreground">
-              Loading summary data...
-            </div>
+            <Box ta="center" py="xl">
+              <Loader size="sm" />
+            </Box>
           );
         }
 
         if (summaryError) {
           return (
-            <div className="rounded-2xl border border-destructive/40 bg-destructive/5 p-6 text-center">
-              <p className="text-sm text-destructive">{summaryError}</p>
-              <Button size="sm" className="mt-3" onClick={handleSummaryRetry}>
+            <Stack gap="md" align="center" py="xl">
+              <Alert color="red">{summaryError}</Alert>
+              <Button size="sm" onClick={handleSummaryRetry}>
                 Retry
               </Button>
-            </div>
+            </Stack>
           );
         }
 
         if (!summaryData) {
           return (
-            <div className="rounded-2xl border border-dashed bg-muted/20 p-6 text-center text-sm text-muted-foreground">
+            <Text c="dimmed" size="sm" ta="center" py="xl">
               Summary data is not available yet.
-            </div>
+            </Text>
           );
         }
 
@@ -399,49 +370,70 @@ export default function ApplicantReviewPage() {
           />
         );
       }
+      case "interview":
+        return <InterviewTab orgId={orgId} applicationId={applicantId} />;
       default:
         return null;
     }
   };
 
   return (
-    <div className="flex-1 w-full flex gap-6 h-[calc(100vh-theme(spacing.16))]">
-      <div className="flex-1 flex flex-col gap-6 overflow-y-auto">
+    <Box
+      style={{
+        flex: 1,
+        width: "100%",
+        display: "flex",
+        gap: 24,
+        height: "calc(100vh - 4rem)",
+      }}
+    >
+      <Stack gap="lg" style={{ flex: 1, overflowY: "auto" }}>
         <Button
-          variant="outline"
+          variant="subtle"
+          color="gray"
+          leftSection={<ArrowLeft width={16} height={16} />}
           onClick={() =>
             router.push(`/protected/org/${orgId}/opening/${openingId}`)
           }
-          className="w-fit"
+          style={{ alignSelf: "flex-start" }}
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Opening
         </Button>
 
-        <h1 className="text-3xl font-bold">{applicantName}</h1>
-        <h2 className="text-xl text-muted-foreground">
-          {applicantEmail} <span className="mx-2">•</span> {applicantMajor}
-        </h2>
+        <Box>
+          <Text size="xl" fw={700} mb={4}>
+            {applicantName}
+          </Text>
+          <Group gap="xs">
+            <Text size="md" c="dimmed">
+              {applicantEmail}
+            </Text>
+            <Text c="dimmed">•</Text>
+            <Text size="md" c="dimmed">
+              {applicantMajor}
+            </Text>
+          </Group>
+        </Box>
+
         {loading ? (
-          <p>Loading application data...</p>
+          <Box ta="center" py="xl">
+            <Loader size="sm" />
+          </Box>
         ) : (
           <>
             <ApplicantTabs />
-            <div className="flex gap-4">
-              <div className={showReviewSidebar ? "w-2/3 pr-4" : "w-full"}>
-                {renderTabContent()}
-              </div>
-            </div>
+            <Box style={{ flex: 1 }}>{renderTabContent()}</Box>
           </>
         )}
-      </div>
-      {showReviewSidebar ? (
+      </Stack>
+
+      {showReviewSidebar && (
         <CommentsSidebar
           applicantId={applicantId}
           openingId={openingId}
           orgId={orgId}
         />
-      ) : null}
-    </div>
+      )}
+    </Box>
   );
 }

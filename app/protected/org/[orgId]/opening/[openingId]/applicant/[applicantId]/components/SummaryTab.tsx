@@ -1,11 +1,133 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatRelativeTime } from "@/lib/date-utils";
-import type { RubricSummaryMetrics } from "./summary-metrics";
-import { normalizeSummaryUpload } from "./summary-uploads";
+import {
+  Avatar,
+  Box,
+  Card,
+  Group,
+  SimpleGrid,
+  Stack,
+  Text,
+} from "@mantine/core";
+import { formatRelativeTime } from "@/lib/utils";
+
+// ---------------------------------------------------------------------------
+// Types (previously in summary-metrics.ts / summary-uploads.ts)
+// ---------------------------------------------------------------------------
+
+export interface RubricCriterion {
+  name: string;
+  max_val: number;
+}
+
+export interface RubricCriteriaSummary {
+  name: string;
+  maxVal: number;
+  average: number | null;
+}
+
+export interface RubricSummaryMetrics {
+  hasValidScores: boolean;
+  criteria: RubricCriteriaSummary[];
+  contributingReviewCount: number;
+  overallAverage: number;
+  overallMax: number;
+}
+
+export function computeRubricSummary(
+  rubric: RubricCriterion[],
+  allScores: Record<string, unknown>[],
+): RubricSummaryMetrics {
+  const criteria: RubricCriteriaSummary[] = rubric.map((c) => {
+    const scores = allScores
+      .map((s) => s[c.name])
+      .filter(
+        (v): v is number =>
+          typeof v === "number" && isFinite(v) && v >= 0 && v <= c.max_val,
+      );
+    return {
+      name: c.name,
+      maxVal: c.max_val,
+      average:
+        scores.length > 0
+          ? scores.reduce((a, b) => a + b, 0) / scores.length
+          : null,
+    };
+  });
+
+  const contributingReviewCount = allScores.filter((s) =>
+    rubric.some(
+      (c) => typeof s[c.name] === "number" && isFinite(s[c.name] as number),
+    ),
+  ).length;
+
+  const maxTotal = rubric.reduce((a, b) => a + b.max_val, 0);
+
+  const reviewTotals = allScores
+    .map((s) =>
+      rubric.reduce((sum, c) => {
+        const v = s[c.name];
+        const n = typeof v === "number" ? v : NaN;
+        return isFinite(n) ? sum + n : sum;
+      }, 0),
+    )
+    .filter((_, i) => {
+      const s = allScores[i];
+      return rubric.some(
+        (c) => typeof s[c.name] === "number" && isFinite(s[c.name] as number),
+      );
+    });
+
+  const overallAverage =
+    reviewTotals.length > 0
+      ? reviewTotals.reduce((a, b) => a + b, 0) / reviewTotals.length
+      : 0;
+
+  return {
+    hasValidScores: contributingReviewCount > 0,
+    criteria,
+    contributingReviewCount,
+    overallAverage,
+    overallMax: maxTotal,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Resume URL normalization (previously in summary-uploads.ts)
+// ---------------------------------------------------------------------------
+
+type UploadState =
+  | { mode: "preview"; url: string; previewUrl: string }
+  | { mode: "link"; url: string }
+  | { mode: "empty" };
+
+function normalizeSummaryUpload(resumeUrl: string | null): UploadState {
+  if (!resumeUrl) return { mode: "empty" };
+
+  let fileId = "";
+  if (resumeUrl.includes("/open?id=")) {
+    fileId = resumeUrl.split("/open?id=")[1].split("&")[0];
+  } else if (resumeUrl.includes("/file/d/")) {
+    fileId = resumeUrl.split("/file/d/")[1].split("/")[0];
+  } else if (resumeUrl.includes("?id=")) {
+    fileId = resumeUrl.split("?id=")[1].split("&")[0];
+  }
+
+  if (fileId) {
+    return {
+      mode: "preview",
+      url: resumeUrl,
+      previewUrl: `https://drive.google.com/file/d/${fileId}/preview`,
+    };
+  }
+
+  return { mode: "link", url: resumeUrl };
+}
+
+// ---------------------------------------------------------------------------
+// Component types
+// ---------------------------------------------------------------------------
 
 export interface ReviewerFeedbackPreview {
   id: string;
@@ -34,6 +156,10 @@ interface SummaryTabProps {
   reviewerFeedback?: ReviewerFeedbackPreview[] | null;
 }
 
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
 const formatMaxValue = (value: number): string =>
   Number.isInteger(value) ? value.toString() : value.toFixed(1);
 
@@ -48,10 +174,7 @@ const formatScoreValue = (value: number): string =>
 
 const getInitials = (name: string): string => {
   const trimmed = name.trim();
-  if (!trimmed) {
-    return "??";
-  }
-
+  if (!trimmed) return "??";
   return trimmed
     .split(" ")
     .filter(Boolean)
@@ -61,17 +184,15 @@ const getInitials = (name: string): string => {
     .toUpperCase();
 };
 
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
+
 export function SummaryTab({
-  applicantName,
-  applicantEmail,
-  applicantMajor,
   resumeUrl,
   rubricSummary,
   reviewerFeedback,
 }: SummaryTabProps) {
-  void applicantName;
-  void applicantEmail;
-  void applicantMajor;
   const uploadState = normalizeSummaryUpload(resumeUrl);
   const hasRubricScores = Boolean(rubricSummary?.hasValidScores);
   const rubricCriteria = rubricSummary?.criteria ?? [];
@@ -81,62 +202,81 @@ export function SummaryTab({
   const hasFeedback = feedbackEntries.length > 0;
 
   return (
-    <div className="space-y-6 pb-10">
+    <Stack gap="lg" pb="xl">
+      {/* Overall Average */}
       <SummarySection testId="summary-overall" title="Overall Average Rating">
-        <div className="flex flex-col gap-4">
-          {hasRubricScores && rubricSummary ? (
-            <div className="flex flex-col gap-3 rounded-2xl border bg-muted/30 p-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {hasRubricScores && rubricSummary ? (
+          <Box
+            p="md"
+            style={{
+              background: "var(--mantine-color-gray-0)",
+              borderRadius: "var(--mantine-radius-lg)",
+              border: "1px solid var(--mantine-color-gray-2)",
+            }}
+          >
+            <Group
+              justify="space-between"
+              align="flex-end"
+              wrap="wrap"
+              gap="md"
+            >
+              <Box>
+                <Text size="xs" fw={600} tt="uppercase" c="dimmed" mb={4}>
                   Overall Average Rating
-                </p>
-                <p className="text-5xl font-semibold leading-none text-foreground">
-                  {rubricSummary.overallAverage.toFixed(1)}
-                  <span className="text-lg font-normal text-muted-foreground">
-                    {" "}
+                </Text>
+                <Group gap="xs" align="baseline">
+                  <Text size="3rem" fw={600} lh={1}>
+                    {rubricSummary.overallAverage.toFixed(1)}
+                  </Text>
+                  <Text size="lg" c="dimmed">
                     / {formatMaxValue(rubricSummary.overallMax)}
-                  </span>
-                </p>
-              </div>
-              <p className="text-sm text-muted-foreground text-left sm:text-right">
+                  </Text>
+                </Group>
+              </Box>
+              <Text size="sm" c="dimmed">
                 based on {reviewerLabel}
-              </p>
-            </div>
-          ) : (
-            <SummaryEmptyState
-              title="No ratings yet"
-              message="Once reviewers submit rubric scores, the combined rating will surface here."
-            />
-          )}
-        </div>
+              </Text>
+            </Group>
+          </Box>
+        ) : (
+          <SummaryEmptyState
+            title="No ratings yet"
+            message="Once reviewers submit rubric scores, the combined rating will surface here."
+          />
+        )}
       </SummarySection>
 
+      {/* Rubric Metrics */}
       <SummarySection testId="summary-rubric-metrics" title="Rubric Metrics">
         {hasRubricScores && rubricSummary ? (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          <Stack gap="sm">
+            <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
               {rubricCriteria.map((criterion) => (
-                <div
+                <Box
                   key={criterion.name}
-                  className="rounded-2xl border bg-card p-3 shadow-sm"
+                  p="sm"
+                  style={{
+                    border: "1px solid var(--mantine-color-gray-2)",
+                    borderRadius: "var(--mantine-radius-md)",
+                  }}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <span className="text-sm font-semibold text-foreground">
+                  <Group justify="space-between" gap="sm">
+                    <Text size="sm" fw={600}>
                       {criterion.name}
-                    </span>
-                    <span className="text-sm font-semibold text-foreground">
+                    </Text>
+                    <Text size="sm" fw={600}>
                       {criterion.average !== null
                         ? formatScore(criterion.average, criterion.maxVal)
                         : `— / ${formatMaxValue(criterion.maxVal)}`}
-                    </span>
-                  </div>
-                </div>
+                    </Text>
+                  </Group>
+                </Box>
               ))}
-            </div>
-            <p className="text-xs text-muted-foreground">
+            </SimpleGrid>
+            <Text size="xs" c="dimmed">
               based on {reviewerLabel}
-            </p>
-          </div>
+            </Text>
+          </Stack>
         ) : (
           <SummaryEmptyState
             title="No ratings yet"
@@ -145,30 +285,38 @@ export function SummaryTab({
         )}
       </SummarySection>
 
+      {/* Reviewer Feedback */}
       <SummarySection testId="summary-feedback" title="Reviewer Feedback">
         {hasFeedback ? (
-          <div className="space-y-4">
+          <Stack gap="md">
             {feedbackEntries.map((feedback) => (
-              <div
+              <Box
                 key={feedback.id}
                 data-testid="summary-feedback-card"
-                className="rounded-2xl border bg-card p-4 shadow-sm"
+                p="md"
+                style={{
+                  border: "1px solid var(--mantine-color-gray-2)",
+                  borderRadius: "var(--mantine-radius-md)",
+                }}
               >
-                <div className="flex flex-wrap items-start gap-3">
-                  <Avatar className="h-9 w-9">
-                    <AvatarFallback className="bg-muted text-muted-foreground text-xs">
-                      {getInitials(feedback.author)}
-                    </AvatarFallback>
+                <Group gap="sm" align="flex-start" wrap="wrap">
+                  <Avatar size={36} color="owlPurple" radius="md">
+                    {getInitials(feedback.author)}
                   </Avatar>
-                  <div className="min-w-0 flex-1 space-y-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-sm font-semibold text-foreground">
+                  <Box style={{ flex: 1, minWidth: 0 }}>
+                    <Group gap="xs" align="center" mb={2}>
+                      <Text size="sm" fw={600}>
                         {feedback.author}
-                      </span>
+                      </Text>
                       {feedback.role && (
-                        <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                        <Text
+                          size="xs"
+                          tt="uppercase"
+                          c="dimmed"
+                          style={{ letterSpacing: "0.05em" }}
+                        >
                           {feedback.role}
-                        </span>
+                        </Text>
                       )}
                       {(() => {
                         const scoreLabel =
@@ -177,51 +325,68 @@ export function SummaryTab({
                           feedback.score !== undefined
                             ? feedback.maxScore !== null &&
                               feedback.maxScore !== undefined
-                              ? `${formatScoreValue(feedback.score)} / ${formatMaxValue(
-                                  feedback.maxScore,
-                                )}`
+                              ? `${formatScoreValue(feedback.score)} / ${formatMaxValue(feedback.maxScore)}`
                               : formatScoreValue(feedback.score)
                             : null);
-
                         return scoreLabel ? (
-                          <span className="rounded-full border bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                          <Box
+                            px="xs"
+                            py={2}
+                            style={{
+                              border: "1px solid var(--mantine-color-gray-3)",
+                              borderRadius: 999,
+                              background: "var(--mantine-color-gray-1)",
+                              fontSize: 10,
+                              fontWeight: 600,
+                              color: "var(--mantine-color-gray-7)",
+                            }}
+                          >
                             {scoreLabel}
-                          </span>
+                          </Box>
                         ) : null;
                       })()}
-                    </div>
-                    <span className="text-xs text-muted-foreground">
+                    </Group>
+                    <Text size="xs" c="dimmed">
                       {feedback.submittedAt
                         ? formatRelativeTime(feedback.submittedAt)
                         : "—"}
-                    </span>
-                  </div>
-                </div>
+                    </Text>
+                  </Box>
+                </Group>
                 {(feedback.rubricScores?.length ?? 0) > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-2">
+                  <Group gap="xs" mt="sm" wrap="wrap">
                     {feedback.rubricScores?.map((rubricScore) => (
-                      <span
+                      <Box
                         key={`${feedback.id}-${rubricScore.name}`}
-                        className="inline-flex items-center gap-1 rounded-xl border bg-muted/50 px-3 py-1 text-xs"
+                        px="sm"
+                        py={4}
+                        style={{
+                          border: "1px solid var(--mantine-color-gray-2)",
+                          borderRadius: "var(--mantine-radius-md)",
+                          background: "var(--mantine-color-gray-0)",
+                          display: "inline-flex",
+                          gap: 4,
+                          fontSize: 12,
+                        }}
                       >
-                        <span className="text-muted-foreground">
+                        <Text span size="xs" c="dimmed">
                           {rubricScore.name}:
-                        </span>
-                        <span className="font-semibold text-foreground">
+                        </Text>
+                        <Text span size="xs" fw={600}>
                           {formatScoreValue(rubricScore.score)}
-                        </span>
-                      </span>
+                        </Text>
+                      </Box>
                     ))}
-                  </div>
+                  </Group>
                 )}
                 {!feedback.rubricScores?.length && feedback.summary && (
-                  <p className="mt-3 text-sm text-muted-foreground">
+                  <Text size="sm" c="dimmed" mt="sm">
                     {feedback.summary}
-                  </p>
+                  </Text>
                 )}
-              </div>
+              </Box>
             ))}
-          </div>
+          </Stack>
         ) : (
           <SummaryEmptyState
             title="No reviewer feedback yet"
@@ -230,44 +395,59 @@ export function SummaryTab({
         )}
       </SummarySection>
 
+      {/* Uploads */}
       <SummarySection testId="summary-uploads" title="Uploads">
         {uploadState.mode === "preview" && (
-          <div className="space-y-3" data-testid="summary-upload-preview">
-            <p className="text-sm text-muted-foreground">
+          <Stack gap="sm" data-testid="summary-upload-preview">
+            <Text size="sm" c="dimmed">
               View the resume inline or open the original file in a new tab.
-            </p>
-            <div className="overflow-hidden rounded-2xl border">
+            </Text>
+            <Box
+              style={{
+                overflow: "hidden",
+                borderRadius: "var(--mantine-radius-md)",
+                border: "1px solid var(--mantine-color-gray-2)",
+              }}
+            >
               <iframe
                 src={uploadState.previewUrl}
-                className="h-[420px] w-full border-0"
+                style={{ height: 420, width: "100%", border: 0 }}
                 title="Applicant resume preview"
                 allow="autoplay"
               />
-            </div>
+            </Box>
             <a
               href={uploadState.url}
               target="_blank"
               rel="noreferrer"
-              className="text-sm font-semibold text-owl-purple hover:underline"
+              style={{
+                fontSize: 14,
+                fontWeight: 600,
+                color: "var(--mantine-color-owlPurple-6)",
+              }}
             >
               Open original file
             </a>
-          </div>
+          </Stack>
         )}
         {uploadState.mode === "link" && (
-          <div className="space-y-2" data-testid="summary-upload-link">
-            <p className="text-sm text-muted-foreground">
+          <Stack gap="xs" data-testid="summary-upload-link">
+            <Text size="sm" c="dimmed">
               The uploaded document can be opened in a new tab.
-            </p>
+            </Text>
             <a
               href={uploadState.url}
               target="_blank"
               rel="noreferrer"
-              className="text-sm font-semibold text-owl-purple hover:underline"
+              style={{
+                fontSize: 14,
+                fontWeight: 600,
+                color: "var(--mantine-color-owlPurple-6)",
+              }}
             >
               Open resume
             </a>
-          </div>
+          </Stack>
         )}
         {uploadState.mode === "empty" && (
           <div data-testid="summary-upload-empty">
@@ -278,9 +458,13 @@ export function SummaryTab({
           </div>
         )}
       </SummarySection>
-    </div>
+    </Stack>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
 
 interface SummarySectionProps {
   title: string;
@@ -296,16 +480,18 @@ function SummarySection({
   children,
 }: SummarySectionProps) {
   return (
-    <Card data-testid={testId} className="shadow-sm">
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-base font-semibold text-foreground">
-          {title}
-        </CardTitle>
-        {description && (
-          <p className="text-sm text-muted-foreground">{description}</p>
-        )}
-      </CardHeader>
-      <CardContent className="space-y-3">{children}</CardContent>
+    <Card withBorder radius="md" shadow="xs" data-testid={testId}>
+      <Stack gap="sm">
+        <Box>
+          <Text fw={600}>{title}</Text>
+          {description && (
+            <Text size="sm" c="dimmed">
+              {description}
+            </Text>
+          )}
+        </Box>
+        {children}
+      </Stack>
     </Card>
   );
 }
@@ -317,9 +503,21 @@ interface SummaryEmptyStateProps {
 
 function SummaryEmptyState({ title, message }: SummaryEmptyStateProps) {
   return (
-    <div className="rounded-2xl border border-dashed bg-muted/30 p-6 text-center">
-      <p className="text-sm font-semibold text-foreground">{title}</p>
-      <p className="text-sm text-muted-foreground">{message}</p>
-    </div>
+    <Box
+      p="lg"
+      ta="center"
+      style={{
+        border: "1px dashed var(--mantine-color-gray-3)",
+        borderRadius: "var(--mantine-radius-md)",
+        background: "var(--mantine-color-gray-0)",
+      }}
+    >
+      <Text size="sm" fw={600}>
+        {title}
+      </Text>
+      <Text size="sm" c="dimmed">
+        {message}
+      </Text>
+    </Box>
   );
 }

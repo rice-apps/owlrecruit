@@ -5,8 +5,18 @@ import Script from "next/script";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { parseQuestionText } from "@/lib/question-utils";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import {
+  Alert,
+  Box,
+  Button,
+  Checkbox,
+  Group,
+  Select,
+  Stack,
+  Text,
+  Textarea,
+  TextInput,
+} from "@mantine/core";
 
 interface RawQuestion {
   id: string;
@@ -28,7 +38,7 @@ interface ApplyFormProps {
 }
 
 // ---------------------------------------------------------------------------
-// Google sign-in button (re-fresh page after sign-in)
+// Google sign-in button
 // ---------------------------------------------------------------------------
 
 function SignInForApplyBtn() {
@@ -101,78 +111,67 @@ function FormField({
   value: string | string[];
   onChange: (v: string | string[]) => void;
 }) {
-  const baseClass =
-    "w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-owl-purple/40";
-
   switch (question.type) {
     case "textarea":
       return (
-        <textarea
-          className={`${baseClass} min-h-[100px] resize-y`}
+        <Textarea
           value={typeof value === "string" ? value : ""}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => onChange(e.currentTarget.value)}
           required={question.is_required ?? false}
+          minRows={3}
+          autosize
         />
       );
     case "select":
       return (
-        <select
-          className={baseClass}
-          value={typeof value === "string" ? value : ""}
-          onChange={(e) => onChange(e.target.value)}
+        <Select
+          data={(question.options ?? []).map((opt) => ({
+            value: opt,
+            label: opt,
+          }))}
+          value={typeof value === "string" ? value : null}
+          onChange={(val) => onChange(val ?? "")}
+          placeholder="Select an option…"
           required={question.is_required ?? false}
-        >
-          <option value="">Select an option…</option>
-          {(question.options ?? []).map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
-          ))}
-        </select>
+        />
       );
     case "checkbox":
       return (
-        <div className="space-y-1.5">
+        <Stack gap="xs">
           {(question.options ?? []).map((opt) => {
             const checked = Array.isArray(value) && value.includes(opt);
             return (
-              <label
+              <Checkbox
                 key={opt}
-                className="flex items-center gap-2 text-sm cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={() => {
-                    const arr = Array.isArray(value) ? [...value] : [];
-                    onChange(
-                      checked ? arr.filter((v) => v !== opt) : [...arr, opt],
-                    );
-                  }}
-                  className="w-4 h-4"
-                />
-                {opt}
-              </label>
+                label={opt}
+                checked={checked}
+                onChange={() => {
+                  const arr = Array.isArray(value) ? [...value] : [];
+                  onChange(
+                    checked ? arr.filter((v) => v !== opt) : [...arr, opt],
+                  );
+                }}
+              />
             );
           })}
-        </div>
+        </Stack>
       );
     case "url":
       return (
-        <Input
+        <TextInput
           type="url"
           value={typeof value === "string" ? value : ""}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => onChange(e.currentTarget.value)}
           required={question.is_required ?? false}
           placeholder="https://"
         />
       );
     default:
       return (
-        <Input
+        <TextInput
           type="text"
           value={typeof value === "string" ? value : ""}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => onChange(e.currentTarget.value)}
           required={question.is_required ?? false}
         />
       );
@@ -232,145 +231,172 @@ export function ApplyForm({
     }
   };
 
-  // Header shared between states
   const header = (
-    <div className="mb-8">
-      <p className="text-sm text-gray-500 mb-1">{orgName}</p>
-      <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+    <Box mb="xl">
+      <Text size="sm" c="dimmed" mb={4}>
+        {orgName}
+      </Text>
+      <Text size="xl" fw={700} mb="xs">
+        {title}
+      </Text>
       {description && (
-        <p className="text-gray-600 mt-2 text-sm leading-relaxed">
+        <Text size="sm" c="dimmed" style={{ lineHeight: 1.6 }}>
           {description}
-        </p>
+        </Text>
       )}
       {closesAt && (
-        <p className="text-xs text-gray-400 mt-2">
+        <Text size="xs" c="dimmed" mt="xs">
           Closes {new Date(closesAt).toLocaleDateString()}
-        </p>
+        </Text>
       )}
-    </div>
+    </Box>
   );
 
   if (submitted) {
     return (
-      <div>
+      <Box>
         {header}
-        <div className="rounded-xl border border-green-200 bg-green-50 p-8 text-center space-y-2">
-          <p className="text-lg font-semibold text-green-800">
+        <Alert color="green" radius="md">
+          <Text fw={600} mb={4}>
             Application submitted!
-          </p>
-          <p className="text-sm text-green-700">
+          </Text>
+          <Text size="sm">
             You can track your application status on your{" "}
             <a
               href="/protected/applications"
-              className="underline hover:text-green-900"
+              style={{ color: "inherit", textDecoration: "underline" }}
             >
               applications page
             </a>
             .
-          </p>
-        </div>
-      </div>
+          </Text>
+        </Alert>
+      </Box>
     );
   }
 
   if (!isAuthenticated) {
     return (
-      <div>
+      <Box>
         {header}
-        <div className="rounded-xl border border-gray-200 bg-white p-8 text-center space-y-4">
-          <p className="text-sm text-gray-600">
+        <Box
+          p="xl"
+          ta="center"
+          style={{
+            border: "1px solid var(--mantine-color-gray-2)",
+            borderRadius: "var(--mantine-radius-md)",
+            background: "white",
+          }}
+        >
+          <Text size="sm" c="dimmed" mb="md">
             Sign in with your Rice Google account to apply.
-          </p>
-          <div className="flex justify-center">
+          </Text>
+          <Group justify="center">
             <SignInForApplyBtn />
-          </div>
-        </div>
-      </div>
+          </Group>
+        </Box>
+      </Box>
     );
   }
 
-  // Not a rice.edu email
   if (userEmail && !userEmail.endsWith("@rice.edu")) {
     return (
-      <div>
+      <Box>
         {header}
-        <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-8 text-center space-y-2">
-          <p className="text-sm text-yellow-800">
+        <Alert color="yellow" radius="md">
+          <Text size="sm">
             A Rice University email address (<strong>@rice.edu</strong>) is
             required to apply. You are signed in as <strong>{userEmail}</strong>
             .
-          </p>
-        </div>
-      </div>
+          </Text>
+        </Alert>
+      </Box>
     );
   }
 
-  // Already submitted
   if (alreadyApplied) {
     return (
-      <div>
+      <Box>
         {header}
-        <div className="rounded-xl border border-blue-200 bg-blue-50 p-8 text-center space-y-2">
-          <p className="text-sm text-blue-800 font-medium">
+        <Alert color="blue" radius="md">
+          <Text fw={500} mb={4}>
             You&apos;ve already applied to this opening.
-          </p>
-          <p className="text-sm text-blue-700">
+          </Text>
+          <Text size="sm">
             Track your status on your{" "}
             <a
               href="/protected/applications"
-              className="underline hover:text-blue-900"
+              style={{ color: "inherit", textDecoration: "underline" }}
             >
               applications page
             </a>
             .
-          </p>
-        </div>
-      </div>
+          </Text>
+        </Alert>
+      </Box>
     );
   }
 
   return (
-    <div>
+    <Box>
       {header}
 
       {parsedQuestions.length === 0 ? (
-        <div className="rounded-xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-500">
-          No questions have been added to this form yet.
-        </div>
-      ) : (
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-6 bg-white rounded-xl border border-gray-200 p-6"
+        <Box
+          p="xl"
+          ta="center"
+          style={{
+            border: "1px solid var(--mantine-color-gray-2)",
+            borderRadius: "var(--mantine-radius-md)",
+            background: "white",
+          }}
         >
-          {parsedQuestions.map((q) => (
-            <div key={q.id} className="space-y-1.5">
-              <label className="block text-sm font-medium text-gray-800">
-                {q.label}
-                {q.is_required && (
-                  <span className="text-red-500 ml-0.5">*</span>
-                )}
-              </label>
-              <FormField
-                question={q}
-                value={formState[q.label] ?? (q.type === "checkbox" ? [] : "")}
-                onChange={(v) =>
-                  setFormState((prev) => ({ ...prev, [q.label]: v }))
-                }
-              />
-            </div>
-          ))}
+          <Text size="sm" c="dimmed">
+            No questions have been added to this form yet.
+          </Text>
+        </Box>
+      ) : (
+        <Box
+          component="form"
+          onSubmit={handleSubmit}
+          p="xl"
+          style={{
+            background: "white",
+            border: "1px solid var(--mantine-color-gray-2)",
+            borderRadius: "var(--mantine-radius-md)",
+          }}
+        >
+          <Stack gap="lg">
+            {parsedQuestions.map((q) => (
+              <Box key={q.id}>
+                <Text size="sm" fw={500} mb="xs">
+                  {q.label}
+                  {q.is_required && (
+                    <Text span c="red" ml={2}>
+                      *
+                    </Text>
+                  )}
+                </Text>
+                <FormField
+                  question={q}
+                  value={
+                    formState[q.label] ?? (q.type === "checkbox" ? [] : "")
+                  }
+                  onChange={(v) =>
+                    setFormState((prev) => ({ ...prev, [q.label]: v }))
+                  }
+                />
+              </Box>
+            ))}
 
-          {error && (
-            <p className="text-sm text-red-600 rounded-lg bg-red-50 px-4 py-3">
-              {error}
-            </p>
-          )}
+            {error && <Alert color="red">{error}</Alert>}
 
-          <Button type="submit" disabled={submitting} className="w-full">
-            {submitting ? "Submitting…" : "Submit Application"}
-          </Button>
-        </form>
+            <Button type="submit" loading={submitting} fullWidth>
+              Submit Application
+            </Button>
+          </Stack>
+        </Box>
       )}
-    </div>
+    </Box>
   );
 }

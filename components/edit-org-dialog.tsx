@@ -3,32 +3,28 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Pencil01, X, Upload01 } from "@untitled-ui/icons-react";
+  Modal,
+  TextInput,
+  Textarea,
+  Button,
+  Group,
+  Alert,
+  Stack,
+  ActionIcon,
+} from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import { AlertCircle, Pencil01 } from "@untitled-ui/icons-react";
 
 type EditOrgDialogProps = {
   orgId: string;
   orgName: string;
   orgDescription: string | null;
-  orgLogoUrl?: string | null;
-  triggerClassName?: string;
 };
 
 export function EditOrgDialog({
   orgId,
   orgName,
   orgDescription,
-  orgLogoUrl,
-  triggerClassName,
 }: EditOrgDialogProps) {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
@@ -40,7 +36,6 @@ export function EditOrgDialog({
   const [error, setError] = React.useState<string | null>(null);
   const logoInputRef = React.useRef<HTMLInputElement>(null);
 
-  // Reset form to current values whenever the dialog opens
   React.useEffect(() => {
     if (open) {
       setName(orgName);
@@ -91,6 +86,7 @@ export function EditOrgDialog({
         throw new Error(data.error || "Failed to save changes");
       }
 
+      notifications.show({ color: "green", message: "Organization updated." });
       router.refresh();
       setOpen(false);
     } catch (err) {
@@ -101,131 +97,55 @@ export function EditOrgDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <button
-          type="button"
-          aria-label="Edit organization"
-          className={triggerClassName}
-        >
-          <Pencil01 className="h-[22px] w-[22px]" />
-          <span className="sr-only">Edit organization</span>
-        </button>
-      </DialogTrigger>
-      <DialogContent
-        showCloseButton={false}
-        className="sm:max-w-md p-6 flex flex-col gap-6"
+    <>
+      <ActionIcon
+        variant="subtle"
+        color="gray"
+        aria-label="Edit organization"
+        onClick={() => setOpen(true)}
       >
-        <DialogHeader className="space-y-4">
-          <div className="flex items-center gap-2">
-            <DialogClose className="opacity-70 transition-opacity hover:opacity-100 rounded-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
-              <X className="h-5 w-5" />
-              <span className="sr-only">Close</span>
-            </DialogClose>
-          </div>
-          <DialogTitle className="text-xl font-semibold">
-            Edit organization
-          </DialogTitle>
-        </DialogHeader>
+        <Pencil01 width={18} height={18} />
+      </ActionIcon>
 
-        <div className="flex flex-col gap-5">
-          <div className="space-y-2">
-            <Label className="text-sm font-medium text-gray-700">
-              Logo
-            </Label>
-            <input
-              ref={logoInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => handleLogoChange(e.target.files?.[0] ?? null)}
-            />
-            <div
-              onDrop={handleLogoDrop}
-              onDragOver={(e) => e.preventDefault()}
-              onClick={() => logoInputRef.current?.click()}
-              className="relative flex h-32 w-32 items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 transition hover:bg-slate-100 cursor-pointer"
-            >
-              {logoPreview ? (
-                <img
-                  src={logoPreview}
-                  alt="Logo preview"
-                  className="h-full w-full object-cover rounded-lg"
-                />
-              ) : orgLogoUrl ? (
-                <img
-                  src={orgLogoUrl}
-                  alt="Current logo"
-                  className="h-full w-full object-cover rounded-lg"
-                />
-              ) : (
-                <div className="flex flex-col items-center gap-2">
-                  <Upload01 className="h-6 w-6 text-slate-400" />
-                  <span className="text-sm text-slate-500">
-                    Drag and drop or click to upload
-                  </span>
-                </div>
-              )}
-            </div>
-            {logoFile && (
-              <button
-                type="button"
-                onClick={() => {
-                  setLogoFile(null);
-                  setLogoPreview(null);
-                  if (logoInputRef.current) {
-                    logoInputRef.current.value = "";
-                  }
-                }}
-                className="text-sm text-slate-600 hover:text-slate-900"
-              >
-                Remove logo
-              </button>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="edit-org-name" className="text-sm font-medium text-gray-700">
-              Organization Name<span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="edit-org-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="h-11 text-sm"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="edit-org-description" className="text-sm font-medium text-gray-700">
-              Description
-            </Label>
-            <Input
-              id="edit-org-description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="h-11 text-sm"
-            />
-          </div>
-
+      <Modal
+        opened={open}
+        onClose={() => setOpen(false)}
+        title="Edit organization"
+        size="md"
+      >
+        <Stack gap="md">
+          <TextInput
+            label="Organization name"
+            required
+            value={name}
+            onChange={(e) => setName(e.currentTarget.value)}
+          />
+          <Textarea
+            label="Description"
+            value={description}
+            onChange={(e) => setDescription(e.currentTarget.value)}
+            minRows={3}
+            autosize
+          />
           {error && (
-            <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-md">
+            <Alert color="red" icon={<AlertCircle width={16} height={16} />}>
               {error}
-            </p>
+            </Alert>
           )}
-        </div>
-
-        <div className="border-t pt-4 flex justify-end gap-3">
-          <DialogClose asChild>
-            <Button variant="outline" disabled={isSaving} className="px-6">
+          <Group justify="flex-end" mt="xs">
+            <Button
+              variant="default"
+              onClick={() => setOpen(false)}
+              disabled={isSaving}
+            >
               Cancel
             </Button>
-          </DialogClose>
-          <Button onClick={handleSave} disabled={isSaving} className="px-6">
-            {isSaving ? "Saving..." : "Save changes"}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+            <Button onClick={handleSave} loading={isSaving}>
+              Save changes
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+    </>
   );
 }

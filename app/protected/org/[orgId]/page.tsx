@@ -1,66 +1,18 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
+import { Button, Text, Alert } from "@mantine/core";
+import { Plus } from "@untitled-ui/icons-react";
 import { EditMembersDialog } from "@/components/edit-members-dialog";
 import {
   MembersStrip,
   type OrgMemberRecord,
 } from "@/components/org/members-strip";
 import { OrgPageHeader } from "@/components/org/org-page-header";
-import {
-  SectionShell,
-  sectionShellTokens,
-} from "@/components/org/section-shell";
+import { SectionShell } from "@/components/org/section-shell";
 import { OrgSectionNav } from "@/components/org-section-nav";
 import { LeaveOrgButton } from "@/components/leave-org-button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { logger } from "@/lib/logger";
 import { OpeningsGrid } from "./components/openings-grid";
-
-type RawMemberUser = NonNullable<OrgMemberRecord["users"]>;
-
-type RawMemberResult = {
-  id: string;
-  user_id: string;
-  role: OrgMemberRecord["role"];
-  users: RawMemberUser | RawMemberUser[] | null;
-};
-
-function isMemberRole(value: unknown): value is OrgMemberRecord["role"] {
-  return value === "admin" || value === "reviewer";
-}
-
-function isRawMemberUser(value: unknown): value is RawMemberUser {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
-
-  const candidate = value as Record<string, unknown>;
-  return (
-    typeof candidate.id === "string" &&
-    (typeof candidate.name === "string" || candidate.name === null) &&
-    (typeof candidate.email === "string" || candidate.email === null)
-  );
-}
-
-function isRawMemberResult(value: unknown): value is RawMemberResult {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
-
-  const candidate = value as Record<string, unknown>;
-  const users = candidate.users;
-  const usersAreValid =
-    users === null ||
-    isRawMemberUser(users) ||
-    (Array.isArray(users) && users.every((entry) => isRawMemberUser(entry)));
-
-  return (
-    typeof candidate.id === "string" &&
-    typeof candidate.user_id === "string" &&
-    isMemberRole(candidate.role) &&
-    usersAreValid
-  );
-}
 
 interface ReviewerOrgPageProps {
   params: Promise<{ orgId: string }>;
@@ -72,11 +24,8 @@ export default async function ReviewerOrgPage({
   const { orgId } = await params;
   const supabase = await createClient();
 
-  const pageLayoutClass =
-    "overflow-x-hidden pb-24 md:pb-28 flex-1 w-full max-w-5xl min-w-0 flex flex-col gap-6";
-
-  const { data: authData } = await supabase.auth.getClaims();
-  const userId = authData?.claims?.sub;
+  const { data: userData } = await supabase.auth.getUser();
+  const userId = userData?.user?.id;
 
   const { data: membership, error: membershipError } = await supabase
     .from("org_members")
@@ -94,9 +43,10 @@ export default async function ReviewerOrgPage({
     });
   }
 
-  const membershipRole = isMemberRole(membership?.role)
-    ? membership.role
-    : null;
+  const membershipRole =
+    membership?.role === "admin" || membership?.role === "reviewer"
+      ? membership.role
+      : null;
   const isAdmin = membershipRole === "admin";
 
   const { data: orgData } = await supabase
@@ -115,15 +65,15 @@ export default async function ReviewerOrgPage({
     .from("org_members")
     .select(
       `
+      id,
+      user_id,
+      role,
+      users:user_id (
         id,
-        user_id,
-        role,
-        users:user_id (
-          id,
-          name,
-          email
-        )
-      `,
+        name,
+        email
+      )
+    `,
     )
     .eq("org_id", orgId)
     .order("role", { ascending: true })
@@ -137,44 +87,16 @@ export default async function ReviewerOrgPage({
     });
   }
 
-  const rawMembers =
-    membersError || !Array.isArray(membersData)
-      ? []
-      : membersData.filter((member) => isRawMemberResult(member));
-
-  const normalizeUser = (
-    users: RawMemberResult["users"],
-  ): OrgMemberRecord["users"] => {
-    if (Array.isArray(users)) {
-      return users.length > 0 ? users[0] : null;
-    }
-    return users ?? null;
-  };
-
-  const members: OrgMemberRecord[] = rawMembers.map((member) => ({
-    id: member.id,
-    user_id: member.user_id,
-    role: member.role,
-    users: normalizeUser(member.users),
-  }));
-
-  const membersState = membersError
-    ? "error"
-    : members.length > 0
-      ? "loaded"
-      : "empty";
-  const memberCountLabel =
-    membersState === "error"
-      ? "Members unavailable"
-      : members.length
-        ? `${members.length} ${members.length === 1 ? "collaborator" : "collaborators"}`
-        : "No members yet";
-  const memberSectionSubtitle =
-    membersState === "error"
-      ? "Could not load the roster right now"
-      : members.length
-        ? "Current roster of reviewers and admins"
-        : "Invite collaborators via Add Members";
+  const members: OrgMemberRecord[] = (membersData ?? []).map((m) => {
+    const usersRaw = m.users;
+    const user = Array.isArray(usersRaw) ? usersRaw[0] : usersRaw;
+    return {
+      id: m.id,
+      user_id: m.user_id,
+      role: m.role as "admin" | "reviewer",
+      users: user ?? null,
+    };
+  });
 
   const displayOrgName = orgData?.name || "Organization";
   const roleLabel = membershipError
@@ -185,8 +107,31 @@ export default async function ReviewerOrgPage({
         ? "REVIEWER"
         : "ROLE UNKNOWN";
 
+  const memberCountLabel = membersError
+    ? "Members unavailable"
+    : members.length
+      ? `${members.length} ${members.length === 1 ? "collaborator" : "collaborators"}`
+      : "No members yet";
+
+  const memberSectionSubtitle = membersError
+    ? "Could not load the roster right now"
+    : members.length
+      ? "Current roster of reviewers and admins"
+      : "Invite collaborators via Edit Members";
+
   return (
-    <div className={pageLayoutClass}>
+    <div
+      style={{
+        flex: 1,
+        width: "100%",
+        maxWidth: 960,
+        minWidth: 0,
+        display: "flex",
+        flexDirection: "column",
+        gap: "1.5rem",
+        paddingBottom: "6rem",
+      }}
+    >
       <OrgPageHeader
         orgId={orgId}
         displayOrgName={displayOrgName}
@@ -210,12 +155,10 @@ export default async function ReviewerOrgPage({
         title="About"
         subtitle="Summary and current context"
       >
-        <p
-          className={`text-base leading-relaxed ${sectionShellTokens.mutedCopy}`}
-        >
+        <Text size="md" c="dimmed" style={{ lineHeight: 1.7 }}>
           {orgData?.description ||
             "This organization has not added an about section yet."}
-        </p>
+        </Text>
       </SectionShell>
 
       <SectionShell
@@ -224,15 +167,15 @@ export default async function ReviewerOrgPage({
         subtitle="Open roles for this organization"
         actions={
           isAdmin ? (
-            <Link
+            <Button
+              component={Link}
               href={`/protected/org/${orgId}/new-opening`}
-              className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-rose-600 shadow-sm transition hover:border-rose-300 hover:text-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-200"
+              size="xs"
+              variant="light"
+              leftSection={<Plus width={14} height={14} />}
             >
-              <span>Add new position</span>
-              <span aria-hidden="true" className="text-base font-bold">
-                +
-              </span>
-            </Link>
+              Add position
+            </Button>
           ) : null
         }
       >
@@ -249,35 +192,38 @@ export default async function ReviewerOrgPage({
         title="Members"
         subtitle={memberSectionSubtitle}
         actions={
-          <div className="flex w-full flex-wrap items-center justify-end gap-2">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-500">
+          <div
+            style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}
+          >
+            <Text
+              size="xs"
+              fw={600}
+              c="dimmed"
+              style={{ textTransform: "uppercase", letterSpacing: "0.1em" }}
+            >
               {memberCountLabel}
-            </span>
+            </Text>
             {isAdmin && <EditMembersDialog orgId={orgId} />}
           </div>
         }
       >
         {membersError ? (
-          <div className="flex flex-col items-start gap-2 rounded-2xl border border-dashed border-amber-200/80 bg-amber-50/60 px-5 py-6">
-            <p className={sectionShellTokens.mutedCopy}>
-              Could not load members right now. Refresh and try again.
-            </p>
-          </div>
+          <Alert color="yellow">
+            Could not load members right now. Refresh and try again.
+          </Alert>
         ) : members.length > 0 ? (
           <MembersStrip members={members} />
         ) : (
-          <div className="flex flex-col items-start gap-2 rounded-2xl border border-dashed border-slate-200/70 bg-slate-50/80 px-5 py-6">
-            <p className={sectionShellTokens.mutedCopy}>
-              No members yet. Invite collaborators via Add Members.
-            </p>
-          </div>
+          <Text size="sm" c="dimmed">
+            No members yet. Invite collaborators via Edit Members.
+          </Text>
         )}
       </SectionShell>
 
       <section
         id="leave-organization"
         tabIndex={-1}
-        className="min-w-0 w-full pt-1 pb-8"
+        style={{ paddingTop: 4, paddingBottom: "2rem" }}
       >
         <LeaveOrgButton
           orgId={orgId}

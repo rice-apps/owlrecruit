@@ -1,25 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import {
+  ActionIcon,
+  Button,
+  Group,
+  Modal,
   Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+  Stack,
+  Text,
+  TextInput,
+} from "@mantine/core";
 import { ChevronRight, X } from "@untitled-ui/icons-react";
 import type { ColumnMapping, CustomQuestion } from "./useUploadWizard";
 
@@ -50,35 +41,33 @@ function MappingSelect({
   getAvailableColumns: (field: string) => string[];
   onUpdateMapping: (key: string, value: string) => void;
 }) {
+  const columns = getAvailableColumns(field);
   return (
-    <div className="grid grid-cols-3 items-center gap-4">
-      <label className="text-sm font-medium text-gray-700">
+    <Group
+      gap="md"
+      align="center"
+      style={{ display: "grid", gridTemplateColumns: "1fr 2fr" }}
+    >
+      <Text size="sm" fw={500}>
         {label}{" "}
         {required && (
-          <>
-            <span className="text-red-500">*</span>{" "}
-            <span className="text-gray-400 font-normal">(required)</span>
-          </>
+          <Text span size="sm" c="red">
+            *{" "}
+            <Text span size="sm" c="dimmed" fw={400}>
+              (required)
+            </Text>
+          </Text>
         )}
-      </label>
-      <div className="col-span-2">
-        <Select
-          value={value}
-          onValueChange={(val) => onUpdateMapping(field, val)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select column" />
-          </SelectTrigger>
-          <SelectContent>
-            {getAvailableColumns(field).map((header) => (
-              <SelectItem key={header} value={header}>
-                {header}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
+      </Text>
+      <Select
+        placeholder="Select column"
+        data={columns.map((c) => ({ value: c, label: c }))}
+        value={value || null}
+        onChange={(val) => onUpdateMapping(field, val ?? "")}
+        clearable={!required}
+        size="sm"
+      />
+    </Group>
   );
 }
 
@@ -105,19 +94,19 @@ export function ColumnMappingStep({
 
   return (
     <>
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900">
+      <Stack gap="xs">
+        <Text size="lg" fw={600}>
           Select Application Columns
-        </h2>
-        <p className="text-gray-500">
+        </Text>
+        <Text c="dimmed" size="sm">
           Match your CSV columns with the preset columns.
-        </p>
-      </div>
+        </Text>
+      </Stack>
 
-      <div className="space-y-6">
-        <div>
-          <h3 className="font-semibold text-gray-900 mb-4">Key Information</h3>
-          <div className="space-y-4 max-w-md">
+      <Stack gap="xl">
+        <Stack gap="md">
+          <Text fw={600}>Key Information</Text>
+          <Stack gap="sm" style={{ maxWidth: 480 }}>
             <MappingSelect
               label="Name"
               required
@@ -148,101 +137,105 @@ export function ColumnMappingStep({
               getAvailableColumns={getAvailableColumns}
               onUpdateMapping={onUpdateMapping}
             />
-          </div>
-        </div>
+          </Stack>
+        </Stack>
 
-        <div>
-          <div className="flex items-center gap-2 mb-4">
-            <h3 className="font-semibold text-gray-900">Questions</h3>
-            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-              <DialogTrigger asChild>
-                <button className="text-sm text-owl-purple font-medium hover:text-owl-purple/80 hover:underline">
-                  Add question
-                </button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add New Question</DialogTitle>
-                  <DialogDescription>
-                    Enter the question text and map it to a CSV column.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="py-4">
-                  <Label htmlFor="question" className="mb-2 block">
-                    Question
-                  </Label>
-                  <Input
-                    id="question"
-                    placeholder="e.g. What is your GPA?"
-                    value={questionText}
-                    onChange={(e) => setQuestionText(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleAdd();
-                    }}
-                  />
-                </div>
-                <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsModalOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button onClick={handleAdd} className="">
-                    Add Question
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
+        <Stack gap="sm">
+          <Group gap="sm" align="center">
+            <Text fw={600}>Questions</Text>
+            <Button
+              variant="subtle"
+              size="xs"
+              color="owlPurple"
+              onClick={() => setIsModalOpen(true)}
+            >
+              Add question
+            </Button>
+          </Group>
 
           {customQuestions.length > 0 && (
-            <div className="space-y-4 max-w-md">
+            <Stack gap="sm" style={{ maxWidth: 480 }}>
               {customQuestions.map((q) => (
-                <div key={q.id} className="grid grid-cols-3 items-center gap-4">
-                  <label className="text-sm font-medium text-gray-700">
+                <Group
+                  key={q.id}
+                  gap="md"
+                  align="center"
+                  style={{ display: "grid", gridTemplateColumns: "1fr 2fr" }}
+                >
+                  <Text size="sm" fw={500}>
                     {q.text}
-                  </label>
-                  <div className="col-span-2 flex gap-2">
+                  </Text>
+                  <Group gap="xs">
                     <Select
-                      value={columnMappings[q.id]}
-                      onValueChange={(val) => onUpdateMapping(q.id, val)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select column" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {getAvailableColumns(q.id).map((header) => (
-                          <SelectItem key={header} value={header}>
-                            {header}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Button
-                      variant="outline"
-                      size="icon"
+                      placeholder="Select column"
+                      data={getAvailableColumns(q.id).map((c) => ({
+                        value: c,
+                        label: c,
+                      }))}
+                      value={columnMappings[q.id] || null}
+                      onChange={(val) => onUpdateMapping(q.id, val ?? "")}
+                      clearable
+                      size="sm"
+                      style={{ flex: 1 }}
+                    />
+                    <ActionIcon
+                      variant="default"
+                      size="sm"
                       onClick={() => onDeleteQuestion(q.id)}
-                      className="shrink-0"
+                      aria-label="Remove question"
+                      style={{ flexShrink: 0 }}
                     >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
+                      <X width={14} height={14} />
+                    </ActionIcon>
+                  </Group>
+                </Group>
               ))}
-            </div>
+            </Stack>
           )}
-        </div>
-      </div>
+        </Stack>
+      </Stack>
 
-      <div className="flex justify-between pt-8">
-        <Button variant="outline" onClick={onBack} className="w-24">
+      <Group justify="space-between" pt="xl">
+        <Button variant="default" onClick={onBack} style={{ width: 96 }}>
           Back
         </Button>
-        <Button onClick={onNext} className="w-24" disabled={!isStep3Valid}>
-          Next <ChevronRight className="w-4 h-4 ml-1" />
+        <Button
+          onClick={onNext}
+          disabled={!isStep3Valid}
+          rightSection={<ChevronRight width={16} height={16} />}
+          style={{ width: 96 }}
+        >
+          Next
         </Button>
-      </div>
+      </Group>
+
+      <Modal
+        opened={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Add New Question"
+        size="sm"
+      >
+        <Stack gap="md">
+          <Text size="sm" c="dimmed">
+            Enter the question text and map it to a CSV column.
+          </Text>
+          <TextInput
+            label="Question"
+            placeholder="e.g. What is your GPA?"
+            value={questionText}
+            onChange={(e) => setQuestionText(e.currentTarget.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleAdd();
+            }}
+          />
+          <Group justify="flex-end" gap="xs">
+            <Button variant="default" onClick={() => setIsModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAdd}>Add Question</Button>
+          </Group>
+        </Stack>
+      </Modal>
     </>
   );
 }

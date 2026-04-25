@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
-import { ThemeProvider } from "next-themes";
-import { Toaster } from "sonner";
+import { ColorSchemeScript, MantineProvider } from "@mantine/core";
+import { Notifications } from "@mantine/notifications";
+import { theme } from "./theme";
 import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
@@ -27,17 +28,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${dmSans.className} antialiased`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
+    <html lang="en">
+      <head>
+        <ColorSchemeScript />
+      </head>
+      <body className={dmSans.variable}>
+        <MantineProvider theme={theme}>
+          <Notifications position="top-right" />
           {children}
-          <Toaster richColors position="top-right" />
-        </ThemeProvider>
+        </MantineProvider>
       </body>
     </html>
   );

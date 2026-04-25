@@ -7,14 +7,12 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const supabase = await createClient();
 
-    let query = supabase
-      .from("openings")
-      .select(
-        `
+    let query = supabase.from("openings").select(
+      `
         *,
         org:orgs(name, logo_url)
       `,
-      );
+    );
 
     // Filter by status(es)
     const statuses = searchParams.get("statuses")?.split(",") || ["open"];
@@ -27,15 +25,14 @@ export async function GET(request: Request) {
     // Filter by date posted
     const datePosted = searchParams.get("datePosted") || "all";
     if (datePosted !== "all") {
-      const now = new Date();
-      let cutoffDate = new Date();
-      
+      const cutoffDate = new Date();
+
       if (datePosted === "7days") {
         cutoffDate.setDate(cutoffDate.getDate() - 7);
       } else if (datePosted === "30days") {
         cutoffDate.setDate(cutoffDate.getDate() - 30);
       }
-      
+
       query = query.gte("created_at", cutoffDate.toISOString());
     }
 
@@ -43,7 +40,9 @@ export async function GET(request: Request) {
     const deadline = searchParams.get("deadline") || "all";
     if (deadline === "closing-soon") {
       const now = new Date();
-      const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      const sevenDaysFromNow = new Date(
+        now.getTime() + 7 * 24 * 60 * 60 * 1000,
+      );
       query = query.gte("closes_at", now.toISOString());
       query = query.lte("closes_at", sevenDaysFromNow.toISOString());
     } else if (deadline === "no-deadline") {
@@ -57,7 +56,7 @@ export async function GET(request: Request) {
     } else if (sort === "closing-soon") {
       query = query.order("closes_at", { ascending: true, nullsFirst: false });
     } else if (sort === "org-name") {
-      query = query.order("title", { ascending: true });
+      query = query.order("name", { referencedTable: "orgs", ascending: true });
     }
 
     const { data: openings, error: fetchError } = await query;

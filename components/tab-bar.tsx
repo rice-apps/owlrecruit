@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 
 interface Tab {
   id: string;
@@ -16,22 +15,38 @@ interface TabBarProps {
 
 export function TabBar({ tabs, currentTab, buildHref }: TabBarProps) {
   return (
-    <nav className="border-b border-gray-200" aria-label="Tabs">
-      <div className="flex gap-8">
-        {tabs.map((tab) => (
-          <Link
-            key={tab.id}
-            href={buildHref(tab.id)}
-            className={cn(
-              "-mb-px inline-flex items-center border-b pb-3 text-base font-semibold transition-colors",
-              currentTab === tab.id
-                ? "border-owl-purple text-owl-purple"
-                : "border-transparent text-gray-500 hover:text-gray-700",
-            )}
-          >
-            {tab.label}
-          </Link>
-        ))}
+    <nav
+      aria-label="Tabs"
+      style={{ borderBottom: "1px solid var(--mantine-color-gray-2)" }}
+    >
+      <div style={{ display: "flex", gap: "2rem" }}>
+        {tabs.map((tab) => {
+          const isActive = currentTab === tab.id;
+          return (
+            <Link
+              key={tab.id}
+              href={buildHref(tab.id)}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                paddingBottom: "0.75rem",
+                marginBottom: "-1px",
+                fontSize: "1rem",
+                fontWeight: 600,
+                borderBottom: isActive
+                  ? "2px solid var(--mantine-color-owlPurple-6)"
+                  : "2px solid transparent",
+                color: isActive
+                  ? "var(--mantine-color-owlPurple-6)"
+                  : "var(--mantine-color-gray-6)",
+                transition: "color 150ms, border-color 150ms",
+                textDecoration: "none",
+              }}
+            >
+              {tab.label}
+            </Link>
+          );
+        })}
       </div>
     </nav>
   );

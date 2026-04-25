@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Box, Card, Center, Text } from "@mantine/core";
 
 export default async function Page({
   searchParams,
@@ -8,29 +8,19 @@ export default async function Page({
   const params = await searchParams;
 
   return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm">
-        <div className="flex flex-col gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl">
-                Sorry, something went wrong.
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {params?.error ? (
-                <p className="text-sm text-muted-foreground">
-                  Code error: {params.error}
-                </p>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  An unspecified error occurred.
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
+    <Center style={{ minHeight: "100svh", padding: "1.5rem" }}>
+      <Box style={{ width: "100%", maxWidth: 400 }}>
+        <Card withBorder radius="md" p="xl">
+          <Text size="xl" fw={700} mb="md">
+            Sorry, something went wrong.
+          </Text>
+          <Text size="sm" c="dimmed">
+            {params?.error
+              ? `Code error: ${params.error}`
+              : "An unspecified error occurred."}
+          </Text>
+        </Card>
+      </Box>
+    </Center>
   );
 }

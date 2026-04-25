@@ -1,89 +1,67 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import OrganizationsSection, { OrgMembership } from "./organizations-section";
+import { Avatar, Title, Stack, Box } from "@mantine/core";
 import ProfileForm from "./profileForm";
-
+import type { OrgMembership } from "./organizations-section";
 
 export default async function ProfilePage() {
   const supabase = await createClient();
 
-  // Get the current logged-in user
   const { data: userData, error: userError } = await supabase.auth.getUser();
-  if (userError || !userData?.user) {
-    redirect("/");
-  }
+  if (userError || !userData?.user) redirect("/");
 
-  // Fetch user profile data from the users table
   const { data: userRecord } = await supabase
     .from("users")
     .select("name")
     .eq("id", userData.user.id)
     .single();
 
-  // Parse the name into first and last name by splitting on space
-  const fullName = userRecord?.name || "";
+  const fullName = userRecord?.name ?? "";
   const nameParts = fullName.trim().split(" ");
-  const firstName = nameParts[0] || "";
-  const lastName = nameParts.slice(1).join(" ") || ""; // Everything after first word
-  const userEmail = userData.user.email;
+  const firstName = nameParts[0] ?? "";
+  const lastName = nameParts.slice(1).join(" ");
+  const userEmail = userData.user.email ?? "";
+  const avatarUrl: string = userData.user.user_metadata?.avatar_url ?? "";
+  const initials =
+    `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || "?";
 
-
-  // Get user's avatar URL from Google OAuth (if exists)
-  const avatarUrl = userData.user.user_metadata?.avatar_url || "";
-
-  // Create initials for fallback
-  const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
-
-  // fetch org memberships without relational payload
-  const { data: rawMemberships, error: membershipError } = await supabase
+  const { data: rawMemberships } = await supabase
     .from("org_members")
-    .select("id, org_id, role")
+    .select("id, org_id, role, orgs(id, name)")
     .eq("user_id", userData.user.id);
 
-  if (membershipError) {
-    throw new Error(membershipError.message);
-  }
-
-  const membershipsList = rawMemberships || [];
-
-  // fetch organization names
-  const orgIds = Array.from(new Set(membershipsList.map((m) => m.org_id)));
-  const { data: orgsData, error: orgsError } = orgIds.length
-    ? await supabase.from("orgs").select("id, name").in("id", orgIds)
-    : { data: [], error: null };
-
-  if (orgsError) {
-    throw new Error(orgsError.message);
-  }
-
-  const orgMap = new Map(orgsData?.map((o) => [o.id, o.name]));
-
-  // map memberships to include org_name
-  const orgMemberships: OrgMembership[] = membershipsList.map((m) => ({
-    ...m,
-    org_name: orgMap.get(m.org_id) || "Unknown Organization",
-  }));
+  const orgMemberships: OrgMembership[] = (rawMemberships ?? []).map((m) => {
+    const org = Array.isArray(m.orgs) ? m.orgs[0] : m.orgs;
+    return {
+      id: m.id,
+      org_id: m.org_id,
+      role: m.role,
+      org_name: org?.name ?? "Unknown Organization",
+    };
+  });
 
   return (
-    <div className="flex flex-col w-full max-w-5xl">
-      {/* Title */}
-      <h1 className="text-2xl font-semibold text-gray-900 mb-8">
-        Profile Information
-      </h1>
+    <Stack maw={640}>
+      <Title order={2}>Profile Information</Title>
 
-      {/* Profile Picture Section */}
-      <div className="mb-12 flex items-center gap-4">
-        <Avatar className="h-20 w-20">
-          <AvatarImage src={avatarUrl} alt={fullName} />
-          <AvatarFallback className="text-2xl bg-gray-200 text-gray-700">
-            {initials}
-          </AvatarFallback>
+      <Box>
+        <Avatar
+          src={avatarUrl || undefined}
+          size={80}
+          radius="xl"
+          color="owlPurple"
+        >
+          {initials}
         </Avatar>
-      </div>
+      </Box>
 
-        <ProfileForm firstName={firstName} lastName={lastName} email={userEmail ?? ""} 
-                            userId={userData.user.id} orgMemberships={orgMemberships} />
-    </div>
+      <ProfileForm
+        firstName={firstName}
+        lastName={lastName}
+        email={userEmail}
+        userId={userData.user.id}
+        orgMemberships={orgMemberships}
+      />
+    </Stack>
   );
 }

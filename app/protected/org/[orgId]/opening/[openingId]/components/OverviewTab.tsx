@@ -1,14 +1,23 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import {
+  Avatar,
+  Button,
+  Card,
+  Group,
+  Loader,
+  MultiSelect,
+  SimpleGrid,
+  Stack,
+  Text,
+  TextInput,
+} from "@mantine/core";
 import { createClient } from "@/lib/supabase/client";
 import type { ApplicationStatus } from "@/types/app";
 import { logger } from "@/lib/logger";
-import { ChevronDown, UsersPlus, X } from "@untitled-ui/icons-react";
+import { getApplicationStatusColor } from "@/lib/status";
 
 interface Applicant {
   id: string;
@@ -64,14 +73,13 @@ export function OverviewTab({
   >([]);
   const [selectedReviewerIds, setSelectedReviewerIds] = useState<string[]>([]);
   const [savingReviewers, setSavingReviewers] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [origin, setOrigin] = useState("");
 
   useEffect(() => {
     setOrigin(window.location.origin);
   }, []);
 
-  const fetchReviewers = async () => {
+  const fetchReviewers = useCallback(async () => {
     try {
       const supabase = createClient();
       const { data: opening, error: openingError } = await supabase
@@ -116,29 +124,27 @@ export function OverviewTab({
     } finally {
       setLoadingReviewers(false);
     }
-  };
+  }, [orgId, openingId]);
 
   useEffect(() => {
     fetchReviewers();
-  }, [orgId, openingId]);
+  }, [fetchReviewers]);
 
   const handleEditReviewers = async () => {
+    setSelectedReviewerIds(reviewers.map((r) => r.id));
     setIsEditingReviewers(true);
-    setIsDropdownOpen(false);
 
-    if (eligibleReviewers.length > 0) {
-      return;
-    }
+    if (eligibleReviewers.length > 0) return;
 
     try {
       const res = await fetch(`/api/org/${orgId}/members?role=admin,reviewer`, {
         cache: "no-store",
       });
       if (!res.ok) throw new Error("Failed to fetch eligible reviewers");
-      const data = await res.json();
-      setEligibleReviewers(data as EligibleReviewer[]);
+      const json = await res.json();
+      setEligibleReviewers(json.data ?? json);
     } catch (error) {
-      console.error(error);
+      logger.error("Failed to fetch eligible reviewers:", error);
     }
   };
 
@@ -155,7 +161,7 @@ export function OverviewTab({
       setLoadingReviewers(true);
       await fetchReviewers();
     } catch (error) {
-      console.error(error);
+      logger.error("Failed to save reviewers:", error);
     } finally {
       setSavingReviewers(false);
     }
@@ -184,309 +190,189 @@ export function OverviewTab({
     [statusBreakdown],
   );
 
+  const reviewerSelectData = eligibleReviewers.map((r) => {
+    const u = Array.isArray(r.users) ? r.users[0] : r.users;
+    return {
+      value: r.user_id,
+      label: u?.name || u?.email || r.user_id,
+    };
+  });
+
+  const applyUrl = applicationLink || `${origin}/apply/${openingId}`;
+
   return (
-    <div className="py-8 space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Total Submissions */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Total Submissions
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-4xl font-bold">{totalSubmissions}</p>
-          </CardContent>
+    <Stack gap="lg" py="lg">
+      {/* Stats */}
+      <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
+        <Card withBorder radius="md" p="md">
+          <Text size="xs" fw={600} tt="uppercase" c="dimmed" mb="xs">
+            Total Submissions
+          </Text>
+          <Text size="2rem" fw={700}>
+            {totalSubmissions}
+          </Text>
         </Card>
 
-        {/* Accepted */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Accepted
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-4xl font-bold">{acceptedCount}</p>
-          </CardContent>
+        <Card withBorder radius="md" p="md">
+          <Text size="xs" fw={600} tt="uppercase" c="dimmed" mb="xs">
+            Accepted
+          </Text>
+          <Text size="2rem" fw={700}>
+            {acceptedCount}
+          </Text>
         </Card>
 
-        {/* Breakdown */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Breakdown
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {statusBreakdown.length > 0 ? (
-              <div className="flex items-end gap-2 h-16">
-                {statusBreakdown.map(({ status, count }) => (
-                  <div
-                    key={status}
-                    className="group relative"
-                    style={{
-                      height: `${(count / maxCount) * 100}%`,
-                      minHeight: "8px",
-                    }}
-                  >
-                    <div className="w-8 h-full rounded-md bg-owl-purple" />
-                    <span className="absolute -top-8 left-1/2 -translate-x-1/2 hidden group-hover:block bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10">
-                      {status}: {count}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">No data yet</p>
-            )}
-          </CardContent>
+        <Card withBorder radius="md" p="md">
+          <Text size="xs" fw={600} tt="uppercase" c="dimmed" mb="xs">
+            Breakdown
+          </Text>
+          {statusBreakdown.length > 0 ? (
+            <Group gap="xs" align="flex-end" style={{ height: 64 }}>
+              {statusBreakdown.map(({ status, count }) => (
+                <div
+                  key={status}
+                  title={`${status}: ${count}`}
+                  style={{
+                    height: `${(count / maxCount) * 100}%`,
+                    minHeight: 8,
+                    width: 24,
+                    borderRadius: 4,
+                    backgroundColor: `var(--mantine-color-${getApplicationStatusColor(status)}-5)`,
+                  }}
+                />
+              ))}
+            </Group>
+          ) : (
+            <Text size="sm" c="dimmed">
+              No data yet
+            </Text>
+          )}
         </Card>
-      </div>
+      </SimpleGrid>
 
-      {/* Application Form Link */}
+      {/* Application link */}
       {openingStatus === "open" && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Application Form Link
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex items-center gap-2">
-            {applicationLink ? (
-              <>
-                <code className="text-sm bg-muted px-2 py-1 rounded flex-1 truncate">
-                  {applicationLink}
-                </code>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigator.clipboard.writeText(applicationLink)}
-                >
-                  Copy
-                </Button>
-              </>
-            ) : (
-              <>
-                <code className="text-sm bg-muted px-2 py-1 rounded flex-1 truncate">
-                  {origin}/apply/{openingId}
-                </code>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    navigator.clipboard.writeText(
-                      `${origin}/apply/${openingId}`,
-                    )
-                  }
-                >
-                  Copy
-                </Button>
-              </>
-            )}
-          </CardContent>
+        <Card withBorder radius="md" p="md">
+          <Text size="xs" fw={600} tt="uppercase" c="dimmed" mb="xs">
+            Application Form Link
+          </Text>
+          <Group gap="xs">
+            <TextInput
+              value={applyUrl}
+              readOnly
+              style={{ flex: 1 }}
+              styles={{ input: { fontFamily: "monospace", fontSize: 13 } }}
+            />
+            <Button
+              variant="light"
+              size="sm"
+              onClick={() => navigator.clipboard.writeText(applyUrl)}
+            >
+              Copy
+            </Button>
+          </Group>
         </Card>
       )}
 
-      {/* Rubric Settings */}
+      {/* Rubric settings link */}
       <Link
         href={`/protected/org/${orgId}/opening/${openingId}/rubric`}
-        className="text-owl-purple text-sm hover:underline inline-block"
+        style={{
+          color: "var(--mantine-color-owlPurple-6)",
+          fontSize: 14,
+          textDecoration: "none",
+        }}
       >
-        Rubric Settings
+        Rubric Settings →
       </Link>
 
       {/* Assigned Reviewers */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-4">
-          <h2 className="text-base font-semibold uppercase tracking-wide">
-            Assigned Reviewers
-          </h2>
-          <button
-            onClick={handleEditReviewers}
-            className="text-owl-purple text-sm hover:underline"
+      <Stack gap="sm">
+        <Group gap="md" align="center">
+          <Text
+            fw={600}
+            size="sm"
+            tt="uppercase"
+            style={{ letterSpacing: "0.05em" }}
           >
-            Edit
-          </button>
-        </div>
+            Assigned Reviewers
+          </Text>
+          {!isEditingReviewers && (
+            <Button
+              variant="subtle"
+              size="xs"
+              color="owlPurple"
+              onClick={handleEditReviewers}
+            >
+              Edit
+            </Button>
+          )}
+        </Group>
 
         {isEditingReviewers && (
-          <div className="border rounded-lg p-3 space-y-3">
-            <div className="flex flex-wrap gap-2">
-              {selectedReviewerIds.length > 0 ? (
-                selectedReviewerIds.map((userId) => {
-                  const reviewer = eligibleReviewers.find(
-                    (entry) => entry.user_id === userId,
-                  );
-
-                  if (!reviewer) return null;
-
-                  const user = Array.isArray(reviewer.users)
-                    ? reviewer.users[0]
-                    : reviewer.users;
-
-                  const displayName = user?.name || user?.email;
-                  if (!displayName) return null;
-
-                  return (
-                    <button
-                      key={userId}
-                      type="button"
-                      onClick={() =>
-                        setSelectedReviewerIds((prev) =>
-                          prev.filter((id) => id !== userId),
-                        )
-                      }
-                      className="flex items-center gap-2 pl-4 pr-3 py-2 bg-white text-gray-900 rounded-full border-2 border-gray-200 hover:border-gray-300 transition-all shadow-sm hover:shadow"
-                    >
-                      <span className="font-medium text-sm">{displayName}</span>
-                      <X className="h-3.5 w-3.5 text-gray-400" />
-                    </button>
-                  );
-                })
-              ) : (
-                <p className="text-sm text-gray-500 py-2">
-                  No reviewers assigned
-                </p>
-              )}
-            </div>
-
-            {eligibleReviewers.length > 0 && (
-              <div className="space-y-2">
-                <button
-                  type="button"
-                  className="w-full justify-between gap-2 inline-flex items-center px-4 py-2 border rounded-md hover:bg-gray-50"
-                  onClick={() => setIsDropdownOpen((prev) => !prev)}
+          <Card withBorder radius="md" p="md">
+            <Stack gap="sm">
+              <MultiSelect
+                placeholder="Select reviewers..."
+                data={reviewerSelectData}
+                value={selectedReviewerIds}
+                onChange={setSelectedReviewerIds}
+                searchable
+                clearable
+              />
+              <Group justify="flex-end" gap="xs">
+                <Button
+                  variant="default"
+                  size="xs"
+                  disabled={savingReviewers}
+                  onClick={() => setIsEditingReviewers(false)}
                 >
-                  <span className="flex items-center gap-2">
-                    <UsersPlus className="h-4 w-4" />
-                    Add Reviewer
-                  </span>
-                  <ChevronDown
-                    className={`h-4 w-4 transition-transform duration-200 ${
-                      isDropdownOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-
-                <div
-                  className={`${isDropdownOpen ? "" : "hidden"} border rounded-lg max-h-48 overflow-y-auto`}
+                  Cancel
+                </Button>
+                <Button
+                  size="xs"
+                  loading={savingReviewers}
+                  onClick={handleSaveReviewers}
                 >
-                  {eligibleReviewers.map((reviewer) => {
-                    const user = Array.isArray(reviewer.users)
-                      ? reviewer.users[0]
-                      : reviewer.users;
-
-                    const isSelected = selectedReviewerIds.includes(
-                      reviewer.user_id,
-                    );
-
-                    return (
-                      <button
-                        key={reviewer.id}
-                        type="button"
-                        onClick={() => {
-                          if (isSelected) {
-                            setSelectedReviewerIds((prev) =>
-                              prev.filter((id) => id !== reviewer.user_id),
-                            );
-                          } else {
-                            setSelectedReviewerIds((prev) => [
-                              ...prev,
-                              reviewer.user_id,
-                            ]);
-                          }
-                        }}
-                        className={`w-full flex items-center justify-between p-3 hover:bg-gray-50 border-b last:border-b-0 transition-colors ${
-                          isSelected ? "bg-owl-purple/5" : ""
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => {}}
-                            className="rounded"
-                          />
-                          <div className="text-left">
-                            <p className="font-medium text-sm">
-                              {user?.name || "Unknown User"}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {user?.email}
-                            </p>
-                          </div>
-                        </div>
-                        <span className="text-xs text-gray-500 uppercase">
-                          {reviewer.role}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            <div className="flex gap-2 justify-end">
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedReviewerIds(
-                    reviewers.map((reviewer) => reviewer.id),
-                  );
-                  setIsEditingReviewers(false);
-                  setIsDropdownOpen(false);
-                }}
-                className="text-sm px-3 py-1.5 rounded border"
-                disabled={savingReviewers}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleSaveReviewers}
-                className="text-sm px-3 py-1.5 rounded bg-owl-purple text-white"
-                disabled={savingReviewers}
-              >
-                {savingReviewers ? "Saving..." : "Save"}
-              </button>
-            </div>
-          </div>
+                  Save
+                </Button>
+              </Group>
+            </Stack>
+          </Card>
         )}
 
         {loadingReviewers ? (
-          <div className="text-sm text-muted-foreground">
-            Loading reviewers...
-          </div>
+          <Loader size="sm" />
         ) : reviewers.length > 0 ? (
-          <div className="flex flex-wrap gap-3">
+          <Group gap="sm" wrap="wrap">
             {reviewers.map((reviewer) => {
               const displayName = reviewer.name || reviewer.email || "Reviewer";
+              const initials = displayName
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+                .substring(0, 2)
+                .toUpperCase();
               return (
-                <Card key={reviewer.id} className="w-fit">
-                  <CardContent className="flex items-center gap-3 p-4">
-                    <Avatar className="h-10 w-10">
-                      <AvatarFallback className="bg-muted text-muted-foreground text-sm">
-                        {displayName
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")
-                          .substring(0, 2)
-                          .toUpperCase()}
-                      </AvatarFallback>
+                <Card key={reviewer.id} withBorder radius="md" p="sm">
+                  <Group gap="sm">
+                    <Avatar size={36} color="owlPurple" radius="md">
+                      {initials}
                     </Avatar>
-                    <span className="font-medium text-sm">{displayName}</span>
-                  </CardContent>
+                    <Text size="sm" fw={500}>
+                      {displayName}
+                    </Text>
+                  </Group>
                 </Card>
               );
             })}
-          </div>
+          </Group>
         ) : (
-          <p className="text-sm text-muted-foreground">
+          <Text size="sm" c="dimmed">
             No reviewers assigned yet
-          </p>
+          </Text>
         )}
-      </div>
-    </div>
+      </Stack>
+    </Stack>
   );
 }

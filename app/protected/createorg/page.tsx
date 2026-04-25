@@ -1,26 +1,26 @@
 "use client";
 
-import * as React from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Upload01 } from "@untitled-ui/icons-react";
+import {
+  Stack,
+  TextInput,
+  Textarea,
+  Button,
+  Group,
+  Alert,
+  Title,
+} from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import { AlertCircle } from "@untitled-ui/icons-react";
 import { logger } from "@/lib/logger";
-import { toast } from "sonner";
 
 export default function NewOrgPage() {
   const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
-  const [logoFile, setLogoFile] = React.useState<File | null>(null);
-  const [logoPreview, setLogoPreview] = React.useState<string | null>(null);
-  const logoInputRef = React.useRef<HTMLInputElement>(null);
-
-  const [formData, setFormData] = React.useState({
-    name: "",
-    description: "",
-  });
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleLogoChange = (file: File | null) => {
     if (!file) return;
@@ -38,150 +38,82 @@ export default function NewOrgPage() {
     e.preventDefault();
     setError(null);
 
-    if (!formData.name.trim()) {
+    if (!name.trim()) {
       setError("Organization name is required");
       return;
     }
 
-    setIsSubmitting(true);
-
+    setSubmitting(true);
     try {
-      const body = new FormData();
-      body.append("name", formData.name.trim());
-      body.append("description", formData.description.trim());
-      if (logoFile) body.append("logo", logoFile);
-
-      const response = await fetch("/api/orgs", {
+      const res = await fetch("/api/orgs", {
         method: "POST",
-        body,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          description: description.trim() || null,
+        }),
       });
 
-      const data = await response.json();
+      const json = await res.json();
+      if (!res.ok)
+        throw new Error(json.error ?? "Failed to create organization");
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to create organization");
-      }
-
-      // Force a full reload to ensure the sidebar layout updates with the new organization
-      window.location.href = `/protected/org/${data.id}`;
+      // Full reload so sidebar refreshes with new org
+      window.location.href = `/protected/org/${json.data?.id ?? json.id}`;
     } catch (err) {
       logger.error("Error creating organization:", err);
-      toast.error(
-        err instanceof Error ? err.message : "Failed to create organization",
-      );
-      setError(
-        err instanceof Error ? err.message : "Failed to create organization",
-      );
+      const msg =
+        err instanceof Error ? err.message : "Failed to create organization";
+      setError(msg);
+      notifications.show({ color: "red", message: msg });
     } finally {
-      setIsSubmitting(false);
+      setSubmitting(false);
     }
   };
 
   return (
-    <div className="flex flex-col">
-      <h1 className="text-3xl font-semibold mb-10">Create new organization</h1>
+    <Stack maw={560} gap="lg">
+      <Title order={2}>Create new organization</Title>
 
-      <form onSubmit={handleSubmit} className="flex flex-col flex-1 space-y-7">
-        {/* Organization Name */}
-        <div className="space-y-2">
-          <Label
-            htmlFor="org-name"
-            className="text-sm font-medium text-gray-700"
-          >
-            Organization Name<span className="text-red-500">*</span>
-          </Label>
-          <Input
-            id="org-name"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+      <form onSubmit={handleSubmit}>
+        <Stack gap="md">
+          <TextInput
+            label="Organization name"
             required
-            className="h-11 text-sm w-full"
+            value={name}
+            onChange={(e) => setName(e.currentTarget.value)}
+            placeholder="e.g. RiceApps"
           />
-        </div>
 
-        {/* Description */}
-        <div className="space-y-2">
-          <Label
-            htmlFor="org-description"
-            className="text-sm font-medium text-gray-700"
-          >
-            Description<span className="text-red-500">*</span>
-          </Label>
-          <Input
-            id="org-description"
-            value={formData.description}
-            onChange={(e) =>
-              setFormData({ ...formData, description: e.target.value })
-            }
-            className="h-11 text-sm w-full"
+          <Textarea
+            label="Description"
+            value={description}
+            onChange={(e) => setDescription(e.currentTarget.value)}
+            placeholder="What does your organization do?"
+            minRows={3}
+            autosize
           />
-        </div>
 
-        {/* Upload logo */}
-        <div className="space-y-2">
-          <Label className="text-sm font-medium text-gray-700">
-            Organization logo
-          </Label>
-          <div
-            className="border-2 border-dashed border-gray-300 rounded-md h-36 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-gray-400 transition-colors bg-white overflow-hidden"
-            onClick={() => logoInputRef.current?.click()}
-            onDrop={handleLogoDrop}
-            onDragOver={(e) => e.preventDefault()}
-          >
-            {logoPreview ? (
-              <img
-                src={logoPreview}
-                alt="Logo preview"
-                className="h-full w-full object-contain p-2"
-              />
-            ) : (
-              <>
-                <Upload01 className="h-5 w-5 text-gray-400" />
-                <span className="text-sm text-gray-400">
-                  Drag &amp; drop or click to upload
-                </span>
-              </>
-            )}
-          </div>
-          <input
-            ref={logoInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => handleLogoChange(e.target.files?.[0] ?? null)}
-          />
-          {logoFile && (
-            <p className="text-xs text-gray-500">{logoFile.name}</p>
+          {error && (
+            <Alert color="red" icon={<AlertCircle width={16} height={16} />}>
+              {error}
+            </Alert>
           )}
-        </div>
 
-        {/* Error message */}
-        {error && (
-          <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
-            {error}
-          </div>
-        )}
-
-        {/* Actions — bottom right */}
-        <div className="flex justify-end gap-3 pt-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.back()}
-            className="px-8 h-11 text-sm"
-            disabled={isSubmitting}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            className="px-8 h-11 text-sm"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Creating..." : "Create organization"}
-          </Button>
-        </div>
+          <Group justify="flex-end" mt="sm">
+            <Button
+              variant="default"
+              onClick={() => router.back()}
+              disabled={submitting}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" loading={submitting}>
+              Create organization
+            </Button>
+          </Group>
+        </Stack>
       </form>
-    </div>
+    </Stack>
   );
 }

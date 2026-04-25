@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { OpeningStatusBadge } from "@/components/status-badge";
+import { Button, Group } from "@mantine/core";
+import { OpeningStatusBadge } from "@/components/StatusBadge";
 import type { OpeningStatus } from "@/types/app";
 
 interface OpeningStatusButtonProps {
@@ -24,13 +24,10 @@ const buttonLabel: Record<OpeningStatus, string> = {
   closed: "Reopen",
 };
 
-const buttonVariant: Record<
-  OpeningStatus,
-  "default" | "outline" | "secondary"
-> = {
-  draft: "default",
-  open: "secondary",
-  closed: "outline",
+const buttonColor: Record<OpeningStatus, string> = {
+  draft: "owlPurple",
+  open: "red",
+  closed: "green",
 };
 
 export function OpeningStatusButton({
@@ -61,16 +58,17 @@ export function OpeningStatusButton({
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <Group gap="sm" align="center">
       <OpeningStatusBadge status={currentStatus} />
       <Button
-        variant={buttonVariant[currentStatus]}
         size="sm"
+        color={buttonColor[currentStatus]}
+        variant="light"
+        loading={loading}
         onClick={handleClick}
-        disabled={loading}
       >
-        {loading ? "Saving..." : buttonLabel[currentStatus]}
+        {buttonLabel[currentStatus]}
       </Button>
-    </div>
+    </Group>
   );
 }

@@ -2,8 +2,6 @@
 
 import { MouseEvent, useCallback, useEffect, useState } from "react";
 
-import { cn } from "@/lib/utils";
-
 type SectionNavItem = {
   id: string;
   label: string;
@@ -123,9 +121,19 @@ export function OrgSectionNav({ sections }: OrgSectionNavProps) {
   }
 
   return (
-    <nav aria-label="On this page" className="border-b border-gray-200">
-      <div className="flex w-full overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-        <div className="flex w-max items-center gap-8">
+    <nav
+      aria-label="On this page"
+      style={{ borderBottom: "1px solid var(--mantine-color-gray-2)" }}
+    >
+      <div
+        style={{
+          display: "flex",
+          overflowX: "auto",
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "2rem" }}>
           {sections.map((section) => {
             const isActive = activeId === section.id;
             return (
@@ -134,12 +142,22 @@ export function OrgSectionNav({ sections }: OrgSectionNavProps) {
                 href={`#${section.id}`}
                 onClick={(event) => handleClick(event, section.id)}
                 aria-current={isActive ? "page" : undefined}
-                className={cn(
-                  "-mb-px inline-flex items-center border-b pb-3 text-base font-semibold transition-colors",
-                  isActive
-                    ? "border-owl-purple text-owl-purple"
-                    : "border-transparent text-gray-500 hover:text-gray-700",
-                )}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  paddingBottom: "0.75rem",
+                  marginBottom: "-1px",
+                  fontSize: "1rem",
+                  fontWeight: 600,
+                  borderBottom: isActive
+                    ? "2px solid var(--mantine-color-owlPurple-6)"
+                    : "2px solid transparent",
+                  color: isActive
+                    ? "var(--mantine-color-owlPurple-6)"
+                    : "var(--mantine-color-gray-6)",
+                  transition: "color 150ms, border-color 150ms",
+                  textDecoration: "none",
+                }}
               >
                 {section.label}
               </a>

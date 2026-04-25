@@ -3,15 +3,19 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ChevronRight } from "@untitled-ui/icons-react";
-import { Button } from "@/components/ui/button";
-import { SearchInput } from "@/components/search-input";
 import {
+  Avatar,
+  Badge,
+  Box,
   Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+  Group,
+  Loader,
+  SimpleGrid,
+  Stack,
+  Text,
+  TextInput,
+} from "@mantine/core";
+import { SearchMd } from "@untitled-ui/icons-react";
 import {
   ApplicationCard,
   ApplicationWithDetails,
@@ -73,174 +77,195 @@ export function ApplicationsView({
   );
 
   return (
-    <div className="flex flex-col gap-6 w-full">
-      {/* Search Header */}
-      <SearchInput
-        value={searchQuery}
-        onChange={setSearchQuery}
+    <Stack gap="xl" style={{ width: "100%" }}>
+      {/* Search */}
+      <TextInput
         placeholder="Search organizations, positions..."
-        showFilter
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.currentTarget.value)}
+        leftSection={<SearchMd width={16} height={16} />}
+        size="md"
       />
 
-      <div className="space-y-8">
-        {searchQuery ? (
-          // Search Results View
-          <div className="space-y-8">
-            {isSearching ? (
-              <div className="text-center py-10 text-gray-500">
-                Searching...
-              </div>
-            ) : (
-              <>
-                {/* Organizations Results */}
-                {searchResults?.orgs && searchResults.orgs.length > 0 && (
-                  <section>
-                    <h2 className="text-lg font-semibold mb-4">
-                      Organizations
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                      {searchResults.orgs.map((org) => (
-                        <Link
-                          href={`/protected/org/${org.id}`}
-                          key={org.id}
-                          className="block h-full"
+      {searchQuery ? (
+        // Search Results
+        <Stack gap="xl">
+          {isSearching ? (
+            <Box ta="center" py="xl">
+              <Loader size="sm" />
+            </Box>
+          ) : (
+            <>
+              {searchResults?.orgs && searchResults.orgs.length > 0 && (
+                <Stack gap="md">
+                  <Text fw={600} size="lg">
+                    Organizations
+                  </Text>
+                  <SimpleGrid
+                    cols={{ base: 1, sm: 2, md: 3, lg: 4 }}
+                    spacing="md"
+                  >
+                    {searchResults.orgs.map((org) => (
+                      <Link
+                        key={org.id}
+                        href={`/protected/org/${org.id}`}
+                        style={{
+                          textDecoration: "none",
+                          display: "block",
+                          height: "100%",
+                        }}
+                      >
+                        <Card
+                          withBorder
+                          radius="md"
+                          p="md"
+                          style={{ height: "100%" }}
                         >
-                          <Card className="hover:shadow-md transition-shadow h-full">
-                            <CardHeader className="p-4 pb-2 flex flex-row items-center gap-4 space-y-0">
-                              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-lg">
-                                {org.name.charAt(0)}
-                              </div>
-                              <div>
-                                <h3 className="font-bold text-base leading-tight">
-                                  {org.name}
-                                </h3>
-                              </div>
-                            </CardHeader>
-                            <CardContent className="p-4 pt-2">
-                              <p className="text-sm text-gray-500 line-clamp-2">
-                                {org.description || "No description provided."}
-                              </p>
-                            </CardContent>
-                          </Card>
-                        </Link>
-                      ))}
-                    </div>
-                  </section>
-                )}
-
-                {/* Openings Results */}
-                {searchResults?.openings &&
-                  searchResults.openings.length > 0 && (
-                    <section>
-                      <h2 className="text-lg font-semibold mb-4">Openings</h2>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {searchResults.openings.map((opening) => (
-                          <div key={opening.id} className="h-full">
-                            <Card className="flex flex-col h-full hover:shadow-md transition-shadow">
-                              <CardHeader className="p-4 pb-2 space-y-2">
-                                <div className="flex justify-between items-start">
-                                  <div className="w-10 h-10 rounded-lg bg-pink-600 flex items-center justify-center text-white font-bold text-lg mb-1">
-                                    {opening.org?.name?.charAt(0) || "?"}
-                                  </div>
-                                  <Badge
-                                    variant="secondary"
-                                    className="text-xs"
-                                  >
-                                    Open
-                                  </Badge>
-                                </div>
-
-                                <div>
-                                  <h3 className="font-bold text-base leading-tight">
-                                    {opening.title}
-                                  </h3>
-                                  <p className="text-sm text-gray-500">
-                                    {opening.org?.name}
-                                  </p>
-                                </div>
-                              </CardHeader>
-                              <CardFooter className="p-4 pt-0 mt-auto border-t pt-4 text-xs text-gray-400 flex justify-between items-center">
-                                <span>
-                                  {opening.closes_at
-                                    ? `Due ${new Date(
-                                        opening.closes_at,
-                                      ).toLocaleDateString("en-US", {
-                                        month: "2-digit",
-                                        day: "2-digit",
-                                        year: "numeric",
-                                      })}`
-                                    : "No deadline"}
-                                </span>
-                                {opening.application_link && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    asChild
-                                    className="h-8 w-8 p-0 rounded-full"
-                                  >
-                                    <Link
-                                      href={opening.application_link}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                    >
-                                      <ChevronRight className="w-4 h-4" />
-                                    </Link>
-                                  </Button>
-                                )}
-                              </CardFooter>
-                            </Card>
-                          </div>
-                        ))}
-                      </div>
-                    </section>
-                  )}
-
-                {!searchResults?.orgs?.length &&
-                  !searchResults?.openings?.length && (
-                    <div className="text-center py-10 text-gray-500">
-                      No results found for &quot;{searchQuery}&quot;.
-                    </div>
-                  )}
-              </>
-            )}
-          </div>
-        ) : (
-          // Default: My Applications View
-          <>
-            {/* My Applications Section */}
-            <section>
-              <h2 className="text-lg font-semibold mb-4">My Applications</h2>
-              {activeApplications.length === 0 ? (
-                <p className="text-gray-500">No active applications found.</p>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {activeApplications.map((app) => (
-                    <div key={app.id} className="h-full">
-                      <ApplicationCard application={app} />
-                    </div>
-                  ))}
-                </div>
+                          <Group gap="md" mb="sm">
+                            <Avatar color="blue" radius="xl" size={40}>
+                              {org.name.charAt(0)}
+                            </Avatar>
+                            <Text fw={700} size="sm" lh={1.2}>
+                              {org.name}
+                            </Text>
+                          </Group>
+                          <Text size="sm" c="dimmed" lineClamp={2}>
+                            {org.description || "No description provided."}
+                          </Text>
+                        </Card>
+                      </Link>
+                    ))}
+                  </SimpleGrid>
+                </Stack>
               )}
-            </section>
 
-            {/* Past Applications Section */}
-            {pastApplications.length > 0 && (
-              <section>
-                <h2 className="text-lg font-semibold mb-4">
-                  Past Applications
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {pastApplications.map((app) => (
-                    <div key={app.id} className="h-full">
-                      <ApplicationCard application={app} />
-                    </div>
-                  ))}
-                </div>
-              </section>
+              {searchResults?.openings && searchResults.openings.length > 0 && (
+                <Stack gap="md">
+                  <Text fw={600} size="lg">
+                    Openings
+                  </Text>
+                  <SimpleGrid
+                    cols={{ base: 1, sm: 2, md: 3, lg: 4 }}
+                    spacing="md"
+                  >
+                    {searchResults.openings.map((opening) => (
+                      <Card
+                        key={opening.id}
+                        withBorder
+                        radius="md"
+                        p="md"
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          height: "100%",
+                        }}
+                      >
+                        <Group justify="space-between" mb="sm">
+                          <Box
+                            style={{
+                              width: 40,
+                              height: 40,
+                              borderRadius: "var(--mantine-radius-md)",
+                              background: "#db2777",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              color: "white",
+                              fontWeight: 700,
+                              fontSize: 18,
+                            }}
+                          >
+                            {opening.org?.name?.charAt(0) || "?"}
+                          </Box>
+                          <Badge variant="light" color="green" size="sm">
+                            Open
+                          </Badge>
+                        </Group>
+
+                        <Text fw={700} size="sm" lh={1.2} mb={4}>
+                          {opening.title}
+                        </Text>
+                        <Text size="sm" c="dimmed" mb="auto">
+                          {opening.org?.name}
+                        </Text>
+
+                        <Group
+                          justify="space-between"
+                          mt="md"
+                          pt="xs"
+                          style={{
+                            borderTop: "1px solid var(--mantine-color-gray-2)",
+                          }}
+                        >
+                          <Text size="xs" c="dimmed">
+                            {opening.closes_at
+                              ? `Due ${new Date(
+                                  opening.closes_at,
+                                ).toLocaleDateString("en-US", {
+                                  month: "2-digit",
+                                  day: "2-digit",
+                                  year: "numeric",
+                                })}`
+                              : "No deadline"}
+                          </Text>
+                          {opening.application_link && (
+                            <Link
+                              href={opening.application_link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ color: "var(--mantine-color-gray-5)" }}
+                            >
+                              <ChevronRight width={16} height={16} />
+                            </Link>
+                          )}
+                        </Group>
+                      </Card>
+                    ))}
+                  </SimpleGrid>
+                </Stack>
+              )}
+
+              {!searchResults?.orgs?.length &&
+                !searchResults?.openings?.length && (
+                  <Text c="dimmed" ta="center" py="xl">
+                    No results found for &quot;{searchQuery}&quot;.
+                  </Text>
+                )}
+            </>
+          )}
+        </Stack>
+      ) : (
+        // My Applications view
+        <Stack gap="xl">
+          <Stack gap="md">
+            <Text fw={600} size="lg">
+              My Applications
+            </Text>
+            {activeApplications.length === 0 ? (
+              <Text c="dimmed">No active applications found.</Text>
+            ) : (
+              <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing="md">
+                {activeApplications.map((app) => (
+                  <ApplicationCard key={app.id} application={app} />
+                ))}
+              </SimpleGrid>
             )}
-          </>
-        )}
-      </div>
-    </div>
+          </Stack>
+
+          {pastApplications.length > 0 && (
+            <Stack gap="md">
+              <Text fw={600} size="lg">
+                Past Applications
+              </Text>
+              <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing="md">
+                {pastApplications.map((app) => (
+                  <ApplicationCard key={app.id} application={app} />
+                ))}
+              </SimpleGrid>
+            </Stack>
+          )}
+        </Stack>
+      )}
+    </Stack>
   );
 }

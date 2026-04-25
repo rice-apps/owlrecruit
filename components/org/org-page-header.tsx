@@ -1,6 +1,4 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
-import { Eye } from "@untitled-ui/icons-react";
+import { Avatar, Badge, Group } from "@mantine/core";
 import { EditOrgDialog } from "@/components/edit-org-dialog";
 
 type OrgPageHeaderProps = {
@@ -23,87 +21,72 @@ export function OrgPageHeader({
   logoUrl,
 }: OrgPageHeaderProps) {
   const orgInitial = displayOrgName.charAt(0).toUpperCase();
-  const headerButtonClasses =
-    "inline-flex h-8 w-8 items-center justify-center text-slate-500 transition hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-60";
 
   return (
-    <div className="relative overflow-hidden rounded-[28px] border border-slate-200 bg-slate-50">
-      <div className="px-4 pt-4">
-        <div aria-hidden="true" className="h-[72px] rounded-3xl bg-rose-300" />
+    <div
+      style={{
+        position: "relative",
+        borderRadius: 28,
+        border: "1px solid var(--mantine-color-gray-2)",
+        background: "var(--mantine-color-gray-0)",
+        overflow: "hidden",
+      }}
+    >
+      <div style={{ padding: "1rem 1rem 0" }}>
+        <div
+          style={{
+            height: 72,
+            borderRadius: 24,
+            background: "var(--mantine-color-red-3)",
+          }}
+        />
       </div>
-      <Avatar className="absolute left-8 top-[54px] h-16 w-16 rounded-xl border-4 border-slate-50 bg-white shadow-md">
-        {logoUrl && <AvatarImage src={logoUrl} alt={`${displayOrgName} logo`} className="object-cover" />}
-        <AvatarFallback className="bg-white text-rose-500 text-3xl font-semibold">
-          {orgInitial}
-        </AvatarFallback>
+
+      <Avatar
+        color="red"
+        radius="md"
+        size={64}
+        style={{
+          position: "absolute",
+          left: 32,
+          top: 54,
+          border: "4px solid var(--mantine-color-gray-0)",
+        }}
+      >
+        {orgInitial}
       </Avatar>
-      <div className="px-8 pb-6 pt-16 sm:pb-7">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-4xl font-medium tracking-tight text-slate-950 md:text-5xl">
-                {displayOrgName}
-              </h1>
-              <span
-                className={cn(
-                  "inline-flex items-center rounded-full border px-3 py-0.5 text-xs font-semibold",
-                  isAdmin
-                    ? "border-owl-purple/30 bg-owl-purple/10 text-owl-purple"
-                    : "border-slate-200 bg-slate-100 text-slate-500",
-                )}
-              >
-                {roleLabel}
-              </span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 pt-3">
-            <button
-              type="button"
-              disabled
-              aria-disabled="true"
-              aria-label={
-                hasRoleError
-                  ? "View organization unavailable"
-                  : "View organization"
-              }
-              className={headerButtonClasses}
+
+      <div style={{ padding: "4rem 2rem 1.5rem" }}>
+        <Group justify="space-between" align="flex-start" wrap="wrap" gap="md">
+          <Group gap="md" wrap="wrap" align="center">
+            <h1
+              style={{
+                fontSize: "2.25rem",
+                fontWeight: 500,
+                letterSpacing: "-0.02em",
+                margin: 0,
+              }}
             >
-              <Eye className="h-[22px] w-[22px]" />
-              <span className="sr-only">
-                {hasRoleError
-                  ? "View organization unavailable"
-                  : "View organization"}
-              </span>
-            </button>
-            {isAdmin && !hasRoleError ? (
+              {displayOrgName}
+            </h1>
+            <Badge
+              variant={isAdmin ? "light" : "outline"}
+              color={isAdmin ? "owlPurple" : "gray"}
+            >
+              {roleLabel}
+            </Badge>
+          </Group>
+
+          {isAdmin && !hasRoleError && (
+            <div style={{ paddingTop: "0.75rem" }}>
               <EditOrgDialog
                 orgId={orgId}
                 orgName={displayOrgName}
                 orgDescription={orgDescription}
-                orgLogoUrl={logoUrl}
-                triggerClassName={headerButtonClasses}
               />
-            ) : (
-              <button
-                type="button"
-                disabled
-                aria-disabled="true"
-                aria-label={
-                  hasRoleError
-                    ? "Edit organization unavailable"
-                    : "Edit organization"
-                }
-                className={headerButtonClasses}
-              >
-                <span className="sr-only">
-                  {hasRoleError
-                    ? "Edit organization unavailable"
-                    : "Edit organization"}
-                </span>
-              </button>
-            )}
-          </div>
-        </div>
+            </div>
+          )}
+        </Group>
       </div>
     </div>
   );

@@ -1,120 +1,205 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Alert, Box, Button, Card, Group, Stack, Text } from "@mantine/core";
 import {
   ChevronRight,
   File01,
   Folder,
   UploadCloud01,
 } from "@untitled-ui/icons-react";
-import { cn } from "@/lib/utils";
 import { useUploadWizard } from "./useUploadWizard";
 import { ColumnMappingStep } from "./ColumnMappingStep";
 
 export function UploadTab() {
   const wizard = useUploadWizard();
 
-  return (
-    <div className="py-8 max-w-4xl">
-      <div className="relative flex items-center justify-between mb-12 max-w-3xl mx-auto px-4">
-        <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 flex items-center">
-          <div className="w-full h-0.5 bg-gray-200" />
-          <div
-            className="absolute left-0 h-0.5 bg-owl-purple transition-all duration-300"
-            style={{
-              width: `${((wizard.currentStep - 1) / (wizard.steps.length - 1)) * 100}%`,
-            }}
-          />
-        </div>
-        {wizard.steps.map((step) => {
-          const isActive = step === wizard.currentStep;
-          const isCompleted = step < wizard.currentStep;
-          return (
-            <div
-              key={step}
-              className={cn(
-                "relative z-10 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium border-2 transition-colors",
-                isActive || isCompleted
-                  ? "bg-owl-purple border-owl-purple text-white"
-                  : "bg-gray-50 border-gray-300 text-gray-400",
-              )}
-            >
-              {step}
-            </div>
-          );
-        })}
-      </div>
+  const progressPct =
+    ((wizard.currentStep - 1) / (wizard.steps.length - 1)) * 100;
 
-      <div className="space-y-6">
+  return (
+    <Box py="xl" style={{ maxWidth: 768 }}>
+      {/* Step indicators */}
+      <Box
+        style={{ position: "relative", maxWidth: 480, margin: "0 auto 3rem" }}
+      >
+        <Box
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: 16,
+            right: 16,
+            transform: "translateY(-50%)",
+            height: 2,
+            background: "var(--mantine-color-gray-2)",
+          }}
+        />
+        <Box
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: 16,
+            transform: "translateY(-50%)",
+            height: 2,
+            width: `${progressPct}%`,
+            background: "var(--mantine-color-owlPurple-6)",
+            transition: "width 300ms ease",
+          }}
+        />
+        <Group justify="space-between" style={{ position: "relative" }}>
+          {wizard.steps.map((step) => {
+            const isActive = step === wizard.currentStep;
+            const isCompleted = step < wizard.currentStep;
+            return (
+              <Box
+                key={step}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 14,
+                  fontWeight: 500,
+                  border: `2px solid ${isActive || isCompleted ? "var(--mantine-color-owlPurple-6)" : "var(--mantine-color-gray-3)"}`,
+                  background:
+                    isActive || isCompleted
+                      ? "var(--mantine-color-owlPurple-6)"
+                      : "var(--mantine-color-gray-0)",
+                  color:
+                    isActive || isCompleted
+                      ? "white"
+                      : "var(--mantine-color-gray-5)",
+                  zIndex: 1,
+                }}
+              >
+                {step}
+              </Box>
+            );
+          })}
+        </Group>
+      </Box>
+
+      <Stack gap="xl">
+        {/* Step 1: Choose import method */}
         {wizard.currentStep === 1 && (
           <>
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900">
+            <Stack gap="xs">
+              <Text size="lg" fw={600}>
                 Set Up Your Application Form
-              </h2>
-              <p className="text-gray-500">
+              </Text>
+              <Text c="dimmed" size="sm">
                 Get started by choosing how you will import your candidates.
-              </p>
-            </div>
+              </Text>
+            </Stack>
 
-            <div className="space-y-4">
-              <Card className="p-6 hover:border-owl-purple hover:shadow-sm cursor-pointer transition-all group border-gray-200">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600">
-                    <File01 className="w-6 h-6" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-owl-purple transition-colors">
+            <Stack gap="md">
+              <Card withBorder radius="md" p="lg" style={{ cursor: "default" }}>
+                <Group gap="md">
+                  <Box
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: "var(--mantine-radius-md)",
+                      background: "var(--mantine-color-violet-0)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "var(--mantine-color-violet-6)",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <File01 width={24} height={24} />
+                  </Box>
+                  <Box style={{ flex: 1 }}>
+                    <Text fw={600} mb={4}>
                       Google Forms
-                    </h3>
-                    <p className="text-sm text-gray-500">
+                    </Text>
+                    <Text size="sm" c="dimmed">
                       Import your candidates from Google Forms.
-                    </p>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-owl-purple transition-colors" />
-                </div>
+                    </Text>
+                  </Box>
+                  <ChevronRight
+                    width={20}
+                    height={20}
+                    style={{
+                      color: "var(--mantine-color-gray-4)",
+                      flexShrink: 0,
+                    }}
+                  />
+                </Group>
               </Card>
 
               <Card
-                className="p-6 hover:border-owl-purple hover:shadow-sm cursor-pointer transition-all group border-gray-200"
+                withBorder
+                radius="md"
+                p="lg"
+                style={{ cursor: "pointer" }}
                 onClick={() => wizard.setCurrentStep(2)}
               >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600">
-                    <Folder className="w-6 h-6" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-owl-purple transition-colors">
+                <Group gap="md">
+                  <Box
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: "var(--mantine-radius-md)",
+                      background: "var(--mantine-color-gray-1)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "var(--mantine-color-gray-6)",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Folder width={24} height={24} />
+                  </Box>
+                  <Box style={{ flex: 1 }}>
+                    <Text fw={600} mb={4}>
                       CSV File
-                    </h3>
-                    <p className="text-sm text-gray-500">
+                    </Text>
+                    <Text size="sm" c="dimmed">
                       Import your candidates from a CSV file.
-                    </p>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-owl-purple transition-colors" />
-                </div>
+                    </Text>
+                  </Box>
+                  <ChevronRight
+                    width={20}
+                    height={20}
+                    style={{
+                      color: "var(--mantine-color-gray-4)",
+                      flexShrink: 0,
+                    }}
+                  />
+                </Group>
               </Card>
-            </div>
+            </Stack>
           </>
         )}
 
+        {/* Step 2: Upload CSV */}
         {wizard.currentStep === 2 && (
           <>
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900">
+            <Stack gap="xs">
+              <Text size="lg" fw={600}>
                 Upload Your CSV
-              </h2>
-              <p className="text-gray-500">Instructions</p>
-            </div>
+              </Text>
+              <Text c="dimmed" size="sm">
+                Drag and drop or click to choose your CSV file.
+              </Text>
+            </Stack>
 
-            <div
-              className={cn(
-                "border-2 border-dashed rounded-lg p-12 flex flex-col items-center justify-center transition-colors",
-                wizard.isDragOver
-                  ? "border-owl-purple bg-owl-purple/10"
-                  : "border-gray-200 bg-gray-50/50",
-              )}
+            <Box
+              style={{
+                border: `2px dashed ${wizard.isDragOver ? "var(--mantine-color-owlPurple-6)" : "var(--mantine-color-gray-3)"}`,
+                borderRadius: "var(--mantine-radius-md)",
+                padding: "3rem 1.5rem",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                background: wizard.isDragOver
+                  ? "var(--mantine-color-owlPurple-0)"
+                  : "var(--mantine-color-gray-0)",
+                transition: "border-color 150ms, background 150ms",
+              }}
               onDragOver={wizard.handleDragOver}
               onDragLeave={wizard.handleDragLeave}
               onDrop={wizard.handleDrop}
@@ -122,75 +207,99 @@ export function UploadTab() {
               <input
                 type="file"
                 accept=".csv"
-                className="hidden"
+                style={{ display: "none" }}
                 ref={wizard.fileInputRef}
                 onChange={wizard.handleFileChange}
               />
 
               {!wizard.file ? (
-                <>
-                  <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 mb-4">
-                    <UploadCloud01 className="w-6 h-6" />
-                  </div>
-                  <p className="text-owl-purple font-medium mb-1">
+                <Stack gap="sm" align="center">
+                  <Box
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: "50%",
+                      background: "var(--mantine-color-gray-2)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "var(--mantine-color-gray-6)",
+                    }}
+                  >
+                    <UploadCloud01 width={24} height={24} />
+                  </Box>
+                  <Text size="sm" c="owlPurple" fw={500}>
                     Choose CSV file or drag and drop
-                  </p>
+                  </Text>
                   <Button
                     onClick={() => wizard.fileInputRef.current?.click()}
-                    className="mt-4"
+                    mt="xs"
                   >
                     Upload CSV
                   </Button>
-                </>
+                </Stack>
               ) : (
-                <>
-                  <div className="w-12 h-12 rounded-full bg-owl-purple/10 flex items-center justify-center text-owl-purple mb-4">
-                    <File01 className="w-6 h-6" />
-                  </div>
-                  <p className="text-gray-900 font-medium mb-1">
-                    {wizard.file.name}
-                  </p>
-                  <p className="text-sm text-gray-500 mb-4">
+                <Stack gap="xs" align="center">
+                  <Box
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: "50%",
+                      background: "var(--mantine-color-owlPurple-0)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "var(--mantine-color-owlPurple-6)",
+                    }}
+                  >
+                    <File01 width={24} height={24} />
+                  </Box>
+                  <Text fw={500}>{wizard.file.name}</Text>
+                  <Text size="sm" c="dimmed">
                     {(wizard.file.size / 1024).toFixed(2)} KB
-                  </p>
-                  <div className="flex gap-2">
+                  </Text>
+                  <Group gap="sm" mt="xs">
                     <Button
                       variant="outline"
+                      color="red"
+                      size="sm"
                       onClick={() => wizard.setFile(null)}
-                      className="text-red-500 hover:text-red-600"
                     >
                       Remove
                     </Button>
                     <Button
                       variant="outline"
+                      size="sm"
                       onClick={() => wizard.fileInputRef.current?.click()}
                     >
                       Change File
                     </Button>
-                  </div>
-                </>
+                  </Group>
+                </Stack>
               )}
-            </div>
+            </Box>
 
-            <div className="flex justify-between pt-4">
+            <Group justify="space-between" pt="md">
               <Button
-                variant="outline"
+                variant="default"
                 onClick={wizard.handleBack}
-                className="w-24"
+                style={{ width: 96 }}
               >
                 Back
               </Button>
               <Button
                 onClick={wizard.handleNext}
-                className="w-24 bg-owl-purple hover:bg-owl-purple/90"
                 disabled={!wizard.file}
+                rightSection={<ChevronRight width={16} height={16} />}
+                style={{ width: 96 }}
               >
-                Next <ChevronRight className="w-4 h-4 ml-1" />
+                Next
               </Button>
-            </div>
+            </Group>
           </>
         )}
 
+        {/* Step 3: Column mapping */}
         {wizard.currentStep === 3 && (
           <ColumnMappingStep
             columnMappings={wizard.columnMappings}
@@ -205,127 +314,124 @@ export function UploadTab() {
           />
         )}
 
+        {/* Step 4: Review & finish */}
         {wizard.currentStep === 4 && (
           <>
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900">Review</h2>
-              <p className="text-gray-500">
+            <Stack gap="xs">
+              <Text size="lg" fw={600}>
+                Review
+              </Text>
+              <Text c="dimmed" size="sm">
                 Review the application to ensure everything looks correct.
-              </p>
-            </div>
+              </Text>
+            </Stack>
 
-            <div className="space-y-6">
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">
-                  Import Method
-                </h3>
-                <p className="text-sm text-gray-600">CSV File</p>
-              </div>
+            <Stack gap="xl">
+              <Stack gap="xs">
+                <Text fw={600}>Import Method</Text>
+                <Text size="sm" c="dimmed">
+                  CSV File
+                </Text>
+              </Stack>
 
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-4">
-                  Column Mappings
-                </h3>
-                <div className="space-y-2 max-w-md">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Name:</span>
-                    <span className="font-medium text-gray-900">
-                      {wizard.columnMappings.name}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">NetID:</span>
-                    <span className="font-medium text-gray-900">
-                      {wizard.columnMappings.netid}
-                    </span>
-                  </div>
-                  {wizard.columnMappings.year && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Year:</span>
-                      <span className="font-medium text-gray-900">
-                        {wizard.columnMappings.year}
-                      </span>
-                    </div>
-                  )}
-                  {wizard.columnMappings.major && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Major:</span>
-                      <span className="font-medium text-gray-900">
-                        {wizard.columnMappings.major}
-                      </span>
-                    </div>
-                  )}
+              <Stack gap="sm">
+                <Text fw={600}>Column Mappings</Text>
+                <Stack gap="xs" style={{ maxWidth: 320 }}>
+                  {[
+                    { key: "name", label: "Name" },
+                    { key: "netid", label: "NetID" },
+                    { key: "year", label: "Year" },
+                    { key: "major", label: "Major" },
+                  ]
+                    .filter(
+                      ({ key }) =>
+                        wizard.columnMappings[
+                          key as keyof typeof wizard.columnMappings
+                        ],
+                    )
+                    .map(({ key, label }) => (
+                      <Group key={key} justify="space-between">
+                        <Text size="sm" c="dimmed">
+                          {label}:
+                        </Text>
+                        <Text size="sm" fw={500}>
+                          {
+                            wizard.columnMappings[
+                              key as keyof typeof wizard.columnMappings
+                            ]
+                          }
+                        </Text>
+                      </Group>
+                    ))}
                   {wizard.customQuestions.map(
                     (q) =>
                       wizard.columnMappings[q.id] && (
-                        <div
-                          key={q.id}
-                          className="flex justify-between text-sm"
-                        >
-                          <span className="text-gray-600">{q.text}:</span>
-                          <span className="font-medium text-gray-900">
+                        <Group key={q.id} justify="space-between">
+                          <Text size="sm" c="dimmed">
+                            {q.text}:
+                          </Text>
+                          <Text size="sm" fw={500}>
                             {wizard.columnMappings[q.id]}
-                          </span>
-                        </div>
+                          </Text>
+                        </Group>
                       ),
                   )}
-                </div>
-              </div>
-            </div>
+                </Stack>
+              </Stack>
+            </Stack>
 
             {(wizard.uploadErrors.length > 0 ||
               (wizard.successCount > 0 && !wizard.isUploading)) && (
-              <div
-                className={cn(
-                  "p-4 mt-6 rounded-lg border text-sm",
-                  wizard.uploadErrors.length > 0
-                    ? "bg-red-50 border-red-200 text-red-800"
-                    : "bg-green-50 border-green-200 text-green-800",
-                )}
+              <Alert
+                color={wizard.uploadErrors.length > 0 ? "red" : "green"}
+                mt="md"
               >
                 {wizard.successCount > 0 && (
-                  <p className="font-semibold mb-2">
+                  <Text
+                    size="sm"
+                    fw={600}
+                    mb={wizard.uploadErrors.length > 0 ? "xs" : 0}
+                  >
                     Successfully uploaded {wizard.successCount} application
                     {wizard.successCount !== 1 ? "s" : ""}.
-                  </p>
+                  </Text>
                 )}
                 {wizard.uploadErrors.length > 0 && (
-                  <>
-                    <p className="font-semibold mb-1">
+                  <Stack gap="xs">
+                    <Text size="sm" fw={600}>
                       Errors encountered during upload:
-                    </p>
-                    <ul className="list-disc pl-5 space-y-1">
+                    </Text>
+                    <ul style={{ paddingLeft: "1.25rem", margin: 0 }}>
                       {wizard.uploadErrors.map((err, idx) => (
-                        <li key={idx}>
+                        <li key={idx} style={{ fontSize: 13 }}>
                           {err.row ? `Row ${err.row}: ` : ""}
                           {err.error}
                         </li>
                       ))}
                     </ul>
-                  </>
+                  </Stack>
                 )}
-              </div>
+              </Alert>
             )}
 
-            <div className="flex justify-between pt-8">
+            <Group justify="space-between" pt="xl">
               <Button
-                variant="outline"
+                variant="default"
                 onClick={wizard.handleBack}
-                className="w-24"
+                style={{ width: 96 }}
               >
                 Back
               </Button>
               <Button
                 onClick={wizard.handleFinishSetup}
-                className="bg-owl-purple hover:bg-owl-purple/90"
-                disabled={wizard.isUploading}
+                loading={wizard.isUploading}
               >
-                {wizard.isUploading ? "Uploading..." : "Finish Setup"}
+                Finish Setup
               </Button>
-            </div>
+            </Group>
           </>
         )}
-      </div>
-    </div>
+      </Stack>
+    </Box>
   );
 }

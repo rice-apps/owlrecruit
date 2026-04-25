@@ -1,6 +1,4 @@
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { Avatar, Badge, Card, Group, ScrollArea, Text } from "@mantine/core";
 
 export type OrgMemberRecord = {
   id: string;
@@ -13,61 +11,52 @@ export type OrgMemberRecord = {
   } | null;
 };
 
-const ROLE_BADGE_STYLES: Record<OrgMemberRecord["role"], string> = {
-  admin: "border-purple-200 bg-white text-purple-900 shadow-sm",
-  reviewer: "border-purple-200 bg-white text-purple-900 shadow-sm",
-};
-
 type MembersStripProps = {
   members: OrgMemberRecord[];
 };
 
 export function MembersStrip({ members }: MembersStripProps) {
-  const count = members.length;
-  if (count === 0) {
+  if (members.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-slate-200 bg-white/80 px-4 py-6 text-center text-sm text-slate-500">
+      <Text size="sm" c="dimmed" ta="center" p="xl">
         No members have joined this organization yet.
-      </div>
+      </Text>
     );
   }
 
   return (
-    <div className="flex gap-3 overflow-x-auto pb-1 pt-2 pr-1">
-      {members.map((member) => {
-        const displayName =
-          member.users?.name?.trim() || member.users?.email || "Unknown";
-        const initial = displayName.charAt(0).toUpperCase() || "U";
+    <ScrollArea>
+      <Group gap="md" wrap="nowrap" pb="xs">
+        {members.map((member) => {
+          const displayName =
+            member.users?.name?.trim() || member.users?.email || "Unknown";
+          const initial = displayName.charAt(0).toUpperCase() || "U";
 
-        return (
-          <article
-            key={member.id}
-            className="flex min-w-[180px] max-w-[240px] flex-col gap-3 rounded-2xl border border-slate-100 bg-white/90 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-          >
-            <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10">
-                <AvatarFallback className="bg-muted text-muted-foreground text-base">
+          return (
+            <Card
+              key={member.id}
+              withBorder
+              radius="md"
+              p="md"
+              style={{ minWidth: 180, maxWidth: 240, flexShrink: 0 }}
+            >
+              <Group gap="sm">
+                <Avatar color="owlPurple" radius="md">
                   {initial}
-                </AvatarFallback>
-              </Avatar>
-              <div className="min-w-0 flex flex-col gap-1">
-                <p className="text-sm font-semibold text-slate-900 truncate leading-none">
-                  {displayName}
-                </p>
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "self-start text-[11px] uppercase tracking-[0.2em]",
-                    ROLE_BADGE_STYLES[member.role],
-                  )}
-                >
-                  {member.role === "admin" ? "Admin" : "Reviewer"}
-                </Badge>
-              </div>
-            </div>
-          </article>
-        );
-      })}
-    </div>
+                </Avatar>
+                <div style={{ minWidth: 0 }}>
+                  <Text size="sm" fw={600} truncate="end">
+                    {displayName}
+                  </Text>
+                  <Badge variant="light" color="owlPurple" size="xs" mt={2}>
+                    {member.role === "admin" ? "Admin" : "Reviewer"}
+                  </Badge>
+                </div>
+              </Group>
+            </Card>
+          );
+        })}
+      </Group>
+    </ScrollArea>
   );
 }
