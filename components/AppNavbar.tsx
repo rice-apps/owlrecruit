@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   AppShellNavbar,
@@ -14,7 +15,6 @@ import {
   Text,
 } from "@mantine/core";
 import {
-  SearchMd,
   File02,
   Users01,
   Bell01,
@@ -134,7 +134,9 @@ export function AppNavbar({ orgs, user, collapsed, onToggle }: AppNavbarProps) {
         align={collapsed ? "center" : "stretch"}
       >
         <NavItem
-          icon={<SearchMd width={20} height={20} />}
+          icon={
+            <Image src="/logo.svg" alt="OwlRecruit" width={20} height={20} />
+          }
           label="Discover"
           href="/protected/discover"
           active={pathname.startsWith("/protected/discover")}

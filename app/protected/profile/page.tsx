@@ -1,6 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { Avatar, Title, Stack, Text, Paper, Group, Anchor } from "@mantine/core";
+import {
+  Avatar,
+  Title,
+  Stack,
+  Text,
+  Paper,
+  Group,
+  Anchor,
+} from "@mantine/core";
 import ProfileForm from "./profileForm";
 import type { OrgMembership } from "./organizations-section";
 
