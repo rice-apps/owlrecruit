@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  AppShell,
+  AppShellNavbar,
   NavLink,
   Accordion,
   Avatar,
@@ -37,7 +37,7 @@ export function AppNavbar({ orgs, user }: AppNavbarProps) {
   const initial = user.name.charAt(0).toUpperCase();
 
   return (
-    <AppShell.Navbar
+    <AppShellNavbar
       p="md"
       style={{ display: "flex", flexDirection: "column", gap: 0 }}
     >
@@ -154,6 +154,6 @@ export function AppNavbar({ orgs, user }: AppNavbarProps) {
           </form>
         </Group>
       </Box>
-    </AppShell.Navbar>
+    </AppShellNavbar>
   );
 }

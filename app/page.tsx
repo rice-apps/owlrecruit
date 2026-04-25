@@ -1,5 +1,14 @@
+"use client";
+
+import dynamic from "next/dynamic";
 import { Center, Stack, Title, Text } from "@mantine/core";
-import SignUpGoogleBtn from "@/app/auth/sign-up/sign-up-google";
+
+// Google Identity Services modifies the DOM before React hydration when the
+// script is cached — disable SSR to avoid the hydration mismatch entirely.
+const SignUpGoogleBtn = dynamic(
+  () => import("@/app/auth/sign-up/sign-up-google"),
+  { ssr: false },
+);
 
 export default function Home() {
   return (

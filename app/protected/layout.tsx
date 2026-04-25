@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { AppShell } from "@mantine/core";
+import { AppShell, AppShellMain } from "@mantine/core";
 import { createClient } from "@/lib/supabase/server";
 import { AppNavbar } from "@/components/AppNavbar";
 import type { OrgWithRole } from "@/types/app";
@@ -70,7 +70,7 @@ export default async function ProtectedLayout({
   return (
     <AppShell navbar={{ width: 240, breakpoint: "sm" }} padding="md">
       <AppNavbar orgs={orgs} user={user} />
-      <AppShell.Main bg="gray.0">{children}</AppShell.Main>
+      <AppShellMain bg="gray.0">{children}</AppShellMain>
     </AppShell>
   );
 }

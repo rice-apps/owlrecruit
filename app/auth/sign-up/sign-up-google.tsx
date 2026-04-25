@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 import { Modal, Text, Button, Stack } from "@mantine/core";
 import { createClient } from "@/lib/supabase/client";
 import Script from "next/script";
-import { useRouter } from "next/navigation";
 
 const supabase = createClient();
 
@@ -15,7 +14,6 @@ declare global {
 }
 
 export default function SignUpGoogleBtn() {
-  const router = useRouter();
   const [authError, setAuthError] = useState(false);
 
   const handleSignInWithGoogle = useCallback(
@@ -31,10 +29,10 @@ export default function SignUpGoogleBtn() {
       }
 
       if (data?.user) {
-        router.push("/protected/discover");
+        window.location.href = "/protected/discover";
       }
     },
-    [router],
+    [],
   );
 
   useEffect(() => {

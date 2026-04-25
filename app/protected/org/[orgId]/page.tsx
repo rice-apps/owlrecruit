@@ -167,15 +167,18 @@ export default async function ReviewerOrgPage({
         subtitle="Open roles for this organization"
         actions={
           isAdmin ? (
-            <Button
-              component={Link}
+            <Link
               href={`/protected/org/${orgId}/new-opening`}
-              size="xs"
-              variant="light"
-              leftSection={<Plus width={14} height={14} />}
+              style={{ textDecoration: "none" }}
             >
-              Add position
-            </Button>
+              <Button
+                size="xs"
+                variant="light"
+                leftSection={<Plus width={14} height={14} />}
+              >
+                Add position
+              </Button>
+            </Link>
           ) : null
         }
       >
