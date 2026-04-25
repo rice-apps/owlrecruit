@@ -6,8 +6,9 @@
 
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
-import { Box, Card, Group, Stack, Text } from "@mantine/core";
-import { EditOpeningDialog } from "@/components/edit-opening-dialog";
+import { ActionIcon, Box, Card, Group, Stack, Text } from "@mantine/core";
+import Link from "next/link";
+import { Pencil01 } from "@untitled-ui/icons-react";
 import { OpeningStatusButton } from "@/components/opening-status-button";
 import { OpeningStatusBadge } from "@/components/StatusBadge";
 import { OpeningTabs } from "./components/OpeningTabs";
@@ -184,17 +185,16 @@ export default async function OpeningOverviewPage({
               openingId={openingId}
               status={openingData?.status || "draft"}
             />
-            <EditOpeningDialog
-              orgId={orgId}
-              openingId={openingId}
-              initialData={{
-                title: openingData?.title || "",
-                description: openingData?.description || undefined,
-                application_link: openingData?.application_link || undefined,
-                closes_at: openingData?.closes_at || undefined,
-                status: openingData?.status || "draft",
-              }}
-            />
+            <Link href={`/protected/org/${orgId}/opening/${openingId}/edit`}>
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                size="sm"
+                aria-label="Edit opening"
+              >
+                <Pencil01 width={16} height={16} />
+              </ActionIcon>
+            </Link>
           </Group>
         </Group>
       </Card>

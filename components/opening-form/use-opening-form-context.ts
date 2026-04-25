@@ -29,9 +29,9 @@ export function useOpeningFormContext(orgId: string) {
         }
 
         if (reviewersRes.ok) {
-          const reviewerData =
-            (await reviewersRes.json()) as EligibleReviewer[];
-          setEligibleReviewers(reviewerData);
+          const json = await reviewersRes.json();
+          const reviewerData = (json.data ?? json) as EligibleReviewer[];
+          setEligibleReviewers(Array.isArray(reviewerData) ? reviewerData : []);
         }
       } catch (error) {
         console.error("Error fetching opening form context:", error);

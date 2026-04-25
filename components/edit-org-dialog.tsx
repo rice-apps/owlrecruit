@@ -3,14 +3,14 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import {
-  Modal,
-  TextInput,
-  Textarea,
+  ActionIcon,
+  Alert,
   Button,
   Group,
-  Alert,
+  Modal,
   Stack,
-  ActionIcon,
+  Textarea,
+  TextInput,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { AlertCircle, Pencil01 } from "@untitled-ui/icons-react";
@@ -31,33 +31,17 @@ export function EditOrgDialog({
   const [name, setName] = React.useState(orgName);
   const [description, setDescription] = React.useState(orgDescription ?? "");
   const [logoFile, setLogoFile] = React.useState<File | null>(null);
-  const [logoPreview, setLogoPreview] = React.useState<string | null>(null);
   const [isSaving, setIsSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const logoInputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
     if (open) {
       setName(orgName);
       setDescription(orgDescription ?? "");
       setLogoFile(null);
-      setLogoPreview(null);
       setError(null);
     }
   }, [open, orgName, orgDescription]);
-
-  const handleLogoChange = (file: File | null) => {
-    if (!file) return;
-    setLogoFile(file);
-    setLogoPreview(URL.createObjectURL(file));
-  };
-
-  const handleLogoDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files[0] ?? null;
-    handleLogoChange(file);
-  };
-
 
   const handleSave = async () => {
     if (!name.trim()) {

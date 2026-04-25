@@ -1,4 +1,4 @@
-import { OpeningFormPage } from "@/components/opening-form/opening-form-page";
+"use client";
 
 import * as React from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -27,11 +27,10 @@ import { AlertCircle, Trash01 } from "@untitled-ui/icons-react";
 import { logger } from "@/lib/logger";
 import { Breadcrumb } from "@/components/Breadcrumb";
 
-export default async function NewOpeningPage({ params }: NewOpeningPageProps) {
-  const { orgId } = await params;
+const MAX_RUBRIC_SCORE = 1_000_000_000_000;
 
 interface ReviewerOption {
-  value: string; // user_id
+  value: string;
   label: string;
 }
 
@@ -209,7 +208,6 @@ export default function NewOpeningPage() {
 
         <form onSubmit={handleSubmit}>
           <Stack gap="lg">
-            {/* Position Name */}
             <TextInput
               label="Position Name"
               required
@@ -218,7 +216,6 @@ export default function NewOpeningPage() {
               placeholder="e.g. Software Developer"
             />
 
-            {/* Application Link */}
             <div>
               <Text size="sm" fw={500} mb="xs">
                 Application Link
@@ -250,7 +247,6 @@ export default function NewOpeningPage() {
               )}
             </div>
 
-            {/* Description */}
             <Textarea
               label="Description"
               value={description}
@@ -260,7 +256,6 @@ export default function NewOpeningPage() {
               autosize
             />
 
-            {/* Due Date */}
             <DateTimePicker
               label="Due Date"
               placeholder="Select date and time"
@@ -269,7 +264,6 @@ export default function NewOpeningPage() {
               clearable
             />
 
-            {/* Applicant Stages */}
             <div>
               <Text size="sm" fw={500} mb="xs">
                 Applicant Stages
@@ -304,7 +298,6 @@ export default function NewOpeningPage() {
               </Box>
             </div>
 
-            {/* Assign Reviewers */}
             {reviewerOptions.length > 0 && (
               <MultiSelect
                 label="Assign Reviewers"
@@ -317,7 +310,6 @@ export default function NewOpeningPage() {
               />
             )}
 
-            {/* Rubric */}
             <div>
               <Text size="sm" fw={500} mb={4}>
                 Add rubric

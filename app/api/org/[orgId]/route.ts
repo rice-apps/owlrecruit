@@ -82,7 +82,6 @@ export async function PATCH(
     updates.logo_url = urlData.publicUrl;
   }
 
-
   const { error: updateError } = await supabase
     .from("orgs")
     .update(updates)
