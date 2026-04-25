@@ -31,13 +31,13 @@ export function TabBar({ tabs, currentTab, buildHref }: TabBarProps) {
                 alignItems: "center",
                 paddingBottom: "0.75rem",
                 marginBottom: "-1px",
-                fontSize: "1rem",
-                fontWeight: 600,
+                fontSize: "0.875rem",
+                fontWeight: 500,
                 borderBottom: isActive
-                  ? "2px solid var(--mantine-color-owlTeal-5)"
+                  ? "2px solid var(--mantine-color-dark-8)"
                   : "2px solid transparent",
                 color: isActive
-                  ? "var(--mantine-color-owlTeal-6)"
+                  ? "var(--mantine-color-dark-8)"
                   : "var(--mantine-color-gray-6)",
                 transition: "color 150ms, border-color 150ms",
                 textDecoration: "none",

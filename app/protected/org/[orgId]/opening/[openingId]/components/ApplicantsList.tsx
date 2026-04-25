@@ -141,7 +141,7 @@ export function ApplicantsList({
         </Table.Tbody>
       </Table>
 
-      <Text size="sm" c="dimmed">
+      <Text size="sm" c="dimmed" pb="xl">
         Showing {filteredApplicants.length} of {applicants.length} applicants
       </Text>
     </Stack>

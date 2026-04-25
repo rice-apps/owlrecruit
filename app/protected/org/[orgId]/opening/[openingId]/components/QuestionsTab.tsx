@@ -1,17 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import {
-  ChevronRight,
-  Plus,
-  Trash01,
-  ArrowUp,
-  ArrowDown,
-} from "@untitled-ui/icons-react";
-import { parseQuestionText, encodeQuestionText } from "@/lib/question-utils";
-import type { FieldType } from "@/lib/question-utils";
+import * as React from "react";
 import {
   ActionIcon,
   Alert,
@@ -21,19 +10,44 @@ import {
   Checkbox,
   Collapse,
   Group,
-  Loader,
   Select,
-  SegmentedControl,
   Stack,
+  Switch,
   Text,
   TextInput,
 } from "@mantine/core";
+import {
+  ArrowDown,
+  ArrowUp,
+  ChevronRight,
+  FilterLines,
+  Plus,
+  SearchMd,
+  Trash01,
+} from "@untitled-ui/icons-react";
+import type { FieldType } from "@/lib/question-utils";
+import { encodeQuestionText, parseQuestionText } from "@/lib/question-utils";
+import { createClient } from "@/lib/supabase/client";
 
 interface Question {
   id: string;
   question_text: string;
   is_required: boolean | null;
   sort_order: number | null;
+}
+
+interface Application {
+  id: string;
+  form_responses: Record<string, unknown>;
+  applicant_id: string;
+  user: {
+    name: string;
+    email: string;
+  } | null;
+  applicant: {
+    name: string;
+    net_id: string;
+  } | null;
 }
 
 interface DraftQuestion {
@@ -43,11 +57,6 @@ interface DraftQuestion {
   type: FieldType;
   options: string[];
   is_required: boolean;
-}
-
-interface Application {
-  id: string;
-  form_responses: Record<string, unknown>;
 }
 
 interface QuestionsTabProps {
@@ -63,10 +72,6 @@ const FIELD_TYPES: { value: FieldType; label: string }[] = [
   { value: "checkbox", label: "Checkboxes" },
   { value: "url", label: "URL" },
 ];
-
-// ---------------------------------------------------------------------------
-// Question card (edit mode) — up/down buttons instead of drag
-// ---------------------------------------------------------------------------
 
 function QuestionCard({
   q,
@@ -86,10 +91,9 @@ function QuestionCard({
   const needsOptions = q.type === "select" || q.type === "checkbox";
 
   return (
-    <Card withBorder radius="md" p="md">
+    <Card radius="lg" shadow="sm" withBorder={false} p="md">
       <Stack gap="sm">
         <Group gap="sm" align="flex-start">
-          {/* Reorder buttons */}
           <Stack gap={2} style={{ flexShrink: 0 }}>
             <ActionIcon
               variant="subtle"
@@ -212,139 +216,54 @@ function QuestionCard({
   );
 }
 
-// ---------------------------------------------------------------------------
-// External link mode panel
-// ---------------------------------------------------------------------------
-
-function ExternalLinkMode({
-  applicationLink,
-  openingId,
-}: {
-  applicationLink: string;
-  openingId: string;
-}) {
-  const router = useRouter();
-  const [link, setLink] = useState(applicationLink);
-  const [saving, setSaving] = useState(false);
-
-  const saveLink = async () => {
-    setSaving(true);
-    try {
-      const supabase = createClient();
-      await supabase
-        .from("openings")
-        .update({ application_link: link })
-        .eq("id", openingId);
-      router.refresh();
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <Stack gap="md" py="lg">
-      <Text size="sm" c="dimmed">
-        Paste your external application link below. Applicants will be directed
-        to this URL, and you can upload responses via the Upload Data tab.
-      </Text>
-      <Group gap="sm" align="flex-end" style={{ maxWidth: 480 }}>
-        <TextInput
-          value={link}
-          onChange={(e) => setLink(e.currentTarget.value)}
-          placeholder="https://docs.google.com/forms/..."
-          type="url"
-          style={{ flex: 1 }}
-        />
-        <Button
-          size="sm"
-          onClick={saveLink}
-          loading={saving}
-          disabled={link === applicationLink}
-        >
-          Save
-        </Button>
-      </Group>
-    </Stack>
+export function QuestionsTab({ openingId, orgId }: QuestionsTabProps) {
+  const [questions, setQuestions] = React.useState<Question[]>([]);
+  const [applications, setApplications] = React.useState<Application[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [isEditMode, setIsEditMode] = React.useState(false);
+  const [draftQuestions, setDraftQuestions] = React.useState<DraftQuestion[]>(
+    [],
   );
-}
+  const [saving, setSaving] = React.useState(false);
+  const [saveError, setSaveError] = React.useState<string | null>(null);
 
-// ---------------------------------------------------------------------------
-// Main component
-// ---------------------------------------------------------------------------
+  const [selectedQuestionId, setSelectedQuestionId] = React.useState<
+    string | null
+  >(null);
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [anonymousView, setAnonymousView] = React.useState(false);
 
-export function QuestionsTab({
-  openingId,
-  orgId,
-  applicationLink,
-}: QuestionsTabProps) {
-  const router = useRouter();
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(
-    null,
-  );
-
-  const isNativeForm = !applicationLink;
-  const [switchingMode, setSwitchingMode] = useState(false);
-
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [draftQuestions, setDraftQuestions] = useState<DraftQuestion[]>([]);
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
-
-  const toggleMode = async (toNative: boolean) => {
-    setSwitchingMode(true);
-    try {
-      const supabase = createClient();
-      const { error } = await supabase
-        .from("openings")
-        .update({ application_link: toNative ? null : "" })
-        .eq("id", openingId);
-      if (!error) router.refresh();
-    } finally {
-      setSwitchingMode(false);
-    }
-  };
-
-  useEffect(() => {
+  React.useEffect(() => {
     const fetchData = async () => {
       const supabase = createClient();
 
-      const { data: questionsData, error: questionsError } = await supabase
+      const { data: questionsData } = await supabase
         .from("questions")
         .select("*")
         .eq("opening_id", openingId)
         .order("sort_order", { ascending: true });
 
-      const { data: applicationsData, error: applicationsError } =
-        await supabase
-          .from("applications")
-          .select("id, form_responses")
-          .eq("opening_id", openingId);
+      const { data: applicationsData } = (await supabase
+        .from("applications")
+        .select(
+          `
+          id,
+          applicant_id,
+          form_responses,
+          user:users_id (name, email),
+          applicant:applicant_id (name, net_id)
+        `,
+        )
+        .eq("opening_id", openingId)) as { data: Application[] | null };
 
-      if (!questionsError && questionsData) setQuestions(questionsData);
-      if (!applicationsError && applicationsData)
-        setApplications(applicationsData);
+      if (questionsData) setQuestions(questionsData);
+      if (applicationsData) setApplications(applicationsData);
 
       setLoading(false);
     };
 
     fetchData();
   }, [openingId]);
-
-  const getResponsesForQuestion = (questionText: string) => {
-    const { label } = parseQuestionText(questionText);
-    return applications
-      .map((app) => {
-        const responses = app.form_responses || {};
-        return responses[label];
-      })
-      .filter(
-        (response) =>
-          response !== undefined && response !== null && response !== "",
-      );
-  };
 
   const enterEditMode = () => {
     setDraftQuestions(
@@ -434,23 +353,10 @@ export function QuestionsTab({
   if (loading) {
     return (
       <Box py="xl" ta="center">
-        <Loader size="sm" />
+        <Text c="dimmed">Loading questions...</Text>
       </Box>
     );
   }
-
-  const modeControl = (
-    <SegmentedControl
-      value={isNativeForm ? "native" : "external"}
-      onChange={(val) => toggleMode(val === "native")}
-      disabled={switchingMode}
-      data={[
-        { label: "Native Form", value: "native" },
-        { label: "External Link", value: "external" },
-      ]}
-      size="sm"
-    />
-  );
 
   // Edit mode
   if (isEditMode) {
@@ -517,56 +423,108 @@ export function QuestionsTab({
   }
 
   // View mode
+  const getResponsesForQuestion = (questionText: string) => {
+    const { label } = parseQuestionText(questionText);
+    const filtered = applications
+      .filter((app) => {
+        const query = searchQuery.toLowerCase();
+        if (!query) return true;
+        const userData = app.user || app.applicant;
+        const userEmail =
+          app.user?.email || `${app.applicant?.net_id}@rice.edu`;
+        return (
+          userData?.name?.toLowerCase().includes(query) ||
+          userEmail?.toLowerCase().includes(query) ||
+          app.applicant?.net_id?.toLowerCase().includes(query)
+        );
+      })
+      .map((app) => {
+        const userData = app.user || app.applicant;
+        const responses = app.form_responses || {};
+        return {
+          applicantName: anonymousView
+            ? `Applicant ${applications.indexOf(app) + 1}`
+            : userData?.name || "Unknown",
+          response: responses[label],
+          email: app.user?.email || `${app.applicant?.net_id}@rice.edu`,
+        };
+      })
+      .filter(
+        ({ response }) =>
+          response !== undefined && response !== null && response !== "",
+      );
+    return filtered;
+  };
+
   return (
-    <Stack gap="sm" py="md">
-      <Group justify="space-between" align="center" mb="xs">
-        {modeControl}
-        {isNativeForm && (
-          <Button variant="outline" size="sm" onClick={enterEditMode}>
-            Edit Form
-          </Button>
-        )}
+    <Stack gap="md">
+      {/* Toolbar */}
+      <Group gap="sm" wrap="nowrap" align="center">
+        <TextInput
+          placeholder="Search applicants by name"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.currentTarget.value)}
+          leftSection={<SearchMd width={16} height={16} />}
+          radius="xl"
+          style={{ flex: 1 }}
+        />
+        <Group gap="xs" wrap="nowrap">
+          <Text size="sm" c="dimmed" style={{ whiteSpace: "nowrap" }}>
+            Anonymous view
+          </Text>
+          <Switch
+            checked={anonymousView}
+            onChange={(e) => setAnonymousView(e.currentTarget.checked)}
+            size="sm"
+          />
+        </Group>
+        <Group gap={4} wrap="nowrap" style={{ cursor: "pointer" }}>
+          <Text size="sm" c="dimmed" style={{ whiteSpace: "nowrap" }}>
+            Filter
+          </Text>
+          <FilterLines width={16} height={16} />
+        </Group>
+        <Button color="dark" radius="xl" size="sm">
+          Submit results
+        </Button>
+        <Button variant="outline" size="sm" onClick={enterEditMode}>
+          Edit Form
+        </Button>
       </Group>
 
-      {!isNativeForm ? (
-        <ExternalLinkMode
-          applicationLink={applicationLink ?? ""}
-          openingId={openingId}
-        />
-      ) : questions.length === 0 ? (
+      {/* Questions list */}
+      {questions.length === 0 ? (
         <Box py="xl" ta="center">
           <Text c="dimmed" size="sm">
-            No questions configured. Click &ldquo;Edit Form&rdquo; to build your
-            form.
+            No questions configured.
           </Text>
         </Box>
       ) : (
-        questions.map((question, index) => {
-          const { label } = parseQuestionText(question.question_text);
-          const responses = getResponsesForQuestion(question.question_text);
-          const isExpanded = selectedQuestionId === question.id;
+        <Stack gap={0}>
+          {questions.map((question, index) => {
+            const { label } = parseQuestionText(question.question_text);
+            const responses = getResponsesForQuestion(question.question_text);
+            const isExpanded = selectedQuestionId === question.id;
 
-          return (
-            <Box
-              key={question.id}
-              style={{ borderBottom: "1px solid var(--mantine-color-gray-2)" }}
-            >
+            return (
               <Box
-                py="sm"
-                px="xs"
-                style={{ cursor: "pointer" }}
-                onClick={() =>
-                  setSelectedQuestionId(isExpanded ? null : question.id)
-                }
+                key={question.id}
+                style={{
+                  borderBottom: "1px solid var(--mantine-color-gray-2)",
+                }}
               >
-                <Group justify="space-between" gap="md">
-                  <Box style={{ flex: 1 }}>
-                    <Text size="xs" c="dimmed" mb={4}>
-                      Question {index + 1} of {questions.length}
-                    </Text>
-                    <Group gap="xs" align="center">
+                <Box
+                  py="md"
+                  px="md"
+                  style={{ cursor: "pointer" }}
+                  onClick={() =>
+                    setSelectedQuestionId(isExpanded ? null : question.id)
+                  }
+                >
+                  <Group justify="space-between" gap="md">
+                    <Group gap="xs" align="center" style={{ flex: 1 }}>
                       <Text size="sm" fw={500}>
-                        {label}
+                        {index + 1}. {label}
                       </Text>
                       {question.is_required && (
                         <Text size="xs" c="red">
@@ -574,46 +532,57 @@ export function QuestionsTab({
                         </Text>
                       )}
                     </Group>
-                  </Box>
-                  <ChevronRight
-                    width={18}
-                    height={18}
-                    style={{
-                      color: "var(--mantine-color-gray-5)",
-                      flexShrink: 0,
-                      transform: isExpanded ? "rotate(90deg)" : "none",
-                      transition: "transform 150ms",
-                    }}
-                  />
-                </Group>
-              </Box>
+                    <ChevronRight
+                      width={18}
+                      height={18}
+                      style={{
+                        color: "var(--mantine-color-gray-5)",
+                        flexShrink: 0,
+                        transform: isExpanded ? "rotate(90deg)" : "none",
+                        transition: "transform 150ms",
+                      }}
+                    />
+                  </Group>
+                </Box>
 
-              <Collapse expanded={isExpanded}>
-                <Stack gap="xs" px="md" pb="sm">
-                  {responses.length > 0 ? (
-                    responses.map((response, idx) => (
-                      <Box
-                        key={idx}
-                        p="sm"
-                        style={{
-                          background: "var(--mantine-color-gray-0)",
-                          borderRadius: "var(--mantine-radius-md)",
-                          fontSize: 14,
-                        }}
+                <Collapse expanded={isExpanded}>
+                  <Stack gap="xs" px="md" pb="md">
+                    {responses.length > 0 ? (
+                      responses.map((item, idx) => (
+                        <Box
+                          key={idx}
+                          p="sm"
+                          style={{
+                            background: "var(--mantine-color-gray-0)",
+                            borderRadius: "var(--mantine-radius-md)",
+                            fontSize: 14,
+                          }}
+                        >
+                          <Text size="sm" fw={500} mb="xs">
+                            {item.applicantName}
+                          </Text>
+                          <Text size="sm" c="dimmed">
+                            {String(item.response)}
+                          </Text>
+                        </Box>
+                      ))
+                    ) : (
+                      <Text
+                        size="sm"
+                        c="dimmed"
+                        ta="center"
+                        py="sm"
+                        fs="italic"
                       >
-                        {String(response)}
-                      </Box>
-                    ))
-                  ) : (
-                    <Text size="sm" c="dimmed" ta="center" py="sm" fs="italic">
-                      No responses yet
-                    </Text>
-                  )}
-                </Stack>
-              </Collapse>
-            </Box>
-          );
-        })
+                        No responses yet
+                      </Text>
+                    )}
+                  </Stack>
+                </Collapse>
+              </Box>
+            );
+          })}
+        </Stack>
       )}
     </Stack>
   );

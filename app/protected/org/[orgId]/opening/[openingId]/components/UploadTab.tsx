@@ -94,7 +94,13 @@ export function UploadTab() {
             </Stack>
 
             <Stack gap="md">
-              <Card withBorder radius="md" p="lg" style={{ cursor: "default" }}>
+              <Card
+                radius="lg"
+                shadow="sm"
+                withBorder={false}
+                p="lg"
+                style={{ cursor: "default" }}
+              >
                 <Group gap="md">
                   <Box
                     style={{
@@ -131,8 +137,9 @@ export function UploadTab() {
               </Card>
 
               <Card
-                withBorder
-                radius="md"
+                radius="lg"
+                shadow="sm"
+                withBorder={false}
                 p="lg"
                 style={{ cursor: "pointer" }}
                 onClick={() => wizard.setCurrentStep(2)}

@@ -40,7 +40,11 @@ export function OverviewTab({ applicants }: OverviewTabProps) {
     <Stack gap="lg" py="lg">
       {/* 4 Stat cards */}
       <SimpleGrid cols={{ base: 1, sm: 4 }} spacing="md">
-        <Card radius="md" p="md">
+        <Card
+          radius="lg"
+          p="md"
+          style={{ border: "1px solid var(--mantine-color-gray-2)" }}
+        >
           <Text size="xs" fw={600} tt="uppercase" c="dimmed" mb="xs">
             Submissions
           </Text>
@@ -49,7 +53,11 @@ export function OverviewTab({ applicants }: OverviewTabProps) {
           </Text>
         </Card>
 
-        <Card radius="md" p="md">
+        <Card
+          radius="lg"
+          p="md"
+          style={{ border: "1px solid var(--mantine-color-gray-2)" }}
+        >
           <Text size="xs" fw={600} tt="uppercase" c="dimmed" mb="xs">
             Accepted
           </Text>
@@ -58,7 +66,11 @@ export function OverviewTab({ applicants }: OverviewTabProps) {
           </Text>
         </Card>
 
-        <Card radius="md" p="md">
+        <Card
+          radius="lg"
+          p="md"
+          style={{ border: "1px solid var(--mantine-color-gray-2)" }}
+        >
           <Text size="xs" fw={600} tt="uppercase" c="dimmed" mb="xs">
             Rejected
           </Text>
@@ -67,7 +79,11 @@ export function OverviewTab({ applicants }: OverviewTabProps) {
           </Text>
         </Card>
 
-        <Card radius="md" p="md">
+        <Card
+          radius="lg"
+          p="md"
+          style={{ border: "1px solid var(--mantine-color-gray-2)" }}
+        >
           <Text size="xs" fw={600} tt="uppercase" c="dimmed" mb="xs">
             Acceptance Rate
           </Text>
@@ -87,7 +103,11 @@ export function OverviewTab({ applicants }: OverviewTabProps) {
         >
           Recent Feedback
         </Text>
-        <Card radius="md" p="xl">
+        <Card
+          radius="lg"
+          p="xl"
+          style={{ border: "1px solid var(--mantine-color-gray-2)" }}
+        >
           <Text size="sm" c="dimmed" ta="center">
             No feedback yet
           </Text>

@@ -151,7 +151,7 @@ export default async function OpeningOverviewPage({
   };
 
   return (
-    <Stack gap="lg" style={{ flex: 1, width: "100%", maxWidth: 1024 }}>
+    <Stack gap="lg" style={{ flex: 1, width: "100%" }}>
       {/* Breadcrumb */}
       <Breadcrumb
         items={[
@@ -164,7 +164,7 @@ export default async function OpeningOverviewPage({
       />
 
       {/* Header card */}
-      <Card radius="lg" shadow="sm" p="xl">
+      <Card radius="lg" shadow="sm" withBorder={false} p="xl">
         <Group justify="space-between" align="flex-start">
           <Stack gap="xs" style={{ flex: 1 }}>
             <Text fw={700} size="xl">
@@ -195,13 +195,21 @@ export default async function OpeningOverviewPage({
         </Group>
       </Card>
 
-      {/* Tabs */}
-      <Suspense fallback={<Box h={48} />}>
-        <OpeningTabs useNativeForm={!openingData?.application_link} />
-      </Suspense>
-
-      {/* Tab content */}
-      <Box style={{ flex: 1 }}>{renderTabContent()}</Box>
+      {/* Tabs and content */}
+      <Card
+        radius="lg"
+        shadow="sm"
+        withBorder={false}
+        p={0}
+        style={{ flex: 1 }}
+      >
+        <Box px="xl" pt="xl" pb="sm">
+          <Suspense fallback={<Box h={32} />}>
+            <OpeningTabs useNativeForm={!openingData?.application_link} />
+          </Suspense>
+        </Box>
+        <Box px="xl">{renderTabContent()}</Box>
+      </Card>
     </Stack>
   );
 }

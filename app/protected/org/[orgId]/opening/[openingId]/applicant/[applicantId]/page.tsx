@@ -20,11 +20,11 @@ import { ApplicantTabs } from "./components/ApplicantTabs";
 import { CommentsSidebar } from "@/app/protected/org/[orgId]/opening/[openingId]/applicant/[applicantId]/components/comments-sidebar";
 import { InterviewTab } from "@/app/protected/org/[orgId]/opening/[openingId]/applicant/[applicantId]/components/InterviewTab";
 import {
-  SummaryTab,
   computeRubricSummary,
   type ReviewerFeedbackPreview,
   type RubricCriterion,
   type RubricSummaryMetrics,
+  SummaryTab,
 } from "@/app/protected/org/[orgId]/opening/[openingId]/applicant/[applicantId]/components/SummaryTab";
 
 interface ApplicationData {
@@ -409,18 +409,18 @@ export default function ApplicantReviewPage() {
           Back to Opening
         </Button>
 
-        <Card radius="lg" shadow="sm" p="xl">
+        <Card radius="lg" shadow="sm" withBorder={false} p="xl">
           <Group justify="space-between" align="flex-start">
             <Box>
               <Text size="xl" fw={700} mb={4}>
                 {applicantName}
               </Text>
-              <Group gap="xs">
-                <Text size="md" c="dimmed">
+              <Group gap="xs" wrap="wrap">
+                <Text size="sm" c="dimmed">
                   {applicantEmail}
                 </Text>
                 <Text c="dimmed">•</Text>
-                <Text size="md" c="dimmed">
+                <Text size="sm" c="dimmed">
                   {applicantMajor}
                 </Text>
               </Group>
@@ -433,10 +433,18 @@ export default function ApplicantReviewPage() {
             <Loader size="sm" />
           </Box>
         ) : (
-          <>
-            <ApplicantTabs />
-            <Box style={{ flex: 1 }}>{renderTabContent()}</Box>
-          </>
+          <Card
+            radius="lg"
+            shadow="sm"
+            withBorder={false}
+            p={0}
+            style={{ flex: 1 }}
+          >
+            <Box px="xl" pt="xl" pb="sm">
+              <ApplicantTabs />
+            </Box>
+            <Box px="xl">{renderTabContent()}</Box>
+          </Card>
         )}
       </Stack>
 
