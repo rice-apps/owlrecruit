@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import {
   Alert,
   Box,
@@ -114,7 +114,7 @@ function ResumeViewer({ resumeUrl }: { resumeUrl: string | null }) {
 
 export default function ApplicantReviewPage() {
   const params = useParams();
-  const router = useRouter();
+
   const searchParams = useSearchParams();
   const { orgId, openingId, applicantId } = params as {
     orgId: string;

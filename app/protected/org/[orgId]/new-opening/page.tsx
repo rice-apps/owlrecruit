@@ -16,10 +16,10 @@ import {
   ActionIcon,
   Table,
   Box,
-  Card,
   Badge,
   Anchor,
   Title,
+  Card,
 } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
 import { notifications } from "@mantine/notifications";
@@ -63,9 +63,7 @@ export default function NewOpeningPage() {
   >("native");
   const [applicationLink, setApplicationLink] = React.useState("");
   const [closesAt, setClosesAt] = React.useState<string | null>(null);
-  const [status, setStatus] = React.useState<"draft" | "open" | "closed">(
-    "draft",
-  );
+  const [status] = React.useState<"draft" | "open" | "closed">("draft");
 
   const [rubricOpen, setRubricOpen] = React.useState(false);
   const [rubric, setRubric] = React.useState<RubricRow[]>([]);
@@ -193,7 +191,7 @@ export default function NewOpeningPage() {
   };
 
   return (
-    <Stack gap="xl" maw={800}>
+    <Stack gap="lg" style={{ width: "100%" }}>
       <Breadcrumb
         items={[
           { label: orgName || "Organization", href: `/protected/org/${orgId}` },
@@ -201,29 +199,29 @@ export default function NewOpeningPage() {
         ]}
       />
 
-      <Card radius="lg" shadow="sm" p="xl">
-        <Title order={2} mb={4}>
-          Create position
-        </Title>
-        <Text c="dimmed" size="sm" mb="lg">
-          Add an opening to your organization.
-        </Text>
+      <Card radius="lg" shadow="sm" withBorder={false} p="xl">
+        <Stack gap="xs" mb="xl">
+          <Title order={3}>Create position</Title>
+          <Text c="dimmed" size="sm">
+            Add an opening to your organization.
+          </Text>
+        </Stack>
 
         <form onSubmit={handleSubmit}>
           <Stack gap="lg">
-            {/* Title */}
+            {/* Position Name */}
             <TextInput
-              label="Position Title"
+              label="Position Name"
               required
               value={title}
               onChange={(e) => setTitle(e.currentTarget.value)}
               placeholder="e.g. Software Developer"
             />
 
-            {/* Application Method */}
+            {/* Application Link */}
             <div>
               <Text size="sm" fw={500} mb="xs">
-                Application Method
+                Application Link
               </Text>
               <SegmentedControl
                 value={applicationMethod}
@@ -236,9 +234,10 @@ export default function NewOpeningPage() {
                   { label: "Native Form", value: "native" },
                   { label: "External Link", value: "external" },
                 ]}
+                mb="xs"
               />
               {applicationMethod === "native" ? (
-                <Text size="xs" c="dimmed" mt="xs">
+                <Text size="xs" c="dimmed">
                   Build a form in the Questions tab after creating this opening.
                 </Text>
               ) : (
@@ -247,7 +246,6 @@ export default function NewOpeningPage() {
                   value={applicationLink}
                   onChange={(e) => setApplicationLink(e.currentTarget.value)}
                   placeholder="https://forms.google.com/..."
-                  mt="xs"
                 />
               )}
             </div>
@@ -271,29 +269,46 @@ export default function NewOpeningPage() {
               clearable
             />
 
-            {/* Opening Status */}
+            {/* Applicant Stages */}
             <div>
               <Text size="sm" fw={500} mb="xs">
-                Opening Status
+                Applicant Stages
               </Text>
-              <SegmentedControl
-                value={status}
-                onChange={(val) =>
-                  setStatus(val as "draft" | "open" | "closed")
-                }
-                data={[
-                  { label: "Draft", value: "draft" },
-                  { label: "Open", value: "open" },
-                  { label: "Closed", value: "closed" },
-                ]}
-              />
+              <Box
+                p="md"
+                style={{
+                  border: "1px solid var(--mantine-color-gray-2)",
+                  borderRadius: "var(--mantine-radius-lg)",
+                }}
+              >
+                <Group gap="xs">
+                  {[
+                    { label: "Interview", color: "yellow" },
+                    { label: "Rejected", color: "red" },
+                    { label: "Accepted", color: "green" },
+                    { label: "Pending", color: "gray" },
+                  ].map((stage) => (
+                    <Badge
+                      key={stage.label}
+                      color={stage.color}
+                      variant={stage.label === "Pending" ? "outline" : "filled"}
+                      radius="xl"
+                    >
+                      {stage.label}
+                    </Badge>
+                  ))}
+                  <Button size="xs" color="dark" radius="xl" variant="filled">
+                    Add stage +
+                  </Button>
+                </Group>
+              </Box>
             </div>
 
             {/* Assign Reviewers */}
             {reviewerOptions.length > 0 && (
               <MultiSelect
                 label="Assign Reviewers"
-                placeholder="Select reviewers..."
+                placeholder="Search members by name"
                 data={reviewerOptions}
                 value={selectedReviewers}
                 onChange={setSelectedReviewers}
@@ -304,32 +319,33 @@ export default function NewOpeningPage() {
 
             {/* Rubric */}
             <div>
-              <Button
-                type="button"
-                variant="subtle"
-                color="owlTeal"
-                size="sm"
-                onClick={() => {
-                  if (rubricOpen) {
-                    setRubric([]);
-                    setRubricOpen(false);
-                  } else {
+              <Text size="sm" fw={500} mb={4}>
+                Add rubric
+              </Text>
+              <Text size="xs" c="dimmed" mb="sm">
+                Define what you&apos;re grading and how many points each part is
+                worth.
+              </Text>
+              {!rubricOpen ? (
+                <Button
+                  type="button"
+                  color="dark"
+                  radius="xl"
+                  size="sm"
+                  onClick={() => {
                     setRubricOpen(true);
                     if (rubric.length === 0) {
                       setRubric([{ name: "", max_val: 10, description: "" }]);
                     }
-                  }
-                }}
-              >
-                {rubricOpen ? "Delete Rubric" : "Add Rubric"}
-              </Button>
-
-              {rubricOpen && (
+                  }}
+                >
+                  Add rubric +
+                </Button>
+              ) : (
                 <Box
-                  mt="sm"
                   style={{
-                    border: "1px solid var(--mantine-color-gray-3)",
-                    borderRadius: 12,
+                    border: "1px solid var(--mantine-color-gray-2)",
+                    borderRadius: "var(--mantine-radius-lg)",
                     padding: "1rem",
                   }}
                 >
@@ -440,51 +456,38 @@ export default function NewOpeningPage() {
                         )}
                       </Text>
                     </Text>
-                    <Button
-                      type="button"
-                      variant="subtle"
-                      color="owlTeal"
-                      size="xs"
-                      onClick={() =>
-                        setRubric([
-                          ...rubric,
-                          { name: "", max_val: 10, description: "" },
-                        ])
-                      }
-                    >
-                      Add criterion +
-                    </Button>
+                    <Group gap="xs">
+                      <Button
+                        type="button"
+                        variant="subtle"
+                        color="owlTeal"
+                        size="xs"
+                        onClick={() =>
+                          setRubric([
+                            ...rubric,
+                            { name: "", max_val: 10, description: "" },
+                          ])
+                        }
+                      >
+                        Add criterion +
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="subtle"
+                        color="red"
+                        size="xs"
+                        onClick={() => {
+                          setRubric([]);
+                          setRubricOpen(false);
+                        }}
+                      >
+                        Delete rubric
+                      </Button>
+                    </Group>
                   </Group>
                 </Box>
               )}
             </div>
-
-            {/* Applicant Stages — display only for MVP */}
-            <Box>
-              <Text size="sm" fw={500} mb="xs">
-                Applicant Stages
-              </Text>
-              <Group gap="xs" mb="xs">
-                {[
-                  { label: "Interview", color: "yellow" },
-                  { label: "Rejected", color: "red" },
-                  { label: "Accepted", color: "green" },
-                  { label: "Pending", color: "gray" },
-                ].map((stage) => (
-                  <Badge
-                    key={stage.label}
-                    color={stage.color}
-                    variant={stage.label === "Pending" ? "outline" : "filled"}
-                    radius="xl"
-                  >
-                    {stage.label}
-                  </Badge>
-                ))}
-              </Group>
-              <Button size="xs" color="dark" radius="xl" variant="filled">
-                Add stage +
-              </Button>
-            </Box>
 
             {error && (
               <Alert color="red" icon={<AlertCircle width={16} height={16} />}>

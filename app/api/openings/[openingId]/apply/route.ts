@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { ensureApplicant } from "@/lib/csv-upload-utils";
 import { parseQuestionText } from "@/lib/question-utils";
+import { logger } from "@/lib/logger";
 
 type Params = Promise<{ openingId: string }>;
 
@@ -100,19 +101,34 @@ export async function POST(request: Request, { params }: { params: Params }) {
     ...formResponses,
   };
 
-  const { error: insertError } = await supabase.from("applications").upsert(
-    {
-      opening_id: openingId,
-      applicant_id: applicant.id,
-      users_id: user.id,
-      form_responses: enrichedResponses,
-      status: "Applied",
-    },
-    { onConflict: "opening_id, applicant_id", ignoreDuplicates: true },
-  );
+  const { error: insertError } = await supabase.from("applications").insert({
+    opening_id: openingId,
+    applicant_id: applicant.id,
+    users_id: user.id,
+    form_responses: enrichedResponses,
+    status: "Applied",
+  });
 
   if (insertError) {
-    return NextResponse.json({ error: insertError.message }, { status: 500 });
+    if (
+      insertError.code === "23505" ||
+      insertError.message.includes("duplicate key")
+    ) {
+      return NextResponse.json(
+        {
+          error: "You have already submitted an application for this opening.",
+        },
+        { status: 409 },
+      );
+    }
+    logger.error("Application insert error:", insertError);
+    return NextResponse.json(
+      {
+        error:
+          "An unexpected error occurred while submitting your application.",
+      },
+      { status: 500 },
+    );
   }
 
   return NextResponse.json({ success: true }, { status: 201 });

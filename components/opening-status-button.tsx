@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Group } from "@mantine/core";
-import { OpeningStatusBadge } from "@/components/StatusBadge";
+import { Button } from "@mantine/core";
+
 import type { OpeningStatus } from "@/types/app";
 
 interface OpeningStatusButtonProps {
