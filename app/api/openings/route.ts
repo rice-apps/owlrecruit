@@ -69,7 +69,30 @@ export async function GET(request: Request) {
       );
     }
 
-    return NextResponse.json(openings);
+    // Attach the current user's application status to each opening (if logged in)
+    let applicationStatusMap: Record<string, string> = {};
+    const { data: authData } = await supabase.auth.getClaims();
+    if (authData?.claims && openings && openings.length > 0) {
+      const openingIds = openings.map((o) => o.id);
+      const { data: userApplications } = await supabase
+        .from("applications")
+        .select("opening_id, status")
+        .eq("user_id", authData.claims.sub)
+        .in("opening_id", openingIds);
+
+      if (userApplications) {
+        applicationStatusMap = Object.fromEntries(
+          userApplications.map((a) => [a.opening_id, a.status]),
+        );
+      }
+    }
+
+    const enriched = (openings ?? []).map((o) => ({
+      ...o,
+      applicationStatus: applicationStatusMap[o.id] ?? null,
+    }));
+
+    return NextResponse.json(enriched);
   } catch (error) {
     logger.error("Error in openings API GET:", error);
     return NextResponse.json(

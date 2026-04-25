@@ -33,11 +33,12 @@ interface OpeningsGridProps {
   isAdmin: boolean;
 }
 
-type FilterStatus = "open" | "closed";
+type FilterStatus = "open" | "closed" | "draft";
 
 const FILTER_OPTIONS: { label: string; value: FilterStatus }[] = [
   { label: "Open", value: "open" },
   { label: "Closed", value: "closed" },
+  { label: "Draft", value: "draft" },
 ];
 
 export function OpeningsGrid({
@@ -70,9 +71,11 @@ export function OpeningsGrid({
 
   return (
     <Stack gap="md">
-      {/* Open / Closed toggle */}
+      {/* Open / Closed / Draft toggle */}
       <Group gap="xs">
-        {FILTER_OPTIONS.map((option) => (
+        {FILTER_OPTIONS.filter(
+          (option) => option.value !== "draft" || isAdmin,
+        ).map((option) => (
           <Button
             key={option.value}
             size="xs"

@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { Text, Alert, ActionIcon } from "@mantine/core";
+import { Text, Alert, ActionIcon, Stack } from "@mantine/core";
 import { Edit02 } from "@untitled-ui/icons-react";
 import { EditMembersDialog } from "@/components/edit-members-dialog";
 import {
@@ -102,18 +102,7 @@ export default async function ReviewerOrgPage({
     openings?.filter((o) => o.status === "open").length ?? 0;
 
   return (
-    <div
-      style={{
-        flex: 1,
-        width: "100%",
-        maxWidth: 960,
-        minWidth: 0,
-        display: "flex",
-        flexDirection: "column",
-        gap: "1.5rem",
-        paddingBottom: "6rem",
-      }}
-    >
+    <Stack gap="lg" pb="xl" style={{ flex: 1, width: "100%", minWidth: 0 }}>
       <OrgPageHeader
         orgId={orgId}
         displayOrgName={displayOrgName}
@@ -200,6 +189,6 @@ export default async function ReviewerOrgPage({
           orgName={displayOrgName}
         />
       </section>
-    </div>
+    </Stack>
   );
 }

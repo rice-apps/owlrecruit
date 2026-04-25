@@ -2,13 +2,19 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Button, Group, Stack, Table, Text, TextInput } from "@mantine/core";
+import {
+  Button,
+  Checkbox,
+  Group,
+  Stack,
+  Switch,
+  Table,
+  Text,
+  TextInput,
+} from "@mantine/core";
 import { ApplicationStatusBadge } from "@/components/StatusBadge";
-import { SearchMd } from "@untitled-ui/icons-react";
+import { FilterLines, SearchMd } from "@untitled-ui/icons-react";
 import type { ApplicationStatus } from "@/types/app";
-
-type SortField = "name" | "email" | "status" | "date";
-type SortDirection = "asc" | "desc";
 
 interface Applicant {
   id: string;
@@ -34,90 +40,44 @@ export function ApplicantsList({
   const [searchQuery, setSearchQuery] = React.useState("");
   const [anonymousView, setAnonymousView] = React.useState(false);
 
-  const [sortField, setSortField] = React.useState<SortField>("name");
-  const [sortDirection, setSortDirection] =
-    React.useState<SortDirection>("asc");
-
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDirection((d) => (d === "asc" ? "desc" : "asc"));
-    } else {
-      setSortField(field);
-      setSortDirection("asc");
-    }
-  };
-
   const filteredApplicants = React.useMemo(() => {
-    let result = applicants;
-
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        (a) =>
-          a.name.toLowerCase().includes(query) ||
-          a.email.toLowerCase().includes(query) ||
-          a.netId.toLowerCase().includes(query),
-      );
-    }
-
-    result = [...result].sort((a, b) => {
-      let cmp = 0;
-      switch (sortField) {
-        case "name":
-          cmp = a.name.localeCompare(b.name);
-          break;
-        case "email":
-          cmp = a.email.localeCompare(b.email);
-          break;
-        case "status":
-          cmp = a.status.localeCompare(b.status);
-          break;
-        case "date":
-          cmp = (a.createdAt || "").localeCompare(b.createdAt || "");
-          break;
-      }
-      return sortDirection === "asc" ? cmp : -cmp;
-    });
-
-    return result;
-  }, [applicants, searchQuery, sortField, sortDirection]);
-
-  const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) return null;
-    return (
-      <span style={{ marginLeft: 4, fontSize: 10 }}>
-        {sortDirection === "asc" ? "▲" : "▼"}
-      </span>
+    if (!searchQuery.trim()) return applicants;
+    const query = searchQuery.toLowerCase();
+    return applicants.filter(
+      (a) =>
+        a.name.toLowerCase().includes(query) ||
+        a.email.toLowerCase().includes(query) ||
+        a.netId.toLowerCase().includes(query),
     );
-  };
-
-  const thStyle: React.CSSProperties = {
-    cursor: "pointer",
-    userSelect: "none",
-    whiteSpace: "nowrap",
-  };
+  }, [applicants, searchQuery]);
 
   return (
     <Stack gap="md">
       {/* Toolbar */}
-      <Group gap="sm" wrap="nowrap">
+      <Group gap="sm" wrap="nowrap" align="center">
         <TextInput
-          placeholder="Search applicants by name..."
+          placeholder="Search applicants by name"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.currentTarget.value)}
           leftSection={<SearchMd width={16} height={16} />}
+          radius="xl"
           style={{ flex: 1 }}
         />
         <Group gap="xs" wrap="nowrap">
           <Text size="sm" c="dimmed" style={{ whiteSpace: "nowrap" }}>
             Anonymous view
           </Text>
-          <input
-            type="checkbox"
+          <Switch
             checked={anonymousView}
-            onChange={(e) => setAnonymousView(e.target.checked)}
-            style={{ cursor: "pointer" }}
+            onChange={(e) => setAnonymousView(e.currentTarget.checked)}
+            size="sm"
           />
+        </Group>
+        <Group gap={4} wrap="nowrap" style={{ cursor: "pointer" }}>
+          <Text size="sm" c="dimmed" style={{ whiteSpace: "nowrap" }}>
+            Filter
+          </Text>
+          <FilterLines width={16} height={16} />
         </Group>
         <Button color="dark" radius="xl" size="sm">
           Submit results
@@ -125,21 +85,15 @@ export function ApplicantsList({
       </Group>
 
       {/* Applicants table */}
-      <Table withTableBorder withColumnBorders={false} highlightOnHover>
+      <Table withTableBorder={false} highlightOnHover>
         <Table.Thead>
           <Table.Tr>
-            <Table.Th style={thStyle} onClick={() => handleSort("name")}>
-              Applicant Name <SortIcon field="name" />
+            <Table.Th w={40}>
+              <Checkbox size="sm" />
             </Table.Th>
-            <Table.Th style={thStyle} onClick={() => handleSort("email")}>
-              NetID <SortIcon field="email" />
-            </Table.Th>
-            <Table.Th style={thStyle} onClick={() => handleSort("status")}>
-              Status <SortIcon field="status" />
-            </Table.Th>
-            <Table.Th style={thStyle} onClick={() => handleSort("date")}>
-              Applied <SortIcon field="date" />
-            </Table.Th>
+            <Table.Th>Name</Table.Th>
+            <Table.Th>Email</Table.Th>
+            <Table.Th>Status</Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
@@ -157,6 +111,9 @@ export function ApplicantsList({
             filteredApplicants.map((applicant) => (
               <Table.Tr key={applicant.id}>
                 <Table.Td>
+                  <Checkbox size="sm" />
+                </Table.Td>
+                <Table.Td>
                   <Link
                     href={`/protected/org/${orgId}/opening/${openingId}/applicant/${applicant.applicationId}`}
                     style={{
@@ -166,24 +123,17 @@ export function ApplicantsList({
                     }}
                   >
                     {anonymousView
-                      ? `Applicant ${applicant.id.slice(0, 8)}`
+                      ? `Applicant ${filteredApplicants.indexOf(applicant) + 1}`
                       : applicant.name}
                   </Link>
                 </Table.Td>
                 <Table.Td>
                   <Text size="sm" c="dimmed">
-                    {anonymousView ? "***" : applicant.netId}
+                    {anonymousView ? "***" : applicant.email}
                   </Text>
                 </Table.Td>
                 <Table.Td>
                   <ApplicationStatusBadge status={applicant.status} />
-                </Table.Td>
-                <Table.Td>
-                  <Text size="sm" c="dimmed">
-                    {applicant.createdAt
-                      ? new Date(applicant.createdAt).toLocaleDateString()
-                      : "-"}
-                  </Text>
                 </Table.Td>
               </Table.Tr>
             ))

@@ -14,6 +14,7 @@ import {
   TextInput,
 } from "@mantine/core";
 import { SearchMd } from "@untitled-ui/icons-react";
+import { ApplicationStatusBadge } from "@/components/StatusBadge";
 import { formatDate } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 
@@ -27,6 +28,7 @@ interface Opening {
   application_link: string | null;
   closes_at: string | null;
   org: { name: string; logo_url?: string | null };
+  applicationStatus: string | null;
 }
 
 export function DiscoverFeed() {
@@ -102,7 +104,7 @@ export function DiscoverFeed() {
           {filtered.map((opening) => (
             <Link
               key={opening.id}
-              href={`/protected/org/${opening.org_id}`}
+              href={`/apply/${opening.id}`}
               style={{ textDecoration: "none" }}
             >
               <Card
@@ -132,6 +134,13 @@ export function DiscoverFeed() {
                 <Text size="sm" c="dimmed">
                   {opening.org.name}
                 </Text>
+
+                {opening.applicationStatus && (
+                  <ApplicationStatusBadge
+                    status={opening.applicationStatus}
+                    size="xs"
+                  />
+                )}
 
                 <Text
                   size="xs"

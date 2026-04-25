@@ -2,17 +2,22 @@
 
 import { useEffect, useState } from "react";
 import {
+  Box,
+  Button,
+  Center,
+  Alert,
+  Group,
+  Loader,
   SimpleGrid,
   Stack,
   Text,
-  Title,
-  Loader,
-  Center,
-  Alert,
+  TextInput,
 } from "@mantine/core";
-import { AlertCircle } from "@untitled-ui/icons-react";
-import ApplicationCard from "./components/ApplicationCard";
-import { SearchInput } from "@/components/SearchInput";
+import { AlertCircle, SearchMd } from "@untitled-ui/icons-react";
+import {
+  ApplicationCard,
+  type ApplicationWithDetails,
+} from "@/components/application-card";
 import { logger } from "@/lib/logger";
 import type { Enums } from "@/types/supabase";
 
@@ -27,11 +32,29 @@ interface Application {
   opening_status?: Enums<"opening_status">;
 }
 
+function toCardProps(app: Application): ApplicationWithDetails {
+  return {
+    id: app.opening_id,
+    org_id: app.org_id,
+    status: app.status,
+    created_at: app.created_at,
+    opening: {
+      title: app.opening_title ?? "Unknown Position",
+      closes_at: app.closes_at ?? null,
+      org: {
+        name: app.org_name ?? "Unknown Organization",
+        logo_url: null,
+      },
+    },
+  } as unknown as ApplicationWithDetails;
+}
+
 export default function MyApplicationsPage() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<"active" | "inactive">("active");
 
   useEffect(() => {
     async function fetchApplications() {
@@ -71,7 +94,7 @@ export default function MyApplicationsPage() {
     return !app.closes_at || new Date(app.closes_at) >= new Date();
   });
 
-  const past = filtered.filter((app) => {
+  const inactive = filtered.filter((app) => {
     if (
       app.status === "Rejected" ||
       app.status === "Accepted Offer" ||
@@ -81,13 +104,52 @@ export default function MyApplicationsPage() {
     return app.closes_at != null && new Date(app.closes_at) < new Date();
   });
 
+  const shown = activeTab === "active" ? active : inactive;
+
   return (
     <Stack gap="lg">
-      <SearchInput
-        value={searchQuery}
-        onChange={setSearchQuery}
-        placeholder="Search organizations, positions..."
-      />
+      {/* Dark banner */}
+      <Box
+        bg="dark.6"
+        p="xl"
+        style={{ borderRadius: "var(--mantine-radius-xl)" }}
+      >
+        <Text c="white" fw={700} size="xl" mb={4}>
+          My Applications
+        </Text>
+        <Text c="dark.2" size="sm" mb="md">
+          Track the status of your submissions.
+        </Text>
+        <TextInput
+          radius="xl"
+          placeholder="Search applications"
+          leftSection={<SearchMd width={16} height={16} />}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.currentTarget.value)}
+        />
+      </Box>
+
+      {/* Active / Inactive toggle */}
+      <Group gap="xs">
+        <Button
+          radius="xl"
+          size="sm"
+          variant={activeTab === "active" ? "filled" : "outline"}
+          color={activeTab === "active" ? "dark" : "gray"}
+          onClick={() => setActiveTab("active")}
+        >
+          Active
+        </Button>
+        <Button
+          radius="xl"
+          size="sm"
+          variant={activeTab === "inactive" ? "filled" : "outline"}
+          color={activeTab === "inactive" ? "dark" : "gray"}
+          onClick={() => setActiveTab("inactive")}
+        >
+          Inactive
+        </Button>
+      </Group>
 
       {loading && (
         <Center py="xl">
@@ -106,49 +168,26 @@ export default function MyApplicationsPage() {
       )}
 
       {!loading && !error && (
-        <Stack gap="xl">
-          <Stack gap="md">
-            <Title order={3}>My Applications</Title>
-            {active.length > 0 ? (
-              <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing="md">
-                {active.map((app) => (
-                  <ApplicationCard
-                    key={`${app.opening_id}-${app.created_at}`}
-                    application={app}
-                  />
-                ))}
-              </SimpleGrid>
-            ) : (
-              <Text c="dimmed">
-                {searchQuery
-                  ? "No active applications match your search."
-                  : "No active applications found."}
-              </Text>
-            )}
-          </Stack>
-
-          {past.length > 0 && (
-            <Stack gap="md">
-              <Title order={3}>Past Applications</Title>
-              <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing="md">
-                {past.map((app) => (
-                  <ApplicationCard
-                    key={`${app.opening_id}-${app.created_at}`}
-                    application={app}
-                  />
-                ))}
-              </SimpleGrid>
-            </Stack>
-          )}
-
-          {active.length === 0 && past.length === 0 && !searchQuery && (
+        <>
+          {shown.length > 0 ? (
+            <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing="md">
+              {shown.map((app) => (
+                <ApplicationCard
+                  key={`${app.opening_id}-${app.created_at}`}
+                  application={toCardProps(app)}
+                />
+              ))}
+            </SimpleGrid>
+          ) : (
             <Center py="xl">
               <Text c="dimmed">
-                You haven&apos;t submitted any applications yet.
+                {searchQuery
+                  ? "No applications match your search."
+                  : `No ${activeTab} applications found.`}
               </Text>
             </Center>
           )}
-        </Stack>
+        </>
       )}
     </Stack>
   );

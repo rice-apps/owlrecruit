@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { Avatar, Title, Stack, Text } from "@mantine/core";
+import { Avatar, Title, Stack, Text, Paper, Group, Anchor } from "@mantine/core";
 import ProfileForm from "./profileForm";
 import type { OrgMembership } from "./organizations-section";
 
@@ -41,30 +41,37 @@ export default async function ProfilePage() {
   });
 
   return (
-    <Stack maw={640}>
-      <div>
-        <Title order={2}>Profile</Title>
-        <Text c="dimmed" size="sm">
-          Manage your personal information and organization membership.
-        </Text>
-      </div>
+    <Paper radius="lg" shadow="sm" p="xl">
+      <Stack gap="lg">
+        <div>
+          <Title order={2}>Profile</Title>
+          <Text c="dimmed" size="sm">
+            Manage your personal information and organization membership.
+          </Text>
+        </div>
 
-      <Avatar
-        src={avatarUrl || undefined}
-        size={80}
-        radius="xl"
-        color="owlTeal"
-      >
-        {initials}
-      </Avatar>
+        <Group gap="md" align="center">
+          <Avatar
+            src={avatarUrl || undefined}
+            size={80}
+            radius="xl"
+            color="owlTeal"
+          >
+            {initials}
+          </Avatar>
+          <Anchor c="owlTeal.6" size="sm" style={{ cursor: "pointer" }}>
+            Change profile picture
+          </Anchor>
+        </Group>
 
-      <ProfileForm
-        firstName={firstName}
-        lastName={lastName}
-        email={userEmail}
-        userId={userData.user.id}
-        orgMemberships={orgMemberships}
-      />
-    </Stack>
+        <ProfileForm
+          firstName={firstName}
+          lastName={lastName}
+          email={userEmail}
+          userId={userData.user.id}
+          orgMemberships={orgMemberships}
+        />
+      </Stack>
+    </Paper>
   );
 }
