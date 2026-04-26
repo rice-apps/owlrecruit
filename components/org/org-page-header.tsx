@@ -32,16 +32,18 @@ export function OrgPageHeader({
   memberCount,
   openPositionCount,
 }: OrgPageHeaderProps) {
-  const orgInitial = displayOrgName.charAt(0).toUpperCase();
-
   return (
     <Card radius="lg" shadow="sm" p="xl">
       <Group justify="space-between" align="center">
         {/* Left: logo + name + counts */}
         <Group align="center" gap="md">
-          <Avatar src={logoUrl || undefined} radius="md" size={56} color="gray">
-            {orgInitial}
-          </Avatar>
+          <Avatar
+            src={logoUrl || undefined}
+            radius="md"
+            size={56}
+            color="initials"
+            name={displayOrgName}
+          />
           <Stack gap={4}>
             <Group gap="sm" align="center">
               <Text fw={700} size="xl">

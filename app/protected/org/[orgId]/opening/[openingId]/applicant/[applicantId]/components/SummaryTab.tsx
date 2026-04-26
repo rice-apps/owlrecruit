@@ -172,18 +172,6 @@ const formatReviewCount = (count: number): string =>
 const formatScoreValue = (value: number): string =>
   Number.isInteger(value) ? value.toString() : value.toFixed(1);
 
-const getInitials = (name: string): string => {
-  const trimmed = name.trim();
-  if (!trimmed) return "??";
-  return trimmed
-    .split(" ")
-    .filter(Boolean)
-    .map((part) => part[0])
-    .join("")
-    .substring(0, 2)
-    .toUpperCase();
-};
-
 // ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
@@ -300,9 +288,12 @@ export function SummaryTab({
                 }}
               >
                 <Group gap="sm" align="flex-start" wrap="wrap">
-                  <Avatar size={36} color="owlTeal" radius="md">
-                    {getInitials(feedback.author)}
-                  </Avatar>
+                  <Avatar
+                    size={36}
+                    color="initials"
+                    name={feedback.author}
+                    radius="md"
+                  />
                   <Box style={{ flex: 1, minWidth: 0 }}>
                     <Group gap="xs" align="center" mb={2}>
                       <Text size="sm" fw={600}>

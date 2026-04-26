@@ -88,9 +88,12 @@ export default async function MyOrgsPage() {
             >
               <Card radius="lg" withBorder={false} shadow="sm">
                 <Group gap="sm" mb="sm">
-                  <Avatar radius="md" size={44} color="gray">
-                    {org.name.charAt(0).toUpperCase()}
-                  </Avatar>
+                  <Avatar
+                    radius="md"
+                    size={44}
+                    color="initials"
+                    name={org.name}
+                  />
                   <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
                     <Text fw={600} size="sm" truncate>
                       {org.name}

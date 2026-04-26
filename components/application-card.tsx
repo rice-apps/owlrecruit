@@ -30,10 +30,9 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
         src={org.logo_url || undefined}
         radius="md"
         size={48}
-        color="gray"
-      >
-        {org.name.charAt(0).toUpperCase()}
-      </Avatar>
+        color="initials"
+        name={org.name}
+      />
 
       <Text fw={700} size="lg" lh={1.2} mt="sm" mb={4}>
         {opening.title}

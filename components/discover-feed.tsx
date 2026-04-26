@@ -123,10 +123,9 @@ export function DiscoverFeed() {
                   src={opening.org.logo_url || undefined}
                   radius="md"
                   size={48}
-                  color="gray"
-                >
-                  {opening.org.name.charAt(0).toUpperCase()}
-                </Avatar>
+                  color="initials"
+                  name={opening.org.name}
+                />
 
                 <Text fw={700} size="md" mt="sm" lh={1.3}>
                   {opening.title}

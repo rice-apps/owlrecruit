@@ -88,14 +88,6 @@ function NavItem({ icon, label, href, active, collapsed }: NavItemProps) {
 export function AppNavbar({ user, collapsed, onToggle }: AppNavbarProps) {
   const pathname = usePathname();
 
-  const initials =
-    user.name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase() || "?";
-
   const orgHref = "/protected/orgs";
 
   return (
@@ -242,9 +234,13 @@ export function AppNavbar({ user, collapsed, onToggle }: AppNavbarProps) {
               flexShrink: 0,
             }}
           >
-            <Avatar src={user.avatarUrl} radius="xl" size={36} color="owlTeal">
-              {initials}
-            </Avatar>
+            <Avatar
+              src={user.avatarUrl}
+              radius="xl"
+              size={36}
+              color="initials"
+              name={user.name}
+            />
           </Box>
           {!collapsed && (
             <Text

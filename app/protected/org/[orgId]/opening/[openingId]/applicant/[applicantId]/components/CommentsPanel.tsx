@@ -166,14 +166,12 @@ export function CommentsPanel({ orgId, applicantId }: CommentsPanelProps) {
                   }}
                 >
                   <Group gap="sm" align="flex-start" mb="xs">
-                    <Avatar size={32} color="owlTeal" radius="xl">
-                      {(comment.userName || "U")
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .substring(0, 2)
-                        .toUpperCase()}
-                    </Avatar>
+                    <Avatar
+                      size={32}
+                      color="initials"
+                      name={comment.userName || ""}
+                      radius="xl"
+                    />
                     <Box>
                       <Text size="sm" fw={600}>
                         {comment.userName || "Unknown User"}

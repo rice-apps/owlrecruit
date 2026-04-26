@@ -51,15 +51,6 @@ function getInterviewerName(
   return u?.name || "Unknown";
 }
 
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-}
-
 export function InterviewTab({ orgId, applicationId }: InterviewTabProps) {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [records, setRecords] = useState<InterviewRecord[]>([]);
@@ -304,9 +295,12 @@ export function InterviewTab({ orgId, applicationId }: InterviewTabProps) {
                 <Accordion.Item key={record.id} value={record.id}>
                   <Accordion.Control>
                     <Group gap="sm">
-                      <Avatar size={28} radius="xl" color="violet">
-                        {getInitials(name)}
-                      </Avatar>
+                      <Avatar
+                        size={28}
+                        radius="xl"
+                        color="initials"
+                        name={name}
+                      />
                       <Text size="sm" fw={500}>
                         {name}
                       </Text>

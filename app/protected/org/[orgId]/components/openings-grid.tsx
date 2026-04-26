@@ -134,10 +134,8 @@ export function OpeningsGrid({
                 href={`/protected/org/${orgId}/opening/${opening.id}`}
                 style={{ textDecoration: "none", color: "inherit" }}
               >
-                {/* Org initial as avatar */}
-                <Avatar radius="md" size={48} color="gray">
-                  {(opening.title || orgName || "O").charAt(0).toUpperCase()}
-                </Avatar>
+                {/* Org avatar */}
+                <Avatar radius="md" size={48} color="initials" name={orgName} />
 
                 <Text fw={700} size="md" mt="sm" lineClamp={2}>
                   {opening.title || "Untitled Opening"}

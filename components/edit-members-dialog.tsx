@@ -335,9 +335,12 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
                     }}
                   >
                     <Group gap="sm">
-                      <Avatar size={32} radius="md" color="owlTeal">
-                        {user.name.charAt(0).toUpperCase()}
-                      </Avatar>
+                      <Avatar
+                        size={32}
+                        radius="md"
+                        color="initials"
+                        name={user.name}
+                      />
                       <div>
                         <Text size="sm" fw={500}>
                           {user.name}
@@ -408,9 +411,12 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
                     }}
                   >
                     <Group gap="sm">
-                      <Avatar size={40} radius="md" color="owlTeal">
-                        {member.users.name?.charAt(0).toUpperCase() || "U"}
-                      </Avatar>
+                      <Avatar
+                        size={40}
+                        radius="md"
+                        color="initials"
+                        name={member.users.name || ""}
+                      />
                       <div>
                         <Group gap="xs">
                           <Text
