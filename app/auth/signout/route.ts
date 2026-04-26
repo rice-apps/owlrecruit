@@ -14,12 +14,17 @@ export async function POST(req: NextRequest) {
 
   if (user) {
     logger.info(`Signing out user: ${user.id}`);
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      logger.warn(`Error during signout (proceeding anyway): ${error.message}`);
+    }
   } else {
     logger.info("No active session found during signout");
   }
 
-  return NextResponse.redirect(new URL("/", req.url), {
+  const url = req.nextUrl.clone();
+  url.pathname = "/";
+  return NextResponse.redirect(url, {
     status: 302,
   });
 }
