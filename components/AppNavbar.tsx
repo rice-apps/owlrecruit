@@ -50,17 +50,23 @@ function NavItem({ icon, label, href, active, collapsed }: NavItemProps) {
       style={{
         display: "flex",
         alignItems: "center",
-        justifyContent: collapsed ? "center" : "flex-start",
-        gap: "var(--mantine-spacing-sm)",
         width: "100%",
         height: 44,
-        paddingInline: collapsed ? 0 : "var(--mantine-spacing-sm)",
         borderRadius: "var(--mantine-radius-md)",
         color,
         transition: "color 150ms",
       }}
     >
-      {icon}
+      <Box
+        style={{
+          width: 65,
+          display: "flex",
+          justifyContent: "center",
+          flexShrink: 0,
+        }}
+      >
+        {icon}
+      </Box>
       {!collapsed && (
         <Text size="sm" fw={500} c="inherit" style={{ whiteSpace: "nowrap" }}>
           {label}
@@ -98,40 +104,42 @@ export function AppNavbar({ user, collapsed, onToggle }: AppNavbarProps) {
       style={{
         display: "flex",
         flexDirection: "column",
-        alignItems: collapsed ? "center" : "stretch",
         paddingTop: "var(--mantine-spacing-md)",
         paddingBottom: "var(--mantine-spacing-md)",
-        paddingInline: collapsed ? 0 : "var(--mantine-spacing-xs)",
         gap: 0,
         overflow: "hidden",
       }}
     >
       {/* Toggle button */}
-      <Tooltip
-        label="Toggle sidebar"
-        position="right"
-        withArrow
-        disabled={!collapsed}
+      <Box
+        style={{
+          width: 65,
+          display: "flex",
+          justifyContent: "center",
+          marginBottom: "var(--mantine-spacing-md)",
+          flexShrink: 0,
+        }}
       >
-        <ActionIcon
-          variant="transparent"
-          color="dark.2"
-          size="lg"
-          mb="md"
-          aria-label="Toggle sidebar"
-          onClick={onToggle}
-          style={{ alignSelf: collapsed ? "center" : "flex-start" }}
+        <Tooltip
+          label="Toggle sidebar"
+          position="right"
+          withArrow
+          disabled={!collapsed}
         >
-          <LayoutLeft width={20} height={20} />
-        </ActionIcon>
-      </Tooltip>
+          <ActionIcon
+            variant="transparent"
+            color="dark.2"
+            size="lg"
+            aria-label="Toggle sidebar"
+            onClick={onToggle}
+          >
+            <LayoutLeft width={20} height={20} />
+          </ActionIcon>
+        </Tooltip>
+      </Box>
 
       {/* Nav items */}
-      <Stack
-        gap="xs"
-        style={{ flex: 1 }}
-        align={collapsed ? "center" : "stretch"}
-      >
+      <Stack gap="xs" style={{ flex: 1 }}>
         <NavItem
           icon={
             <Image src="/logo.svg" alt="OwlRecruit" width={20} height={20} />
@@ -170,11 +178,7 @@ export function AppNavbar({ user, collapsed, onToggle }: AppNavbarProps) {
       </Box>
 
       {/* Sign out */}
-      <form
-        action="/auth/signout"
-        method="post"
-        style={{ width: collapsed ? "auto" : "100%" }}
-      >
+      <form action="/auth/signout" method="post" style={{ width: "100%" }}>
         <Tooltip
           label="Sign out"
           position="right"
@@ -186,17 +190,23 @@ export function AppNavbar({ user, collapsed, onToggle }: AppNavbarProps) {
             style={{
               display: "flex",
               alignItems: "center",
-              justifyContent: collapsed ? "center" : "flex-start",
-              gap: "var(--mantine-spacing-sm)",
-              width: collapsed ? 44 : "100%",
+              width: "100%",
               height: 44,
-              paddingInline: collapsed ? 0 : "var(--mantine-spacing-sm)",
               borderRadius: "var(--mantine-radius-md)",
               color: "var(--mantine-color-dark-2)",
               transition: "color 150ms",
             }}
           >
-            <LogOut01 width={20} height={20} />
+            <Box
+              style={{
+                width: 65,
+                display: "flex",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <LogOut01 width={20} height={20} />
+            </Box>
             {!collapsed && (
               <Text
                 size="sm"
@@ -219,22 +229,23 @@ export function AppNavbar({ user, collapsed, onToggle }: AppNavbarProps) {
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "var(--mantine-spacing-sm)",
-            width: collapsed ? "auto" : "100%",
-            paddingInline: collapsed ? 0 : "var(--mantine-spacing-xs)",
+            width: "100%",
             paddingBlock: "var(--mantine-spacing-xs)",
             borderRadius: "var(--mantine-radius-md)",
           }}
         >
-          <Avatar
-            src={user.avatarUrl}
-            radius="xl"
-            size={36}
-            color="owlTeal"
-            style={{ flexShrink: 0 }}
+          <Box
+            style={{
+              width: 65,
+              display: "flex",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
           >
-            {initials}
-          </Avatar>
+            <Avatar src={user.avatarUrl} radius="xl" size={36} color="owlTeal">
+              {initials}
+            </Avatar>
+          </Box>
           {!collapsed && (
             <Text
               size="sm"
