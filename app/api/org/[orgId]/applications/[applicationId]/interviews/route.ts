@@ -38,7 +38,7 @@ export async function GET(
       .order("created_at", { ascending: true });
 
     if (error) {
-      log.error("Error fetching interviews", error);
+      log.error("error fetching interviews", error);
       log.flush(500);
       return err(error.message, 500);
     }
@@ -48,7 +48,7 @@ export async function GET(
     return ok(data);
   } catch (e) {
     if (e instanceof Response) return e;
-    log.error("Unexpected error fetching interviews", e);
+    log.error("unexpected error fetching interviews", e);
     log.flush(500);
     return err("Internal Server Error", 500);
   }
@@ -132,7 +132,7 @@ export async function POST(
       .single();
 
     if (error) {
-      log.error("Error creating interview", error);
+      log.error("error creating interview", error);
       log.flush(500);
       return err(error.message, 500);
     }
@@ -142,7 +142,7 @@ export async function POST(
     return ok(data, 201);
   } catch (e) {
     if (e instanceof Response) return e;
-    log.error("Unexpected error creating interview", e);
+    log.error("unexpected error creating interview", e);
     log.flush(500);
     return err("Internal Server Error", 500);
   }

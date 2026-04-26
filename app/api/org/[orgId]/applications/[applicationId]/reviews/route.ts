@@ -51,7 +51,7 @@ export async function GET(
       .order("created_at", { ascending: false });
 
     if (commentsError) {
-      log.error("Error fetching comments", commentsError);
+      log.error("error fetching comments", commentsError);
       log.flush(500);
       return err(commentsError.message, 500);
     }
@@ -79,7 +79,7 @@ export async function GET(
       .order("created_at", { ascending: false });
 
     if (reviewsError) {
-      log.error("Error fetching reviews", reviewsError);
+      log.error("error fetching reviews", reviewsError);
       log.flush(500);
       return err(reviewsError.message, 500);
     }
@@ -130,7 +130,7 @@ export async function GET(
     });
   } catch (e) {
     if (e instanceof Response) return e;
-    log.error("Unexpected error fetching reviews", e);
+    log.error("unexpected error fetching reviews", e);
     log.flush(500);
     return err("Internal Server Error", 500);
   }
@@ -216,7 +216,7 @@ export async function POST(
         .single();
 
       if (commentError) {
-        log.error("Error inserting comment", commentError);
+        log.error("error inserting comment", commentError);
         log.flush(500);
         return err(commentError.message, 500);
       }
@@ -255,7 +255,7 @@ export async function POST(
       }
 
       if (reviewResult.error) {
-        log.error("Error upserting review", reviewResult.error);
+        log.error("error upserting review", reviewResult.error);
         log.flush(500);
         return err(reviewResult.error.message, 500);
       }
@@ -266,7 +266,7 @@ export async function POST(
     return ok(results, 201);
   } catch (e) {
     if (e instanceof Response) return e;
-    log.error("Unexpected error submitting review", e);
+    log.error("unexpected error submitting review", e);
     log.flush(500);
     return err("Internal Server Error", 500);
   }

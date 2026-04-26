@@ -90,7 +90,7 @@ export async function POST(
       code: err.code,
       message: err.message,
     }));
-    log.warn("CSV parsing errors", { error_count: formattedErrors.length });
+    log.warn("csv parsing errors", { error_count: formattedErrors.length });
     log.flush(400);
     return new Response(
       JSON.stringify(formatErrorResponse("CSV parsing error", formattedErrors)),
@@ -155,7 +155,7 @@ export async function POST(
     .select();
 
   if (error) {
-    log.error("Error upserting CSV applications", error);
+    log.error("error upserting csv applications", error);
     log.flush(500);
     return new Response(JSON.stringify(formatErrorResponse(error.message)), {
       status: 500,

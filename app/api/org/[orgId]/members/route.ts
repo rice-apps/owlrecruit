@@ -45,7 +45,7 @@ export async function GET(
     const { data, error } = await query;
 
     if (error) {
-      log.error("Error fetching members", error);
+      log.error("error fetching members", error);
       log.flush(500);
       return err(error.message, 500);
     }
@@ -55,7 +55,7 @@ export async function GET(
     return ok(data);
   } catch (e) {
     if (e instanceof Response) return e;
-    log.error("Unexpected error fetching members", e);
+    log.error("unexpected error fetching members", e);
     log.flush(500);
     return err("Internal Server Error", 500);
   }
@@ -93,7 +93,7 @@ export async function POST(
       .single();
 
     if (error) {
-      log.error("Error adding member", error);
+      log.error("error adding member", error);
       log.flush(500);
       return err(error.message, 500);
     }
@@ -102,7 +102,7 @@ export async function POST(
     return ok(data, 201);
   } catch (e) {
     if (e instanceof Response) return e;
-    log.error("Unexpected error adding member", e);
+    log.error("unexpected error adding member", e);
     log.flush(500);
     return err("Internal Server Error", 500);
   }

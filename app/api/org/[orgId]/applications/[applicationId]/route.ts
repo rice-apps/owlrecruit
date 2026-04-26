@@ -62,7 +62,7 @@ export async function PATCH(
       .single();
 
     if (updateError) {
-      log.error("Error updating application status", updateError);
+      log.error("error updating application status", updateError);
       log.flush(500);
       return err(updateError.message, 500);
     }
@@ -71,7 +71,7 @@ export async function PATCH(
     return ok(updated);
   } catch (e) {
     if (e instanceof Response) return e;
-    log.error("Unexpected error updating application", e);
+    log.error("unexpected error updating application", e);
     log.flush(500);
     return err("Internal Server Error", 500);
   }

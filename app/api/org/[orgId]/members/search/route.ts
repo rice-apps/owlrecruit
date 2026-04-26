@@ -29,7 +29,7 @@ export async function GET(
       .eq("org_id", orgId);
 
     if (membersError) {
-      log.error("Error fetching member ids", membersError);
+      log.error("error fetching member ids", membersError);
       log.flush(500);
       return err(membersError.message, 500);
     }
@@ -51,7 +51,7 @@ export async function GET(
     const { data: users, error: usersError } = await query.limit(10);
 
     if (usersError) {
-      log.error("Error searching users", usersError);
+      log.error("error searching users", usersError);
       log.flush(500);
       return err(usersError.message, 500);
     }
@@ -61,7 +61,7 @@ export async function GET(
     return ok(users);
   } catch (e) {
     if (e instanceof Response) return e;
-    log.error("Unexpected error searching members", e);
+    log.error("unexpected error searching members", e);
     log.flush(500);
     return err("Internal Server Error", 500);
   }

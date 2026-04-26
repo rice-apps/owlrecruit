@@ -146,7 +146,7 @@ export async function GET() {
       applications: transformedApplications,
     });
   } catch (error) {
-    log.error("Unexpected error fetching user org status", error);
+    log.error("unexpected error fetching user org status", error);
     log.flush(500);
     return NextResponse.json(
       { error: "Internal Server Error" },

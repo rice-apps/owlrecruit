@@ -42,7 +42,7 @@ export async function POST(request: Request) {
         .upload(path, bytes, { contentType: logoFile.type });
 
       if (uploadError) {
-        log.error("Logo upload failed", uploadError);
+        log.error("logo upload failed", uploadError);
         log.flush(500);
         return NextResponse.json(
           { error: "Failed to upload logo" },
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
     );
 
     if (rpcError) {
-      log.error("RPC error creating org", rpcError);
+      log.error("supabase RPC error creating org", rpcError);
       log.flush(500);
       return NextResponse.json({ error: rpcError.message }, { status: 500 });
     }
@@ -80,7 +80,7 @@ export async function POST(request: Request) {
         .eq("id", newOrgId);
 
       if (updateError) {
-        log.error("Error attaching logo to org", updateError);
+        log.error("error attaching logo to org", updateError);
         log.flush(500);
         return NextResponse.json(
           { error: updateError.message },
@@ -93,7 +93,7 @@ export async function POST(request: Request) {
     log.flush(201);
     return NextResponse.json({ id: newOrgId }, { status: 201 });
   } catch (error) {
-    log.error("Unexpected error creating organization", error);
+    log.error("unexpected error creating organization", error);
     log.flush(500);
     return NextResponse.json(
       { error: "Internal Server Error" },

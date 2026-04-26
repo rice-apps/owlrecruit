@@ -72,7 +72,7 @@ export async function GET() {
     log.flush(200);
     return NextResponse.json(applications);
   } catch (error) {
-    log.error("Unexpected error fetching user applications", error);
+    log.error("unexpected error fetching user applications", error);
     log.flush(500);
     return NextResponse.json(
       { error: "Internal Server Error" },

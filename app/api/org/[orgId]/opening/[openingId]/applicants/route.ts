@@ -30,7 +30,7 @@ export async function GET(
     .eq("opening_id", openingId);
 
   if (error) {
-    log.error("Error fetching applicants", error);
+    log.error("error fetching applicants", error);
     log.flush(500);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

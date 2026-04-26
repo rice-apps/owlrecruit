@@ -173,7 +173,7 @@ export async function PATCH(
     .eq("id", openingId);
 
   if (updateError) {
-    log.error("Error updating opening", updateError);
+    log.error("error updating opening", updateError);
     log.flush(500);
     return NextResponse.json({ error: updateError.message }, { status: 500 });
   }

@@ -80,7 +80,7 @@ export async function PATCH(
       .upload(path, bytes, { contentType: logoFile.type });
 
     if (uploadError) {
-      log.error("Logo upload failed", uploadError);
+      log.error("logo upload failed", uploadError);
       log.flush(500);
       return NextResponse.json(
         { error: "Failed to upload logo" },
@@ -101,7 +101,7 @@ export async function PATCH(
     .eq("id", orgId);
 
   if (updateError) {
-    log.error("Error updating org", updateError);
+    log.error("error updating org", updateError);
     log.flush(500);
     return NextResponse.json({ error: updateError.message }, { status: 500 });
   }

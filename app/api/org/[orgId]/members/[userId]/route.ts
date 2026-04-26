@@ -109,7 +109,7 @@ export async function PUT(request: Request, { params }: { params: Params }) {
       .eq("user_id", userId);
 
     if (error) {
-      log.error("Error updating member role", error);
+      log.error("error updating member role", error);
       log.flush(500);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
@@ -188,7 +188,7 @@ export async function DELETE(request: Request, { params }: { params: Params }) {
       .eq("user_id", userId);
 
     if (error) {
-      log.error("Error removing member", error);
+      log.error("error removing member", error);
       log.flush(500);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }

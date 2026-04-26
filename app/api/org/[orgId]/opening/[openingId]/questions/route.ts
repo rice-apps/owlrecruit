@@ -22,7 +22,7 @@ export async function GET(_request: Request, { params }: { params: Params }) {
     .order("sort_order", { ascending: true });
 
   if (error) {
-    log.error("Error fetching questions", error);
+    log.error("error fetching questions", error);
     log.flush(500);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -106,7 +106,7 @@ export async function PATCH(request: Request, { params }: { params: Params }) {
     .eq("opening_id", openingId);
 
   if (deleteError) {
-    log.error("Error deleting existing questions", deleteError);
+    log.error("error deleting existing questions", deleteError);
     log.flush(500);
     return NextResponse.json({ error: deleteError.message }, { status: 500 });
   }
@@ -130,7 +130,7 @@ export async function PATCH(request: Request, { params }: { params: Params }) {
     .select();
 
   if (error) {
-    log.error("Error inserting questions", error);
+    log.error("error inserting questions", error);
     log.flush(500);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

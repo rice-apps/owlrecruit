@@ -45,7 +45,7 @@ export async function GET(
     log.flush(200);
     return NextResponse.json({ role: membership.role });
   } catch (error) {
-    log.error("Unexpected error fetching my-role", error);
+    log.error("unexpected error fetching my-role", error);
     log.flush(500);
     return NextResponse.json(
       { error: "Internal Server Error" },

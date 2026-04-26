@@ -32,7 +32,7 @@ export async function GET(
     .order("created_at", { ascending: false });
 
   if (error) {
-    log.error("Error fetching org openings", error);
+    log.error("error fetching org openings", error);
     log.flush(500);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -152,7 +152,7 @@ export async function POST(
     .single();
 
   if (error) {
-    log.error("Error creating opening", error);
+    log.error("error creating opening", error);
     log.flush(500);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

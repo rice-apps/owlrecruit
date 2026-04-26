@@ -64,7 +64,7 @@ export async function GET(request: Request) {
     const { data: openings, error: fetchError } = await query;
 
     if (fetchError) {
-      log.error("Error fetching openings", fetchError);
+      log.error("error fetching openings", fetchError);
       log.flush(500);
       return NextResponse.json(
         { error: "Failed to fetch openings" },
@@ -100,7 +100,7 @@ export async function GET(request: Request) {
     log.flush(200);
     return NextResponse.json(enriched);
   } catch (error) {
-    log.error("Unexpected error in openings GET", error);
+    log.error("unexpected error in openings GET", error);
     log.flush(500);
     return NextResponse.json(
       { error: "Internal Server Error" },
@@ -165,7 +165,7 @@ export async function POST(request: Request) {
       .single();
 
     if (error) {
-      log.error("Error inserting opening", error);
+      log.error("error inserting opening", error);
       log.flush(500);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
@@ -174,7 +174,7 @@ export async function POST(request: Request) {
     log.flush(200);
     return NextResponse.json(data);
   } catch (error) {
-    log.error("Unexpected error in openings POST", error);
+    log.error("unexpected error in openings POST", error);
     log.flush(500);
     return NextResponse.json(
       { error: "Internal Server Error" },

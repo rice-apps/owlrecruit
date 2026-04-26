@@ -37,10 +37,10 @@ export async function GET(request: Request) {
     ]);
 
     if (openingsResult.error) {
-      log.error("Error fetching openings in search", openingsResult.error);
+      log.error("error fetching openings in search", openingsResult.error);
     }
     if (orgsResult.error) {
-      log.error("Error fetching orgs in search", orgsResult.error);
+      log.error("error fetching orgs in search", orgsResult.error);
     }
 
     log.set({
@@ -53,7 +53,7 @@ export async function GET(request: Request) {
       orgs: orgsResult.data || [],
     });
   } catch (error) {
-    log.error("Unexpected error in search", error);
+    log.error("unexpected error in search", error);
     log.flush(500);
     return NextResponse.json(
       { error: "Internal Server Error" },

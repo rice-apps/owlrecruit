@@ -140,7 +140,7 @@ export async function POST(request: Request, { params }: { params: Params }) {
         { status: 409 },
       );
     }
-    log.error("Application insert error", insertError);
+    log.error("application insert error", insertError);
     log.flush(500);
     return NextResponse.json(
       {

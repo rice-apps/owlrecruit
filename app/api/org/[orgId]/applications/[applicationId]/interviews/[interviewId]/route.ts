@@ -73,7 +73,7 @@ export async function PATCH(
       .single();
 
     if (error) {
-      log.error("Error updating interview", error);
+      log.error("error updating interview", error);
       log.flush(500);
       return err(error.message, 500);
     }
@@ -82,7 +82,7 @@ export async function PATCH(
     return ok(data);
   } catch (e) {
     if (e instanceof Response) return e;
-    log.error("Unexpected error updating interview", e);
+    log.error("unexpected error updating interview", e);
     log.flush(500);
     return err("Internal Server Error", 500);
   }
