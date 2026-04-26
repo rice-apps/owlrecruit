@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { logger } from "@/lib/logger";
 import { notifications } from "@mantine/notifications";
 import {
   Modal,
@@ -73,8 +72,7 @@ export function RubricEditorDialog({
 
       onSuccess(rubric);
       setOpen(false);
-    } catch (err) {
-      logger.error("Error saving rubric:", err);
+    } catch {
       notifications.show({ color: "red", message: "Failed to save changes." });
       setError("Failed to save changes. Please try again.");
     } finally {

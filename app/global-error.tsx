@@ -1,19 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
-import { logger } from "@/lib/logger";
-
-export default function GlobalError({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
-  useEffect(() => {
-    logger.error("Global error:", error);
-  }, [error]);
-
+export default function GlobalError({ reset }: { reset: () => void }) {
   return (
     <html lang="en">
       <body>

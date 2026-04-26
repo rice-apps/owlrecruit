@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { createRequestLogger } from "@/lib/logger";
 
 async function requireAdminForOrg(orgId: string) {
   const supabase = await createClient();
@@ -12,6 +13,7 @@ async function requireAdminForOrg(orgId: string) {
     return {
       error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
       supabase: null,
+      userId: null,
     };
   }
 
@@ -29,10 +31,11 @@ async function requireAdminForOrg(orgId: string) {
         { status: 403 },
       ),
       supabase: null,
+      userId: null,
     };
   }
 
-  return { error: null, supabase };
+  return { error: null, supabase, userId: user.id };
 }
 
 export async function GET(
@@ -40,11 +43,19 @@ export async function GET(
   { params }: { params: Promise<{ orgId: string; openingId: string }> },
 ) {
   const { orgId, openingId } = await params;
+  const log = createRequestLogger({
+    method: "GET",
+    path: `/api/org/${orgId}/openings/${openingId}`,
+    org_id: orgId,
+    opening_id: openingId,
+  });
 
-  const { error, supabase } = await requireAdminForOrg(orgId);
+  const { error, supabase, userId } = await requireAdminForOrg(orgId);
   if (error || !supabase) {
+    log.flush(error ? (error.status ?? 403) : 403);
     return error;
   }
+  log.set({ user_id: userId });
 
   const { data: openingData } = await supabase
     .from("openings")
@@ -56,9 +67,11 @@ export async function GET(
     .single();
 
   if (!openingData) {
+    log.flush(404);
     return NextResponse.json({ error: "Opening not found" }, { status: 404 });
   }
 
+  log.flush(200);
   return NextResponse.json({
     opening: {
       title: openingData.title || "",
@@ -82,10 +95,19 @@ export async function PATCH(
   { params }: { params: Promise<{ orgId: string; openingId: string }> },
 ) {
   const { orgId, openingId } = await params;
-  const { error, supabase } = await requireAdminForOrg(orgId);
+  const log = createRequestLogger({
+    method: "PATCH",
+    path: `/api/org/${orgId}/openings/${openingId}`,
+    org_id: orgId,
+    opening_id: openingId,
+  });
+
+  const { error, supabase, userId } = await requireAdminForOrg(orgId);
   if (error || !supabase) {
+    log.flush(error ? (error.status ?? 403) : 403);
     return error;
   }
+  log.set({ user_id: userId });
 
   const { data: opening } = await supabase
     .from("openings")
@@ -94,10 +116,12 @@ export async function PATCH(
     .single();
 
   if (!opening) {
+    log.flush(404);
     return NextResponse.json({ error: "Opening not found" }, { status: 404 });
   }
 
   if (opening.org_id !== orgId) {
+    log.flush(400);
     return NextResponse.json(
       { error: "Opening does not belong to this organization" },
       { status: 400 },
@@ -126,6 +150,7 @@ export async function PATCH(
   if (rubric !== undefined) updates.rubric = rubric;
   if (reviewer_ids !== undefined) {
     if (!Array.isArray(reviewer_ids)) {
+      log.flush(400);
       return NextResponse.json(
         { error: "reviewer_ids must be an array of user IDs" },
         { status: 400 },
@@ -148,8 +173,12 @@ export async function PATCH(
     .eq("id", openingId);
 
   if (updateError) {
+    log.error("Error updating opening", updateError);
+    log.flush(500);
     return NextResponse.json({ error: updateError.message }, { status: 500 });
   }
 
+  log.set({ updated_fields: Object.keys(updates) });
+  log.flush(200);
   return NextResponse.json({ success: true });
 }

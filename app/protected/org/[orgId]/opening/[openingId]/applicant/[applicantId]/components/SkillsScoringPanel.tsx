@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { notifications } from "@mantine/notifications";
-import { logger } from "@/lib/logger";
 import { RubricEditorDialog } from "@/components/rubric-editor-dialog";
 import {
   Box,
@@ -49,8 +48,8 @@ export function SkillsScoringPanel({
             setRubrics(opening.rubric);
           }
         }
-      } catch (error) {
-        logger.error("Error fetching rubrics:", error);
+      } catch {
+        // rubric loads silently on failure
       } finally {
         setLoadingRubrics(false);
       }
@@ -70,8 +69,8 @@ export function SkillsScoringPanel({
           setScores(data.myScoreSkills);
         }
       }
-    } catch (error) {
-      logger.error("Error fetching scores:", error);
+    } catch {
+      // scores load silently on failure
     }
   }, [orgId, applicantId]);
 
@@ -92,13 +91,11 @@ export function SkillsScoringPanel({
       );
 
       if (!res.ok) {
-        logger.warn("Failed to save score");
         notifications.show({ color: "red", message: "Failed to save score." });
       } else {
         notifications.show({ color: "green", message: "Score saved!" });
       }
-    } catch (e) {
-      logger.error("Error saving score", e);
+    } catch {
       notifications.show({ color: "red", message: "Error saving score." });
     } finally {
       setSavingScore(false);

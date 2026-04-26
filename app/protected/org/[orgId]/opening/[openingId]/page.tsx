@@ -91,7 +91,7 @@ export default async function OpeningOverviewPage({
   };
 
   if (appError) {
-    logger.error("Error fetching applications:", appError);
+    logger.error({ err: appError }, "error fetching applications");
   }
 
   const applicants = (applications || [])

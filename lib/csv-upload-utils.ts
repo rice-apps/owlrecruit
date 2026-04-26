@@ -460,7 +460,7 @@ export async function processAndUploadApplications(
       customQuestions,
     );
   } catch (error: unknown) {
-    logger.error("Failed to upsert questions:", error);
+    logger.error({ err: error }, "failed to upsert questions");
   }
 
   for (let i = 0; i < csvData.length; i++) {
@@ -501,7 +501,8 @@ export async function processAndUploadApplications(
             .from("applicants")
             .update({ name })
             .eq("id", userId);
-          if (updateError) logger.error("Error updating name:", updateError);
+          if (updateError)
+            logger.error({ err: updateError }, "error updating applicant name");
         }
       } else {
         // Not in our cache of "applicants for this opening".

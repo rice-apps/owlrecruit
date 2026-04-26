@@ -1,8 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
-import { logger } from "@/lib/logger";
+import { createRequestLogger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 
 export async function GET() {
+  const log = createRequestLogger({
+    method: "GET",
+    path: "/api/user/applications",
+  });
   try {
     const supabase = await createClient();
     const {
@@ -11,8 +15,10 @@ export async function GET() {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
+      log.flush(401);
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    log.set({ user_id: user.id });
 
     // 1. Get User's NetID from users table
     const { data: userData, error: userError } = await supabase
@@ -23,8 +29,11 @@ export async function GET() {
 
     if (userError || !userData?.net_id) {
       // If no user record or no net_id, they can't have applications as an applicant
+      log.flush(200);
       return NextResponse.json([]);
     }
+
+    log.set({ net_id: userData.net_id });
 
     // 2. Find Applicant ID from applicants table using NetID
     const { data: applicantData, error: applicantError } = await supabase
@@ -34,6 +43,7 @@ export async function GET() {
       .single();
 
     if (applicantError || !applicantData) {
+      log.flush(200);
       return NextResponse.json([]);
     }
 
@@ -58,9 +68,12 @@ export async function GET() {
       throw new Error(applicationsError.message);
     }
 
+    log.set({ application_count: applications?.length ?? 0 });
+    log.flush(200);
     return NextResponse.json(applications);
   } catch (error) {
-    logger.error("Error fetching user applications:", error);
+    log.error("Unexpected error fetching user applications", error);
+    log.flush(500);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },

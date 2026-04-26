@@ -18,7 +18,6 @@ import {
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { Users01 } from "@untitled-ui/icons-react";
-import { logger } from "@/lib/logger";
 
 type Member = {
   id: string;
@@ -84,8 +83,7 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
       if (!res.ok) throw new Error("Failed to fetch members");
       const json = await res.json();
       setMembers((json.data ?? json) as Member[]);
-    } catch (error) {
-      logger.error("Failed to fetch members:", error);
+    } catch {
     } finally {
       setIsLoading(false);
     }
@@ -117,8 +115,7 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
           if (!res.ok) throw new Error("Failed to search users");
           const json = await res.json();
           setSearchResults((json.data ?? json) as SearchedUser[]);
-        } catch (error) {
-          logger.error("Failed to search users:", error);
+        } catch {
         } finally {
           setIsSearching(false);
         }
@@ -253,8 +250,7 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
       await Promise.all(promises);
       router.refresh();
       setOpen(false);
-    } catch (error) {
-      logger.error("Failed to save changes:", error);
+    } catch {
       notifications.show({
         color: "red",
         message: "Failed to save changes. Please try again.",

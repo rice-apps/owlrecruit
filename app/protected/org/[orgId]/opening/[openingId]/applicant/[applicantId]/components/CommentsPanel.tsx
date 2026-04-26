@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { notifications } from "@mantine/notifications";
-import { logger } from "@/lib/logger";
 import {
   Avatar,
   Box,
@@ -43,11 +42,9 @@ export function CommentsPanel({ orgId, applicantId }: CommentsPanelProps) {
       if (res.ok) {
         const data = await res.json();
         setComments(data.comments ?? []);
-      } else {
-        logger.warn("Failed to fetch comments, API might be missing");
       }
-    } catch (error) {
-      logger.error("Error fetching comments:", error);
+    } catch {
+      // comments load silently on failure
     }
   }, [orgId, applicantId]);
 
@@ -80,8 +77,7 @@ export function CommentsPanel({ orgId, applicantId }: CommentsPanelProps) {
         notifications.show({ color: "green", message: "Comment posted!" });
         fetchComments();
       }
-    } catch (error) {
-      logger.error("Error posting comment:", error);
+    } catch {
       notifications.show({ color: "red", message: "Error posting comment." });
     } finally {
       setLoading(false);

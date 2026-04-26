@@ -1,13 +1,16 @@
 import { createClient } from "@/lib/supabase/server";
-import { logger } from "@/lib/logger";
+import { createRequestLogger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
+  const log = createRequestLogger({ method: "GET", path: "/api/search" });
   try {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("query");
+    log.set({ search_query: query });
 
     if (!query) {
+      log.flush(200);
       return NextResponse.json({ openings: [], orgs: [] });
     }
 
@@ -34,19 +37,24 @@ export async function GET(request: Request) {
     ]);
 
     if (openingsResult.error) {
-      logger.error("Error fetching openings:", openingsResult.error);
+      log.error("Error fetching openings in search", openingsResult.error);
     }
-
     if (orgsResult.error) {
-      logger.error("Error fetching orgs:", orgsResult.error);
+      log.error("Error fetching orgs in search", orgsResult.error);
     }
 
+    log.set({
+      openings_count: openingsResult.data?.length ?? 0,
+      orgs_count: orgsResult.data?.length ?? 0,
+    });
+    log.flush(200);
     return NextResponse.json({
       openings: openingsResult.data || [],
       orgs: orgsResult.data || [],
     });
   } catch (error) {
-    logger.error("Error in search API:", error);
+    log.error("Unexpected error in search", error);
+    log.flush(500);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },

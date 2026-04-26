@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { createRequestLogger } from "@/lib/logger";
 
 type Params = Promise<{ orgId: string; userId: string }>;
 
@@ -47,12 +48,20 @@ async function getAuthContext(orgId: string) {
 }
 
 export async function PUT(request: Request, { params }: { params: Params }) {
+  const { orgId, userId } = await params;
+  const log = createRequestLogger({
+    method: "PUT",
+    path: `/api/org/${orgId}/members/${userId}`,
+    org_id: orgId,
+    target_user_id: userId,
+  });
   try {
-    const { orgId, userId } = await params;
     const body = await request.json();
     const { role } = body;
+    log.set({ new_role: role });
 
     if (!role || !["admin", "reviewer"].includes(role)) {
+      log.flush(400);
       return NextResponse.json(
         { error: "Invalid or missing role" },
         { status: 400 },
@@ -60,10 +69,15 @@ export async function PUT(request: Request, { params }: { params: Params }) {
     }
 
     const ctx = await getAuthContext(orgId);
-    if (ctx.error) return ctx.error;
+    if (ctx.error) {
+      log.flush(401);
+      return ctx.error;
+    }
+    log.set({ user_id: ctx.callerId });
 
     // Only admins can change roles
     if (ctx.callerRole !== "admin") {
+      log.flush(403);
       return NextResponse.json(
         { error: "Only admins can change member roles" },
         { status: 403 },
@@ -80,6 +94,7 @@ export async function PUT(request: Request, { params }: { params: Params }) {
         .single();
 
       if (targetMembership?.role === "admin" && ctx.adminCount <= 1) {
+        log.flush(403);
         return NextResponse.json(
           { error: "Cannot demote the only admin. Transfer admin role first." },
           { status: 403 },
@@ -94,11 +109,15 @@ export async function PUT(request: Request, { params }: { params: Params }) {
       .eq("user_id", userId);
 
     if (error) {
+      log.error("Error updating member role", error);
+      log.flush(500);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    log.flush(200);
     return NextResponse.json({ success: true });
   } catch {
+    log.flush(500);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },
@@ -107,17 +126,27 @@ export async function PUT(request: Request, { params }: { params: Params }) {
 }
 
 export async function DELETE(request: Request, { params }: { params: Params }) {
+  const { orgId, userId } = await params;
+  const log = createRequestLogger({
+    method: "DELETE",
+    path: `/api/org/${orgId}/members/${userId}`,
+    org_id: orgId,
+    target_user_id: userId,
+  });
   try {
-    const { orgId, userId } = await params;
-
     const ctx = await getAuthContext(orgId);
-    if (ctx.error) return ctx.error;
+    if (ctx.error) {
+      log.flush(401);
+      return ctx.error;
+    }
+    log.set({ user_id: ctx.callerId });
 
     const isSelf = ctx.callerId === userId;
 
     if (isSelf) {
       // Leaving the org — block if they're the only admin
       if (ctx.callerRole === "admin" && ctx.adminCount <= 1) {
+        log.flush(403);
         return NextResponse.json(
           {
             error: "Cannot leave as the only admin. Transfer admin role first.",
@@ -128,6 +157,7 @@ export async function DELETE(request: Request, { params }: { params: Params }) {
     } else {
       // Removing someone else — must be an admin
       if (ctx.callerRole !== "admin") {
+        log.flush(403);
         return NextResponse.json(
           { error: "Only admins can remove members" },
           { status: 403 },
@@ -143,6 +173,7 @@ export async function DELETE(request: Request, { params }: { params: Params }) {
         .single();
 
       if (targetMembership?.role === "admin" && ctx.adminCount <= 1) {
+        log.flush(403);
         return NextResponse.json(
           { error: "Cannot remove the only admin" },
           { status: 403 },
@@ -157,11 +188,16 @@ export async function DELETE(request: Request, { params }: { params: Params }) {
       .eq("user_id", userId);
 
     if (error) {
+      log.error("Error removing member", error);
+      log.flush(500);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    log.set({ action: isSelf ? "self_leave" : "admin_remove" });
+    log.flush(200);
     return NextResponse.json({ success: true });
   } catch {
+    log.flush(500);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },

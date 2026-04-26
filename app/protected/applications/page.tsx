@@ -18,7 +18,6 @@ import {
   ApplicationCard,
   type ApplicationWithDetails,
 } from "@/components/application-card";
-import { logger } from "@/lib/logger";
 import type { Enums } from "@/types/supabase";
 
 interface Application {
@@ -65,7 +64,6 @@ export default function MyApplicationsPage() {
         const json = await res.json();
         setApplications(json.applications ?? []);
       } catch (err) {
-        logger.error("Error fetching applications:", err);
         setError(
           err instanceof Error ? err.message : "An unexpected error occurred",
         );

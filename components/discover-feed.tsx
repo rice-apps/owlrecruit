@@ -16,7 +16,6 @@ import {
 import { SearchMd } from "@untitled-ui/icons-react";
 import { ApplicationStatusBadge } from "@/components/StatusBadge";
 import { formatDate } from "@/lib/utils";
-import { logger } from "@/lib/logger";
 
 interface Opening {
   id: string;
@@ -50,8 +49,7 @@ export function DiscoverFeed() {
         if (!res.ok) throw new Error("Failed to fetch openings");
         const json = await res.json();
         setOpenings(json.data ?? json);
-      } catch (error) {
-        logger.error("Error fetching openings:", error);
+      } catch {
       } finally {
         setLoading(false);
       }

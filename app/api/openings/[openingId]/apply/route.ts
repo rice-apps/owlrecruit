@@ -2,12 +2,18 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { ensureApplicant } from "@/lib/csv-upload-utils";
 import { parseQuestionText } from "@/lib/question-utils";
-import { logger } from "@/lib/logger";
+import { createRequestLogger } from "@/lib/logger";
 
 type Params = Promise<{ openingId: string }>;
 
 export async function POST(request: Request, { params }: { params: Params }) {
   const { openingId } = await params;
+  const log = createRequestLogger({
+    method: "POST",
+    path: `/api/openings/${openingId}/apply`,
+    opening_id: openingId,
+  });
+
   const supabase = await createClient();
 
   // Auth required
@@ -16,11 +22,15 @@ export async function POST(request: Request, { params }: { params: Params }) {
   } = await supabase.auth.getUser();
 
   if (!user) {
+    log.flush(401);
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  log.set({ user_id: user.id });
+
   const email = user.email ?? "";
   if (!email.endsWith("@rice.edu")) {
+    log.flush(400);
     return NextResponse.json(
       { error: "A Rice University email (@rice.edu) is required to apply." },
       { status: 400 },
@@ -31,6 +41,8 @@ export async function POST(request: Request, { params }: { params: Params }) {
   const name: string =
     (user.user_metadata?.full_name as string | undefined) || netId;
 
+  log.set({ net_id: netId });
+
   // Verify opening is accepting applications
   const { data: opening, error: openingError } = await supabase
     .from("openings")
@@ -39,10 +51,13 @@ export async function POST(request: Request, { params }: { params: Params }) {
     .single();
 
   if (openingError || !opening) {
+    log.flush(404);
     return NextResponse.json({ error: "Opening not found" }, { status: 404 });
   }
 
   if (opening.status !== "open") {
+    log.set({ opening_status: opening.status });
+    log.flush(409);
     return NextResponse.json(
       { error: "This opening is not currently accepting applications." },
       { status: 409 },
@@ -51,6 +66,7 @@ export async function POST(request: Request, { params }: { params: Params }) {
 
   // Find or create applicant record
   const applicant = await ensureApplicant(supabase, netId, name);
+  log.set({ applicant_id: applicant.id });
 
   // Duplicate check
   const { data: existing } = await supabase
@@ -61,6 +77,7 @@ export async function POST(request: Request, { params }: { params: Params }) {
     .maybeSingle();
 
   if (existing) {
+    log.flush(409);
     return NextResponse.json(
       { error: "You have already submitted an application for this opening." },
       { status: 409 },
@@ -87,6 +104,7 @@ export async function POST(request: Request, { params }: { params: Params }) {
       answer === "" ||
       (Array.isArray(answer) && answer.length === 0);
     if (isEmpty) {
+      log.flush(400);
       return NextResponse.json(
         { error: `Required field is missing: ${label}` },
         { status: 400 },
@@ -114,6 +132,7 @@ export async function POST(request: Request, { params }: { params: Params }) {
       insertError.code === "23505" ||
       insertError.message.includes("duplicate key")
     ) {
+      log.flush(409);
       return NextResponse.json(
         {
           error: "You have already submitted an application for this opening.",
@@ -121,7 +140,8 @@ export async function POST(request: Request, { params }: { params: Params }) {
         { status: 409 },
       );
     }
-    logger.error("Application insert error:", insertError);
+    log.error("Application insert error", insertError);
+    log.flush(500);
     return NextResponse.json(
       {
         error:
@@ -131,5 +151,6 @@ export async function POST(request: Request, { params }: { params: Params }) {
     );
   }
 
+  log.flush(201);
   return NextResponse.json({ success: true }, { status: 201 });
 }

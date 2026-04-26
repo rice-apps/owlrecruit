@@ -24,7 +24,6 @@ import {
 import { DateTimePicker } from "@mantine/dates";
 import { notifications } from "@mantine/notifications";
 import { AlertCircle, Trash01 } from "@untitled-ui/icons-react";
-import { logger } from "@/lib/logger";
 import { Breadcrumb } from "@/components/Breadcrumb";
 
 const MAX_RUBRIC_SCORE = 1_000_000_000_000;
@@ -104,8 +103,8 @@ export default function NewOpeningPage() {
           );
           setReviewerOptions(options);
         }
-      } catch (err) {
-        logger.error("Error fetching page data:", err);
+      } catch {
+        // non-critical; page renders with defaults
       }
     };
     fetchData();
@@ -180,7 +179,6 @@ export default function NewOpeningPage() {
       notifications.show({ color: "green", message: "Opening created." });
       router.push(`/protected/org/${orgId}`);
     } catch (err) {
-      logger.error("Error creating opening:", err);
       const msg =
         err instanceof Error ? err.message : "Failed to create opening";
       setError(msg);

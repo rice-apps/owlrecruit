@@ -18,7 +18,6 @@ import {
 import { notifications } from "@mantine/notifications";
 import { Plus, Trash01 } from "@untitled-ui/icons-react";
 import { createClient } from "@/lib/supabase/client";
-import { logger } from "@/lib/logger";
 
 interface QAPair {
   question: string;
@@ -79,8 +78,7 @@ export function InterviewTab({ orgId, applicationId }: InterviewTabProps) {
       const json = await res.json();
       const data: InterviewRecord[] = json.data ?? json;
       setRecords(data);
-    } catch (err) {
-      logger.error("Error fetching interviews:", err);
+    } catch {
       setError("Unable to load interview records.");
     } finally {
       setLoading(false);
@@ -128,7 +126,6 @@ export function InterviewTab({ orgId, applicationId }: InterviewTabProps) {
       }
       await fetchRecords();
     } catch (err) {
-      logger.error("Error creating interview record:", err);
       notifications.show({
         color: "red",
         message:
@@ -155,8 +152,7 @@ export function InterviewTab({ orgId, applicationId }: InterviewTabProps) {
       );
       if (!res.ok) throw new Error("Failed to save");
       notifications.show({ color: "green", message: "Interview notes saved." });
-    } catch (err) {
-      logger.error("Error saving interview:", err);
+    } catch {
       notifications.show({
         color: "red",
         message: "Failed to save interview notes.",

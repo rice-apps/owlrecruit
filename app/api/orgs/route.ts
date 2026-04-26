@@ -1,8 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
-import { logger } from "@/lib/logger";
+import { createRequestLogger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
+  const log = createRequestLogger({ method: "POST", path: "/api/orgs" });
   try {
     const supabase = await createClient();
     const {
@@ -11,8 +12,10 @@ export async function POST(request: Request) {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
+      log.flush(401);
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    log.set({ user_id: user.id });
 
     const formData = await request.formData();
     const name = formData.get("name") as string | null;
@@ -20,6 +23,7 @@ export async function POST(request: Request) {
     const logoFile = formData.get("logo") as File | null;
 
     if (!name?.trim()) {
+      log.flush(400);
       return NextResponse.json(
         { error: "Organization name is required" },
         { status: 400 },
@@ -38,6 +42,8 @@ export async function POST(request: Request) {
         .upload(path, bytes, { contentType: logoFile.type });
 
       if (uploadError) {
+        log.error("Logo upload failed", uploadError);
+        log.flush(500);
         return NextResponse.json(
           { error: "Failed to upload logo" },
           { status: 500 },
@@ -62,6 +68,8 @@ export async function POST(request: Request) {
     );
 
     if (rpcError) {
+      log.error("RPC error creating org", rpcError);
+      log.flush(500);
       return NextResponse.json({ error: rpcError.message }, { status: 500 });
     }
 
@@ -72,6 +80,8 @@ export async function POST(request: Request) {
         .eq("id", newOrgId);
 
       if (updateError) {
+        log.error("Error attaching logo to org", updateError);
+        log.flush(500);
         return NextResponse.json(
           { error: updateError.message },
           { status: 500 },
@@ -79,9 +89,12 @@ export async function POST(request: Request) {
       }
     }
 
+    log.set({ org_id: newOrgId });
+    log.flush(201);
     return NextResponse.json({ id: newOrgId }, { status: 201 });
   } catch (error) {
-    logger.error("Error creating organization:", error);
+    log.error("Unexpected error creating organization", error);
+    log.flush(500);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },

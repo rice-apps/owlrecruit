@@ -15,7 +15,6 @@ import {
 import { Json } from "@/types/supabase";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { createClient } from "@/lib/supabase/client";
-import { logger } from "@/lib/logger";
 import { ApplicantTabs } from "./components/ApplicantTabs";
 import { CommentsSidebar } from "@/app/protected/org/[orgId]/opening/[openingId]/applicant/[applicantId]/components/comments-sidebar";
 import { InterviewTab } from "@/app/protected/org/[orgId]/opening/[openingId]/applicant/[applicantId]/components/InterviewTab";
@@ -157,8 +156,8 @@ export default function ApplicantReviewPage() {
         setApplicationData(data);
         if (orgData) setOrgName(orgData.name);
         if (openingData) setOpeningTitle(openingData.title);
-      } catch (err) {
-        logger.error("Error fetching application data:", err);
+      } catch {
+        // loading state cleared below
       } finally {
         setLoading(false);
       }
@@ -263,7 +262,6 @@ export default function ApplicantReviewPage() {
       } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError")
           return;
-        logger.error("Error fetching summary data:", error);
         if (isMounted)
           setSummaryError("Unable to load summary data. Please try again.");
       } finally {

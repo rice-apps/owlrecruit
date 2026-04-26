@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Papa from "papaparse";
-import { logger } from "@/lib/logger";
 
 export type ColumnMapping = {
   name: string;
@@ -66,8 +65,8 @@ export function useUploadWizard() {
           );
           setExistingApplicants(map);
         }
-      } catch (error) {
-        logger.error("Failed to fetch existing applicants:", error);
+      } catch {
+        // non-critical; upload proceeds without pre-population
       }
     };
     if (openingId && orgId) {
@@ -202,7 +201,6 @@ export function useUploadWizard() {
         );
       }
     } catch (error: unknown) {
-      logger.error("Error uploading data:", error);
       setUploadErrors([
         {
           error:

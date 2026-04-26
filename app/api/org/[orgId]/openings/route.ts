@@ -1,11 +1,18 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { createRequestLogger } from "@/lib/logger";
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ orgId: string }> },
 ) {
   const { orgId } = await params;
+  const log = createRequestLogger({
+    method: "GET",
+    path: `/api/org/${orgId}/openings`,
+    org_id: orgId,
+  });
+
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -25,6 +32,8 @@ export async function GET(
     .order("created_at", { ascending: false });
 
   if (error) {
+    log.error("Error fetching org openings", error);
+    log.flush(500);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
@@ -47,6 +56,8 @@ export async function GET(
     };
   });
 
+  log.set({ result_count: openings.length });
+  log.flush(200);
   return NextResponse.json(openings);
 }
 
@@ -55,20 +66,33 @@ export async function POST(
   { params }: { params: Promise<{ orgId: string }> },
 ) {
   const { orgId } = await params;
+  const log = createRequestLogger({
+    method: "POST",
+    path: `/api/org/${orgId}/openings`,
+    org_id: orgId,
+  });
+
   const supabase = await createClient();
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
+  if (!user) {
+    log.flush(401);
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  log.set({ user_id: user.id });
+
   const { data: membership } = await supabase
     .from("org_members")
     .select("role")
-    .eq("user_id", user!.id)
+    .eq("user_id", user.id)
     .eq("org_id", orgId)
     .single();
 
   if (membership?.role !== "admin") {
+    log.flush(403);
     return NextResponse.json(
       { error: "Only admins can create openings" },
       { status: 403 },
@@ -87,6 +111,7 @@ export async function POST(
   } = body;
 
   if (!title?.trim()) {
+    log.flush(400);
     return NextResponse.json(
       { error: "Position title is required" },
       { status: 400 },
@@ -94,6 +119,7 @@ export async function POST(
   }
 
   if (reviewer_ids !== undefined && !Array.isArray(reviewer_ids)) {
+    log.flush(400);
     return NextResponse.json(
       { error: "reviewer_ids must be an array of user IDs" },
       { status: 400 },
@@ -126,8 +152,12 @@ export async function POST(
     .single();
 
   if (error) {
+    log.error("Error creating opening", error);
+    log.flush(500);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  log.set({ opening_id: data.id });
+  log.flush(201);
   return NextResponse.json(data, { status: 201 });
 }

@@ -1,11 +1,19 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { createRequestLogger } from "@/lib/logger";
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ orgId: string; openingId: string }> },
 ) {
-  const { openingId } = await params;
+  const { orgId, openingId } = await params;
+  const log = createRequestLogger({
+    method: "GET",
+    path: `/api/org/${orgId}/opening/${openingId}/applicants`,
+    org_id: orgId,
+    opening_id: openingId,
+  });
+
   const supabase = await createClient();
 
   const { data: applications, error } = await supabase
@@ -22,6 +30,8 @@ export async function GET(
     .eq("opening_id", openingId);
 
   if (error) {
+    log.error("Error fetching applicants", error);
+    log.flush(500);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
@@ -36,5 +46,7 @@ export async function GET(
       };
     });
 
+  log.set({ applicant_count: existingApplicants.length });
+  log.flush(200);
   return NextResponse.json({ applicants: existingApplicants });
 }

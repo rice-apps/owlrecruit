@@ -9,7 +9,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Badge, Box, Card, Group, Loader, Stack, Text } from "@mantine/core";
 import type { Enums } from "@/types/supabase";
-import { logger } from "@/lib/logger";
 import { getApplicationStatusColor } from "@/lib/status";
 
 type ApplicationStatus = Enums<"status">;
@@ -65,7 +64,6 @@ export default function OrgStatusCard({ userId }: OrgStatusCardProps) {
         const data: OrgData = await response.json();
         setOrgData(data);
       } catch (err) {
-        logger.error("Error fetching org data:", err);
         setError(
           err instanceof Error ? err.message : "An unexpected error occurred",
         );

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { MessageChatCircle, SearchMd } from "@untitled-ui/icons-react";
-import { logger } from "@/lib/logger";
 import { Box, Group, ActionIcon } from "@mantine/core";
 import { CommentsPanel } from "./CommentsPanel";
 import { SkillsScoringPanel } from "./SkillsScoringPanel";
@@ -31,8 +30,8 @@ export function CommentsSidebar({
             setIsAdmin(true);
           }
         }
-      } catch (error) {
-        logger.error("Error checking role:", error);
+      } catch {
+        // role defaults to non-admin
       }
     };
     if (orgId) {

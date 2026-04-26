@@ -2,16 +2,24 @@ import { createClient } from "@/lib/supabase/server";
 import { type NextRequest } from "next/server";
 import { ok, err } from "@/lib/api-response";
 import { requireOrgMember } from "@/lib/auth";
+import { createRequestLogger } from "@/lib/logger";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ orgId: string; applicationId: string }> },
 ) {
+  const { orgId, applicationId } = await params;
+  const log = createRequestLogger({
+    method: "GET",
+    path: `/api/org/${orgId}/applications/${applicationId}/reviews`,
+    org_id: orgId,
+    application_id: applicationId,
+  });
   try {
-    const { orgId, applicationId } = await params;
     const supabase = await createClient();
 
-    await requireOrgMember(supabase, orgId);
+    const { userId } = await requireOrgMember(supabase, orgId);
+    log.set({ user_id: userId });
 
     const { data: application } = await supabase
       .from("applications")
@@ -19,7 +27,10 @@ export async function GET(
       .eq("id", applicationId)
       .single();
 
-    if (!application) return err("Application not found", 404);
+    if (!application) {
+      log.flush(404);
+      return err("Application not found", 404);
+    }
 
     const opening = (
       Array.isArray(application.openings)
@@ -28,8 +39,10 @@ export async function GET(
     ) as { org_id: string; rubric: unknown[] | null } | null;
     const appOrgId = opening?.org_id;
 
-    if (appOrgId !== orgId)
+    if (appOrgId !== orgId) {
+      log.flush(400);
       return err("Application does not belong to this organization");
+    }
 
     const { data: comments, error: commentsError } = await supabase
       .from("comments")
@@ -37,7 +50,11 @@ export async function GET(
       .eq("application_id", applicationId)
       .order("created_at", { ascending: false });
 
-    if (commentsError) return err(commentsError.message, 500);
+    if (commentsError) {
+      log.error("Error fetching comments", commentsError);
+      log.flush(500);
+      return err(commentsError.message, 500);
+    }
 
     const formattedComments = (comments ?? []).map((c) => ({
       id: c.id,
@@ -61,7 +78,11 @@ export async function GET(
       .eq("application_id", applicationId)
       .order("created_at", { ascending: false });
 
-    if (reviewsError) return err(reviewsError.message, 500);
+    if (reviewsError) {
+      log.error("Error fetching reviews", reviewsError);
+      log.flush(500);
+      return err(reviewsError.message, 500);
+    }
 
     const reviewerScores = (allReviews ?? []).map((review) => ({
       id: review.id,
@@ -93,6 +114,11 @@ export async function GET(
       }
     }
 
+    log.set({
+      comment_count: formattedComments.length,
+      review_count: reviewerScores.length,
+    });
+    log.flush(200);
     return ok({
       comments: formattedComments,
       myScoreSkills,
@@ -104,6 +130,8 @@ export async function GET(
     });
   } catch (e) {
     if (e instanceof Response) return e;
+    log.error("Unexpected error fetching reviews", e);
+    log.flush(500);
     return err("Internal Server Error", 500);
   }
 }
@@ -112,11 +140,18 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ orgId: string; applicationId: string }> },
 ) {
+  const { orgId, applicationId } = await params;
+  const log = createRequestLogger({
+    method: "POST",
+    path: `/api/org/${orgId}/applications/${applicationId}/reviews`,
+    org_id: orgId,
+    application_id: applicationId,
+  });
   try {
-    const { orgId, applicationId } = await params;
     const supabase = await createClient();
 
     const { userId } = await requireOrgMember(supabase, orgId);
+    log.set({ user_id: userId });
 
     let body: {
       scoreSkills?: Record<string, number>;
@@ -126,13 +161,19 @@ export async function POST(
     try {
       body = await request.json();
     } catch {
+      log.flush(400);
       return err("Invalid JSON body");
     }
 
     const commentContent = body.notes || body.content;
     const scoreSkills = body.scoreSkills;
+    log.set({
+      has_comment: !!commentContent,
+      has_score: scoreSkills !== undefined,
+    });
 
     if (!scoreSkills && !commentContent) {
+      log.flush(400);
       return err(
         "At least one of scoreSkills or notes/content must be provided",
       );
@@ -144,7 +185,10 @@ export async function POST(
       .eq("id", applicationId)
       .single();
 
-    if (!application) return err("Application not found", 404);
+    if (!application) {
+      log.flush(404);
+      return err("Application not found", 404);
+    }
 
     const opening = application.openings as
       | { org_id: string }
@@ -153,8 +197,10 @@ export async function POST(
       ? opening[0]?.org_id
       : opening.org_id;
 
-    if (appOrgId !== orgId)
+    if (appOrgId !== orgId) {
+      log.flush(400);
       return err("Application does not belong to this organization");
+    }
 
     const results: { comment?: unknown; review?: unknown } = {};
 
@@ -169,7 +215,11 @@ export async function POST(
         .select()
         .single();
 
-      if (commentError) return err(commentError.message, 500);
+      if (commentError) {
+        log.error("Error inserting comment", commentError);
+        log.flush(500);
+        return err(commentError.message, 500);
+      }
       results.comment = comment;
     }
 
@@ -204,13 +254,20 @@ export async function POST(
           .single();
       }
 
-      if (reviewResult.error) return err(reviewResult.error.message, 500);
+      if (reviewResult.error) {
+        log.error("Error upserting review", reviewResult.error);
+        log.flush(500);
+        return err(reviewResult.error.message, 500);
+      }
       results.review = reviewResult.data;
     }
 
+    log.flush(201);
     return ok(results, 201);
   } catch (e) {
     if (e instanceof Response) return e;
+    log.error("Unexpected error submitting review", e);
+    log.flush(500);
     return err("Internal Server Error", 500);
   }
 }

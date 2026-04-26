@@ -1,10 +1,18 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { createRequestLogger } from "@/lib/logger";
 
 type Params = Promise<{ orgId: string; openingId: string }>;
 
 export async function GET(_request: Request, { params }: { params: Params }) {
-  const { openingId } = await params;
+  const { orgId, openingId } = await params;
+  const log = createRequestLogger({
+    method: "GET",
+    path: `/api/org/${orgId}/opening/${openingId}/questions`,
+    org_id: orgId,
+    opening_id: openingId,
+  });
+
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -14,14 +22,25 @@ export async function GET(_request: Request, { params }: { params: Params }) {
     .order("sort_order", { ascending: true });
 
   if (error) {
+    log.error("Error fetching questions", error);
+    log.flush(500);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  log.set({ question_count: data?.length ?? 0 });
+  log.flush(200);
   return NextResponse.json({ questions: data });
 }
 
 export async function PATCH(request: Request, { params }: { params: Params }) {
   const { orgId, openingId } = await params;
+  const log = createRequestLogger({
+    method: "PATCH",
+    path: `/api/org/${orgId}/opening/${openingId}/questions`,
+    org_id: orgId,
+    opening_id: openingId,
+  });
+
   const supabase = await createClient();
 
   const {
@@ -29,8 +48,10 @@ export async function PATCH(request: Request, { params }: { params: Params }) {
   } = await supabase.auth.getUser();
 
   if (!user) {
+    log.flush(401);
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  log.set({ user_id: user.id });
 
   const { data: membership } = await supabase
     .from("org_members")
@@ -40,6 +61,7 @@ export async function PATCH(request: Request, { params }: { params: Params }) {
     .single();
 
   if (membership?.role !== "admin") {
+    log.flush(403);
     return NextResponse.json(
       { error: "Only admins can manage questions" },
       { status: 403 },
@@ -54,6 +76,7 @@ export async function PATCH(request: Request, { params }: { params: Params }) {
   }> = body.questions;
 
   if (!Array.isArray(questions)) {
+    log.flush(400);
     return NextResponse.json(
       { error: "questions must be an array" },
       { status: 400 },
@@ -69,6 +92,7 @@ export async function PATCH(request: Request, { params }: { params: Params }) {
     .single();
 
   if (openingError || !opening) {
+    log.flush(404);
     return NextResponse.json(
       { error: "Opening not found in this organization" },
       { status: 404 },
@@ -82,10 +106,14 @@ export async function PATCH(request: Request, { params }: { params: Params }) {
     .eq("opening_id", openingId);
 
   if (deleteError) {
+    log.error("Error deleting existing questions", deleteError);
+    log.flush(500);
     return NextResponse.json({ error: deleteError.message }, { status: 500 });
   }
 
   if (questions.length === 0) {
+    log.set({ question_count: 0 });
+    log.flush(200);
     return NextResponse.json({ questions: [] });
   }
 
@@ -102,8 +130,12 @@ export async function PATCH(request: Request, { params }: { params: Params }) {
     .select();
 
   if (error) {
+    log.error("Error inserting questions", error);
+    log.flush(500);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  log.set({ question_count: data?.length ?? 0 });
+  log.flush(200);
   return NextResponse.json({ questions: data });
 }

@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { Button, Menu, Text, Group } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { ConfirmModal } from "@/components/ConfirmModal";
-import { logger } from "@/lib/logger";
 
 interface LeaveOrgButtonProps {
   orgId: string;
@@ -35,8 +34,7 @@ export function LeaveOrgButton({
       if (!res.ok) throw new Error("Failed to leave organization");
       router.push("/protected/discover");
       router.refresh();
-    } catch (err) {
-      logger.error("Failed to leave organization:", err);
+    } catch {
       notifications.show({
         color: "red",
         message: "Failed to leave organization. Please try again.",

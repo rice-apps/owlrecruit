@@ -18,7 +18,6 @@ import {
 import { Dropzone, IMAGE_MIME_TYPE } from "@mantine/dropzone";
 import { AlertCircle, UploadCloud01 } from "@untitled-ui/icons-react";
 import { notifications } from "@mantine/notifications";
-import { logger } from "@/lib/logger";
 
 export default function NewOrgPage() {
   const router = useRouter();
@@ -54,7 +53,6 @@ export default function NewOrgPage() {
       // Full reload so sidebar refreshes with new org
       window.location.href = `/protected/org/${json.data?.id ?? json.id}`;
     } catch (err) {
-      logger.error("Error creating organization:", err);
       const msg =
         err instanceof Error ? err.message : "Failed to create organization";
       setError(msg);

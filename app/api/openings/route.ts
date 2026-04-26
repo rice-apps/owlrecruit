@@ -1,11 +1,19 @@
 import { createClient } from "@/lib/supabase/server";
-import { logger } from "@/lib/logger";
+import { createRequestLogger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
+  const log = createRequestLogger({ method: "GET", path: "/api/openings" });
   try {
     const { searchParams } = new URL(request.url);
     const supabase = await createClient();
+
+    const statuses = searchParams.get("statuses")?.split(",") || ["open"];
+    const datePosted = searchParams.get("datePosted") || "all";
+    const deadline = searchParams.get("deadline") || "all";
+    const sort = searchParams.get("sort") || "recent";
+
+    log.set({ statuses, date_posted: datePosted, deadline, sort });
 
     let query = supabase.from("openings").select(
       `
@@ -15,7 +23,6 @@ export async function GET(request: Request) {
     );
 
     // Filter by status(es)
-    const statuses = searchParams.get("statuses")?.split(",") || ["open"];
     if (statuses.length === 1) {
       query = query.eq("status", statuses[0]);
     } else {
@@ -23,21 +30,17 @@ export async function GET(request: Request) {
     }
 
     // Filter by date posted
-    const datePosted = searchParams.get("datePosted") || "all";
     if (datePosted !== "all") {
       const cutoffDate = new Date();
-
       if (datePosted === "7days") {
         cutoffDate.setDate(cutoffDate.getDate() - 7);
       } else if (datePosted === "30days") {
         cutoffDate.setDate(cutoffDate.getDate() - 30);
       }
-
       query = query.gte("created_at", cutoffDate.toISOString());
     }
 
     // Filter by application deadline
-    const deadline = searchParams.get("deadline") || "all";
     if (deadline === "closing-soon") {
       const now = new Date();
       const sevenDaysFromNow = new Date(
@@ -50,7 +53,6 @@ export async function GET(request: Request) {
     }
 
     // Apply ordering based on sort parameter
-    const sort = searchParams.get("sort") || "recent";
     if (sort === "recent") {
       query = query.order("created_at", { ascending: false });
     } else if (sort === "closing-soon") {
@@ -62,7 +64,8 @@ export async function GET(request: Request) {
     const { data: openings, error: fetchError } = await query;
 
     if (fetchError) {
-      logger.error("Error fetching openings:", fetchError);
+      log.error("Error fetching openings", fetchError);
+      log.flush(500);
       return NextResponse.json(
         { error: "Failed to fetch openings" },
         { status: 500 },
@@ -73,6 +76,7 @@ export async function GET(request: Request) {
     let applicationStatusMap: Record<string, string> = {};
     const { data: authData } = await supabase.auth.getClaims();
     if (authData?.claims && openings && openings.length > 0) {
+      log.set({ user_id: authData.claims.sub });
       const openingIds = openings.map((o) => o.id);
       const { data: userApplications } = await supabase
         .from("applications")
@@ -92,9 +96,12 @@ export async function GET(request: Request) {
       applicationStatus: applicationStatusMap[o.id] ?? null,
     }));
 
+    log.set({ result_count: enriched.length });
+    log.flush(200);
     return NextResponse.json(enriched);
   } catch (error) {
-    logger.error("Error in openings API GET:", error);
+    log.error("Unexpected error in openings GET", error);
+    log.flush(500);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },
@@ -103,20 +110,25 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const log = createRequestLogger({ method: "POST", path: "/api/openings" });
   try {
     const supabase = await createClient();
 
     const { data: authData, error: authError } = await supabase.auth.getUser();
     if (authError || !authData.user) {
+      log.flush(401);
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const user = authData.user;
+    log.set({ user_id: user.id });
 
     const body = await request.json();
     const { org_id, title, description, application_link, closes_at, status } =
       body;
+    log.set({ org_id });
 
     if (!title?.trim()) {
+      log.flush(400);
       return NextResponse.json(
         { error: "Position title is required" },
         { status: 400 },
@@ -132,6 +144,7 @@ export async function POST(request: Request) {
       .single();
 
     if (membershipError || !membership || membership.role !== "admin") {
+      log.flush(403);
       return NextResponse.json(
         { error: "Unauthorized: Only admins can manage openings" },
         { status: 403 },
@@ -152,12 +165,17 @@ export async function POST(request: Request) {
       .single();
 
     if (error) {
+      log.error("Error inserting opening", error);
+      log.flush(500);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    log.set({ opening_id: data.id });
+    log.flush(200);
     return NextResponse.json(data);
   } catch (error) {
-    logger.error("Error in openings API:", error);
+    log.error("Unexpected error in openings POST", error);
+    log.flush(500);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },

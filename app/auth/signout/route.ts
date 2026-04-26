@@ -13,13 +13,13 @@ export async function POST(req: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (user) {
-    logger.info(`Signing out user: ${user.id}`);
+    logger.info({ user_id: user.id }, "signing out user");
     const { error } = await supabase.auth.signOut();
     if (error) {
-      logger.warn(`Error during signout (proceeding anyway): ${error.message}`);
+      logger.warn({ err: error }, "error during signout, proceeding anyway");
     }
   } else {
-    logger.info("No active session found during signout");
+    logger.info("no active session found during signout");
   }
 
   const url = req.nextUrl.clone();

@@ -43,7 +43,7 @@ export default async function ProtectedLayout({
     .eq("user_id", userId);
 
   if (membershipsError) {
-    logger.error("Error fetching org memberships:", membershipsError);
+    logger.error({ err: membershipsError }, "error fetching org memberships");
   }
 
   const orgs: OrgWithRole[] = (memberships ?? [])

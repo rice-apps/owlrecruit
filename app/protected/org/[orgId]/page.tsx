@@ -34,12 +34,10 @@ export default async function ReviewerOrgPage({
     .single();
 
   if (membershipError) {
-    logger.error("Failed to fetch org membership", {
-      orgId,
-      userId,
-      code: membershipError.code,
-      message: membershipError.message,
-    });
+    logger.error(
+      { err: membershipError, org_id: orgId, user_id: userId },
+      "failed to fetch org membership",
+    );
   }
 
   const membershipRole =
@@ -79,11 +77,10 @@ export default async function ReviewerOrgPage({
     .order("user_id", { ascending: true });
 
   if (membersError) {
-    logger.error("Failed to fetch org members", {
-      orgId,
-      code: membersError.code,
-      message: membersError.message,
-    });
+    logger.error(
+      { err: membersError, org_id: orgId },
+      "failed to fetch org members",
+    );
   }
 
   const members: OrgMemberRecord[] = (membersData ?? []).map((m) => {

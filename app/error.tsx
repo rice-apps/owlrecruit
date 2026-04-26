@@ -1,19 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
-import { logger } from "@/lib/logger";
-
-export default function Error({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
-  useEffect(() => {
-    logger.error("Page error:", error);
-  }, [error]);
-
+export default function Error({ reset }: { reset: () => void }) {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-4">
       <h2 className="text-2xl font-semibold">Something went wrong</h2>

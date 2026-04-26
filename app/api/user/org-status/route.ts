@@ -1,8 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
-import { logger } from "@/lib/logger";
+import { createRequestLogger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 
 export async function GET() {
+  const log = createRequestLogger({
+    method: "GET",
+    path: "/api/user/org-status",
+  });
   try {
     const supabase = await createClient();
     const {
@@ -11,10 +15,12 @@ export async function GET() {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
+      log.flush(401);
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const userId = user.id;
+    log.set({ user_id: userId });
 
     // Get the user's net_id
     const { data: userData, error: userError } = await supabase
@@ -24,6 +30,7 @@ export async function GET() {
       .single();
 
     if (userError || !userData) {
+      log.flush(404);
       return NextResponse.json(
         { error: "User not found in database" },
         { status: 404 },
@@ -31,6 +38,7 @@ export async function GET() {
     }
 
     const netId = userData.net_id;
+    log.set({ net_id: netId });
 
     // Fetch org memberships and applications in parallel
     const [membershipsResult, applicationsResult] = await Promise.all([
@@ -128,12 +136,18 @@ export async function GET() {
         };
       }) || [];
 
+    log.set({
+      membership_count: transformedMemberships.length,
+      application_count: transformedApplications.length,
+    });
+    log.flush(200);
     return NextResponse.json({
       memberships: transformedMemberships,
       applications: transformedApplications,
     });
   } catch (error) {
-    logger.error("Error fetching user org status:", error);
+    log.error("Unexpected error fetching user org status", error);
+    log.flush(500);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },
