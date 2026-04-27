@@ -1,5 +1,5 @@
 /**
- * Opening Overview Page
+ * Opening Overview Page (Flattened URL)
  *
  * Displays opening details with tabs for Overview, Applicants, Questions, and Upload.
  */
@@ -21,8 +21,18 @@ import { logger } from "@/lib/logger";
 import { Breadcrumb } from "@/components/Breadcrumb";
 
 interface OpeningOverviewPageProps {
-  params: Promise<{ orgId: string; openingId: string }>;
+  params: Promise<{ openingId: string }>;
   searchParams: Promise<{ tab?: string }>;
+}
+
+interface OpeningData {
+  title: string;
+  description: string | null;
+  status: "open" | "closed" | "draft" | string;
+  application_link: string | null;
+  closes_at: string | null;
+  org_id: string;
+  orgs: Array<{ name: string }> | { name: string };
 }
 
 interface ApplicationRow {
@@ -48,21 +58,27 @@ export default async function OpeningOverviewPage({
   params,
   searchParams,
 }: OpeningOverviewPageProps) {
-  const { orgId, openingId } = await params;
+  const { openingId } = await params;
   const { tab = "overview" } = await searchParams;
   const supabase = await createClient();
 
-  const { data: orgData } = await supabase
-    .from("orgs")
-    .select("name")
-    .eq("id", orgId)
-    .single();
-
-  const { data: openingData } = await supabase
+  const { data: openingData } = (await supabase
     .from("openings")
-    .select("title, description, status, application_link, closes_at")
+    .select(
+      "title, description, status, application_link, closes_at, org_id, orgs(name)",
+    )
     .eq("id", openingId)
-    .single();
+    .single()) as { data: OpeningData | null; error: unknown };
+
+  if (!openingData) {
+    throw new Error("Opening not found");
+  }
+
+  const orgId = openingData.org_id;
+  const orgName =
+    (Array.isArray(openingData.orgs)
+      ? openingData.orgs[0]?.name
+      : openingData.orgs?.name) || "Organization";
 
   const { data: applications, error: appError } = (await supabase
     .from("applications")
@@ -124,13 +140,7 @@ export default async function OpeningOverviewPage({
           />
         );
       case "applicants":
-        return (
-          <ApplicantsList
-            applicants={applicants}
-            orgId={orgId}
-            openingId={openingId}
-          />
-        );
+        return <ApplicantsList applicants={applicants} />;
       case "questions":
         return (
           <QuestionsTab
@@ -140,7 +150,7 @@ export default async function OpeningOverviewPage({
           />
         );
       case "upload":
-        return <UploadTab />;
+        return <UploadTab orgId={orgId} />;
       default:
         return (
           <OverviewTab
@@ -160,7 +170,7 @@ export default async function OpeningOverviewPage({
       <Breadcrumb
         items={[
           {
-            label: orgData?.name || "Organization",
+            label: orgName || "Organization",
             href: `/protected/org/${orgId}`,
           },
           { label: openingData?.title || "Opening" },
@@ -185,9 +195,11 @@ export default async function OpeningOverviewPage({
             <OpeningStatusButton
               orgId={orgId}
               openingId={openingId}
-              status={openingData?.status || "draft"}
+              status={
+                (openingData?.status as "open" | "closed" | "draft") || "draft"
+              }
             />
-            <Link href={`/protected/org/${orgId}/opening/${openingId}/edit`}>
+            <Link href={`/protected/opening/${openingId}/edit`}>
               <ActionIcon
                 variant="subtle"
                 color="gray"

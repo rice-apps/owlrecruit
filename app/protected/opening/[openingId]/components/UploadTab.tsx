@@ -10,8 +10,12 @@ import {
 import { useUploadWizard } from "./useUploadWizard";
 import { ColumnMappingStep } from "./ColumnMappingStep";
 
-export function UploadTab() {
-  const wizard = useUploadWizard();
+interface UploadTabProps {
+  orgId: string;
+}
+
+export function UploadTab({ orgId }: UploadTabProps) {
+  const wizard = useUploadWizard(orgId);
 
   const progressPct =
     ((wizard.currentStep - 1) / (wizard.steps.length - 1)) * 100;

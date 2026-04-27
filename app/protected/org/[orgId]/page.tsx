@@ -150,7 +150,6 @@ export default async function ReviewerOrgPage({
       >
         <OpeningsGrid
           openings={openings ?? []}
-          orgId={orgId}
           orgName={displayOrgName}
           isAdmin={isAdmin}
         />

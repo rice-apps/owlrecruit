@@ -33,6 +33,7 @@ interface OpeningFormPageProps {
   orgId: string;
   openingId?: string;
   initialOpening?: OpeningInitialData;
+  openingHref?: string;
 }
 
 export function OpeningFormPage({
@@ -40,6 +41,7 @@ export function OpeningFormPage({
   orgId,
   openingId,
   initialOpening,
+  openingHref,
 }: OpeningFormPageProps) {
   const router = useRouter();
   const { orgName, eligibleReviewers } = useOpeningFormContext(orgId);
@@ -171,7 +173,9 @@ export function OpeningFormPage({
       }
 
       if (isEditMode && openingId) {
-        router.push(`/protected/org/${orgId}/opening/${openingId}`);
+        router.push(
+          openingHref ?? `/protected/org/${orgId}/opening/${openingId}`,
+        );
       } else {
         router.push(`/protected/org/${orgId}`);
       }
@@ -200,7 +204,9 @@ export function OpeningFormPage({
             ? [
                 {
                   label: initialOpening?.title || "Opening",
-                  href: `/protected/org/${orgId}/opening/${openingId}`,
+                  href:
+                    openingHref ??
+                    `/protected/org/${orgId}/opening/${openingId}`,
                 },
                 { label: "Edit" },
               ]

@@ -16,8 +16,8 @@ import { Json } from "@/types/supabase";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { createClient } from "@/lib/supabase/client";
 import { ApplicantTabs } from "./components/ApplicantTabs";
-import { CommentsSidebar } from "@/app/protected/org/[orgId]/opening/[openingId]/applicant/[applicantId]/components/comments-sidebar";
-import { InterviewTab } from "@/app/protected/org/[orgId]/opening/[openingId]/applicant/[applicantId]/components/InterviewTab";
+import { CommentsSidebar } from "@/app/protected/application/[applicationId]/components/comments-sidebar";
+import { InterviewTab } from "@/app/protected/application/[applicationId]/components/InterviewTab";
 import { ApplicationStatusBadge } from "@/components/StatusBadge";
 import type { ApplicationStatus } from "@/types/app";
 import {
@@ -26,12 +26,26 @@ import {
   type RubricCriterion,
   type RubricSummaryMetrics,
   SummaryTab,
-} from "@/app/protected/org/[orgId]/opening/[openingId]/applicant/[applicantId]/components/SummaryTab";
+} from "@/app/protected/application/[applicationId]/components/SummaryTab";
 
 interface ApplicationData {
   form_responses: Json;
   resume_url: string | null;
   status: ApplicationStatus;
+  org_id: string;
+  opening_id: string;
+}
+
+interface FetchedApplication extends ApplicationData {
+  openings:
+    | {
+        title: string;
+        orgs: { name: string } | Array<{ name: string }>;
+      }
+    | Array<{
+        title: string;
+        orgs: { name: string } | Array<{ name: string }>;
+      }>;
 }
 
 interface ReviewerScoreSummary {
@@ -111,21 +125,18 @@ function ResumeViewer({ resumeUrl }: { resumeUrl: string | null }) {
   );
 }
 
-export default function ApplicantReviewPage() {
+export default function ApplicationReviewPage() {
   const params = useParams();
-
   const searchParams = useSearchParams();
-  const { orgId, openingId, applicantId } = params as {
-    orgId: string;
-    openingId: string;
-    applicantId: string;
-  };
+  const applicationId = params.applicationId as string;
 
   const tab = searchParams.get("tab") || "submission";
   const showReviewSidebar = tab !== "summary" && tab !== "interview";
   const [applicationData, setApplicationData] =
-    useState<ApplicationData | null>(null);
+    useState<FetchedApplication | null>(null);
   const [loading, setLoading] = useState(true);
+  const [orgId, setOrgId] = useState<string>("");
+  const [openingId, setOpeningId] = useState<string>("");
   const [orgName, setOrgName] = useState<string>("");
   const [openingTitle, setOpeningTitle] = useState<string>("");
   const [summaryData, setSummaryData] = useState<SummaryTabState | null>(null);
@@ -137,25 +148,27 @@ export default function ApplicantReviewPage() {
     async function fetchApplicationData() {
       try {
         const supabase = createClient();
-        const [{ data, error }, { data: orgData }, { data: openingData }] =
-          await Promise.all([
-            supabase
-              .from("applications")
-              .select("form_responses, resume_url, status")
-              .eq("id", applicantId)
-              .single(),
-            supabase.from("orgs").select("name").eq("id", orgId).single(),
-            supabase
-              .from("openings")
-              .select("title")
-              .eq("id", openingId)
-              .single(),
-          ]);
+        const { data, error } = await supabase
+          .from("applications")
+          .select(
+            "form_responses, resume_url, status, org_id, opening_id, openings(title, orgs(name))",
+          )
+          .eq("id", applicationId)
+          .single();
 
         if (error) throw error;
-        setApplicationData(data);
-        if (orgData) setOrgName(orgData.name);
-        if (openingData) setOpeningTitle(openingData.title);
+        const fetchedData = data as FetchedApplication;
+        setApplicationData(fetchedData);
+        setOrgId(fetchedData.org_id);
+        setOpeningId(fetchedData.opening_id);
+        const opening = Array.isArray(fetchedData.openings)
+          ? fetchedData.openings[0]
+          : fetchedData.openings;
+        const orgs = Array.isArray(opening?.orgs)
+          ? opening.orgs[0]
+          : opening?.orgs;
+        setOrgName(orgs?.name || "Organization");
+        setOpeningTitle(opening?.title || "Opening");
       } catch {
         // loading state cleared below
       } finally {
@@ -163,17 +176,17 @@ export default function ApplicantReviewPage() {
       }
     }
     fetchApplicationData();
-  }, [applicantId, orgId, openingId]);
+  }, [applicationId]);
 
   useEffect(() => {
     setSummaryData(null);
     setSummaryError(null);
     setSummaryFetchAttempted(false);
     setSummaryLoading(false);
-  }, [applicantId, orgId]);
+  }, [applicationId]);
 
   useEffect(() => {
-    if (tab !== "summary" || summaryFetchAttempted) return;
+    if (tab !== "summary" || summaryFetchAttempted || !orgId) return;
 
     const controller = new AbortController();
     let isMounted = true;
@@ -184,7 +197,7 @@ export default function ApplicantReviewPage() {
 
       try {
         const response = await fetch(
-          `/api/org/${orgId}/applications/${applicantId}/reviews`,
+          `/api/org/${orgId}/applications/${applicationId}/reviews`,
           { signal: controller.signal },
         );
 
@@ -278,7 +291,7 @@ export default function ApplicantReviewPage() {
       isMounted = false;
       controller.abort();
     };
-  }, [tab, orgId, applicantId, summaryFetchAttempted]);
+  }, [tab, orgId, applicationId, summaryFetchAttempted]);
 
   const formData =
     typeof applicationData?.form_responses === "object" &&
@@ -394,7 +407,7 @@ export default function ApplicantReviewPage() {
         );
       }
       case "interview":
-        return <InterviewTab orgId={orgId} applicationId={applicantId} />;
+        return <InterviewTab orgId={orgId} applicationId={applicationId} />;
       default:
         return null;
     }
@@ -419,7 +432,7 @@ export default function ApplicantReviewPage() {
             },
             {
               label: openingTitle || "Opening",
-              href: `/protected/org/${orgId}/opening/${openingId}`,
+              href: `/protected/opening/${openingId}`,
             },
             { label: applicantName },
           ]}
@@ -471,7 +484,7 @@ export default function ApplicantReviewPage() {
 
       {showReviewSidebar && (
         <CommentsSidebar
-          applicantId={applicantId}
+          applicantId={applicationId}
           openingId={openingId}
           orgId={orgId}
         />

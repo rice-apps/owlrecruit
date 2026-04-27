@@ -15,11 +15,10 @@ export type CustomQuestion = {
   text: string;
 };
 
-export function useUploadWizard() {
+export function useUploadWizard(orgId: string) {
   const params = useParams();
   const router = useRouter();
   const openingId = params.openingId as string;
-  const orgId = params.orgId as string;
 
   const [currentStep, setCurrentStep] = useState(1);
   const [file, setFile] = useState<File | null>(null);
@@ -196,9 +195,7 @@ export function useUploadWizard() {
       if (results.errors.length > 0) {
         setUploadErrors(results.errors);
       } else {
-        router.push(
-          `/protected/org/${orgId}/opening/${openingId}?tab=applicants`,
-        );
+        router.push(`/protected/opening/${openingId}?tab=applicants`);
       }
     } catch (error: unknown) {
       setUploadErrors([

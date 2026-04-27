@@ -28,7 +28,6 @@ interface OpeningItem {
 
 interface OpeningsGridProps {
   openings: OpeningItem[];
-  orgId: string;
   orgName: string;
   isAdmin: boolean;
 }
@@ -43,7 +42,6 @@ const FILTER_OPTIONS: { label: string; value: FilterStatus }[] = [
 
 export function OpeningsGrid({
   openings,
-  orgId,
   orgName,
   isAdmin,
 }: OpeningsGridProps) {
@@ -131,7 +129,7 @@ export function OpeningsGrid({
               )}
 
               <Link
-                href={`/protected/org/${orgId}/opening/${opening.id}`}
+                href={`/protected/opening/${opening.id}`}
                 style={{ textDecoration: "none", color: "inherit" }}
               >
                 {/* Org avatar */}

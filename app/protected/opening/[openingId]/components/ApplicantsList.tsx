@@ -28,15 +28,9 @@ interface Applicant {
 
 interface ApplicantsListProps {
   applicants: Applicant[];
-  orgId: string;
-  openingId: string;
 }
 
-export function ApplicantsList({
-  applicants,
-  orgId,
-  openingId,
-}: ApplicantsListProps) {
+export function ApplicantsList({ applicants }: ApplicantsListProps) {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [anonymousView, setAnonymousView] = React.useState(false);
 
@@ -115,7 +109,7 @@ export function ApplicantsList({
                 </Table.Td>
                 <Table.Td>
                   <Link
-                    href={`/protected/org/${orgId}/opening/${openingId}/applicant/${applicant.applicationId}`}
+                    href={`/protected/application/${applicant.applicationId}`}
                     style={{
                       fontWeight: 600,
                       color: "var(--mantine-color-gray-9)",
