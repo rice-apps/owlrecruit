@@ -40,8 +40,9 @@ export function CommentsPanel({ orgId, applicantId }: CommentsPanelProps) {
         `/api/org/${orgId}/applications/${applicantId}/reviews`,
       );
       if (res.ok) {
-        const data = await res.json();
-        setComments(data.comments ?? []);
+        const body = await res.json();
+        const payload = body.data ?? body;
+        setComments(payload.comments ?? []);
       }
     } catch {
       // comments load silently on failure

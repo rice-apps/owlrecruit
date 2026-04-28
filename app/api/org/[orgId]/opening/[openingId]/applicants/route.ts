@@ -21,7 +21,7 @@ export async function GET(
     .select(
       `
       applicant_id,
-      users:applicant_id (
+      applicant:applicant_id (
         net_id,
         name
       )
@@ -36,13 +36,15 @@ export async function GET(
   }
 
   const existingApplicants = applications
-    .filter((app) => app.users)
+    .filter((app) => app.applicant)
     .map((app) => {
-      const user = Array.isArray(app.users) ? app.users[0] : app.users;
+      const applicant = Array.isArray(app.applicant)
+        ? app.applicant[0]
+        : app.applicant;
       return {
-        netId: user.net_id,
+        netId: applicant.net_id,
         applicantId: app.applicant_id,
-        name: user.name,
+        name: applicant.name,
       };
     });
 

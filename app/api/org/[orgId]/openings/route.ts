@@ -135,17 +135,6 @@ export async function POST(
       application_link: application_link?.trim() || null,
       closes_at: closes_at || null,
       status: status || "open",
-      reviewer_ids:
-        reviewer_ids === undefined
-          ? null
-          : Array.from(
-              new Set(
-                reviewer_ids
-                  .filter((id: unknown) => typeof id === "string")
-                  .map((id: string) => id.trim())
-                  .filter(Boolean),
-              ),
-            ),
       rubric: rubric ?? null,
     })
     .select()
@@ -155,6 +144,22 @@ export async function POST(
     log.error("error creating opening", error);
     log.flush(500);
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  if (Array.isArray(reviewer_ids) && reviewer_ids.length > 0) {
+    const uniqueIds = Array.from(
+      new Set(
+        reviewer_ids
+          .filter((id: unknown) => typeof id === "string")
+          .map((id: string) => id.trim())
+          .filter(Boolean),
+      ),
+    );
+    await supabase
+      .from("opening_reviewers")
+      .insert(
+        uniqueIds.map((userId) => ({ opening_id: data.id, user_id: userId })),
+      );
   }
 
   log.set({ opening_id: data.id });

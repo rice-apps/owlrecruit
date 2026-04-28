@@ -17,10 +17,9 @@ export async function POST(request: Request) {
     }
     log.set({ user_id: user.id });
 
-    const formData = await request.formData();
-    const name = formData.get("name") as string | null;
-    const description = formData.get("description") as string | null;
-    const logoFile = formData.get("logo") as File | null;
+    const body = await request.json();
+    const name = body.name as string | null;
+    const description = body.description as string | null;
 
     if (!name?.trim()) {
       log.flush(400);
@@ -30,32 +29,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Upload logo if provided
-    let logo_url: string | null = null;
-    if (logoFile && logoFile.size > 0) {
-      const ext = logoFile.name.split(".").pop();
-      const path = `logos/${crypto.randomUUID()}.${ext}`;
-      const bytes = await logoFile.arrayBuffer();
-
-      const { error: uploadError } = await supabase.storage
-        .from("org-assets")
-        .upload(path, bytes, { contentType: logoFile.type });
-
-      if (uploadError) {
-        log.error("logo upload failed", uploadError);
-        log.flush(500);
-        return NextResponse.json(
-          { error: "Failed to upload logo" },
-          { status: 500 },
-        );
-      }
-
-      const { data: urlData } = supabase.storage
-        .from("org-assets")
-        .getPublicUrl(path);
-
-      logo_url = urlData.publicUrl;
-    }
+    const logo_url: string | null = null;
 
     // Atomically create org and assign creator as admin
     const { data: newOrgId, error: rpcError } = await supabase.rpc(

@@ -32,7 +32,6 @@ interface ApplicationData {
   form_responses: Json;
   resume_url: string | null;
   status: ApplicationStatus;
-  org_id: string;
   opening_id: string;
 }
 
@@ -40,12 +39,15 @@ interface FetchedApplication extends ApplicationData {
   openings:
     | {
         title: string;
+        org_id: string;
         orgs: { name: string } | Array<{ name: string }>;
       }
     | Array<{
         title: string;
+        org_id: string;
         orgs: { name: string } | Array<{ name: string }>;
       }>;
+  applicant: { name: string | null } | Array<{ name: string | null }> | null;
 }
 
 interface ReviewerScoreSummary {
@@ -151,7 +153,7 @@ export default function ApplicationReviewPage() {
         const { data, error } = await supabase
           .from("applications")
           .select(
-            "form_responses, resume_url, status, org_id, opening_id, openings(title, orgs(name))",
+            "form_responses, resume_url, status, opening_id, openings(title, org_id, orgs(name)), applicant:applicant_id(name)",
           )
           .eq("id", applicationId)
           .single();
@@ -159,11 +161,11 @@ export default function ApplicationReviewPage() {
         if (error) throw error;
         const fetchedData = data as FetchedApplication;
         setApplicationData(fetchedData);
-        setOrgId(fetchedData.org_id);
         setOpeningId(fetchedData.opening_id);
         const opening = Array.isArray(fetchedData.openings)
           ? fetchedData.openings[0]
           : fetchedData.openings;
+        setOrgId(opening?.org_id || "");
         const orgs = Array.isArray(opening?.orgs)
           ? opening.orgs[0]
           : opening?.orgs;
@@ -307,9 +309,15 @@ export default function ApplicationReviewPage() {
     return undefined;
   };
 
+  const applicantRecord = applicationData?.applicant
+    ? Array.isArray(applicationData.applicant)
+      ? applicationData.applicant[0]
+      : applicationData.applicant
+    : null;
   const applicantName =
     toDisplayString(formData["Name"]) ||
     toDisplayString(formData["name"]) ||
+    applicantRecord?.name ||
     "Unknown Applicant";
   const applicantEmail =
     toDisplayString(formData["Email"]) ||

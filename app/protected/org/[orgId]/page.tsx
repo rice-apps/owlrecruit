@@ -94,9 +94,13 @@ export default async function ReviewerOrgPage({
     };
   });
 
+  // RLS already filters out draft/closed openings for non-members
+  const displayOpenings = openings ?? [];
+
   const displayOrgName = orgData?.name || "Organization";
-  const openPositionCount =
-    openings?.filter((o) => o.status === "open").length ?? 0;
+  const openPositionCount = displayOpenings.filter(
+    (o) => o.status === "open",
+  ).length;
 
   return (
     <Stack gap="lg" pb="xl" style={{ flex: 1, width: "100%", minWidth: 0 }}>
@@ -149,7 +153,7 @@ export default async function ReviewerOrgPage({
         }
       >
         <OpeningsGrid
-          openings={openings ?? []}
+          openings={displayOpenings}
           orgName={displayOrgName}
           isAdmin={isAdmin}
         />

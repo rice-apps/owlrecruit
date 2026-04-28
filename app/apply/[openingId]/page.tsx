@@ -52,22 +52,29 @@ export default async function ApplyPage({ params }: Props) {
   const orgName = (orgRow as { name: string } | null)?.name ?? "Unknown Org";
 
   let alreadyApplied = false;
-  if (user?.email?.endsWith("@rice.edu")) {
-    const netId = user.email.split("@")[0];
-    const { data: applicant } = await supabase
-      .from("applicants")
-      .select("id")
-      .eq("net_id", netId)
+  if (user) {
+    const { data: userRecord } = await supabase
+      .from("users")
+      .select("net_id")
+      .eq("id", user.id)
       .maybeSingle();
 
-    if (applicant) {
-      const { data: existing } = await supabase
-        .from("applications")
+    if (userRecord?.net_id) {
+      const { data: applicant } = await supabase
+        .from("applicants")
         .select("id")
-        .eq("opening_id", openingId)
-        .eq("applicant_id", applicant.id)
+        .eq("net_id", userRecord.net_id)
         .maybeSingle();
-      alreadyApplied = !!existing;
+
+      if (applicant) {
+        const { data: existing } = await supabase
+          .from("applications")
+          .select("id")
+          .eq("opening_id", openingId)
+          .eq("applicant_id", applicant.id)
+          .maybeSingle();
+        alreadyApplied = !!existing;
+      }
     }
   }
 

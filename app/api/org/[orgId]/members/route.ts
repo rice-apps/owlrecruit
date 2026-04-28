@@ -94,6 +94,10 @@ export async function POST(
 
     if (error) {
       log.error("error adding member", error);
+      if (error.code === "23505") {
+        log.flush(409);
+        return err("User is already a member of this organization", 409);
+      }
       log.flush(500);
       return err(error.message, 500);
     }

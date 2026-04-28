@@ -40,7 +40,7 @@ interface ApplicationRow {
   status: string;
   applicant_id: string;
   created_at: string | null;
-  users_id: string | null;
+  user_id: string | null;
   user: {
     id: string;
     name: string;
@@ -80,6 +80,23 @@ export default async function OpeningOverviewPage({
       ? openingData.orgs[0]?.name
       : openingData.orgs?.name) || "Organization";
 
+  // Determine current user's role for tab visibility
+  const { data: authData } = await supabase.auth.getClaims();
+  let isAdmin = false;
+  let isMember = false;
+  if (authData?.claims) {
+    const { data: membership } = await supabase
+      .from("org_members")
+      .select("role")
+      .eq("user_id", authData.claims.sub)
+      .eq("org_id", orgId)
+      .maybeSingle();
+    if (membership) {
+      isMember = true;
+      isAdmin = membership.role === "admin";
+    }
+  }
+
   const { data: applications, error: appError } = (await supabase
     .from("applications")
     .select(
@@ -87,8 +104,8 @@ export default async function OpeningOverviewPage({
       id,
       status,
       applicant_id,
-      users_id,
-      user:users_id (
+      user_id,
+      user:user_id (
         id,
         name,
         net_id,
@@ -223,7 +240,11 @@ export default async function OpeningOverviewPage({
       >
         <Box px="xl" pt="xl" pb="sm">
           <Suspense fallback={<Box h={32} />}>
-            <OpeningTabs useNativeForm={!openingData?.application_link} />
+            <OpeningTabs
+              useNativeForm={!openingData?.application_link}
+              isAdmin={isAdmin}
+              isMember={isMember}
+            />
           </Suspense>
         </Box>
         <Box px="xl">{renderTabContent()}</Box>

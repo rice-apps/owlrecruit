@@ -77,17 +77,35 @@ export async function GET(request: Request) {
     const { data: authData } = await supabase.auth.getClaims();
     if (authData?.claims && openings && openings.length > 0) {
       log.set({ user_id: authData.claims.sub });
-      const openingIds = openings.map((o) => o.id);
-      const { data: userApplications } = await supabase
-        .from("applications")
-        .select("opening_id, status")
-        .eq("user_id", authData.claims.sub)
-        .in("opening_id", openingIds);
 
-      if (userApplications) {
-        applicationStatusMap = Object.fromEntries(
-          userApplications.map((a) => [a.opening_id, a.status]),
-        );
+      // Resolve applicant_id via net_id so CSV-uploaded applications are included
+      const { data: userData } = await supabase
+        .from("users")
+        .select("net_id")
+        .eq("id", authData.claims.sub)
+        .single();
+
+      if (userData?.net_id) {
+        const { data: applicantData } = await supabase
+          .from("applicants")
+          .select("id")
+          .eq("net_id", userData.net_id)
+          .single();
+
+        if (applicantData) {
+          const openingIds = openings.map((o) => o.id);
+          const { data: userApplications } = await supabase
+            .from("applications")
+            .select("opening_id, status")
+            .eq("applicant_id", applicantData.id)
+            .in("opening_id", openingIds);
+
+          if (userApplications) {
+            applicationStatusMap = Object.fromEntries(
+              userApplications.map((a) => [a.opening_id, a.status]),
+            );
+          }
+        }
       }
     }
 

@@ -78,9 +78,17 @@ export default function NewOpeningPage() {
           const json = await orgStatusRes.json();
           const memberships = json.data ?? json.memberships ?? [];
           const membership = memberships.find(
-            (m: { org_id: string; org_name: string }) => m.org_id === orgId,
+            (m: { org_id: string; org_name: string; role: string }) =>
+              m.org_id === orgId,
           );
-          if (membership) setOrgName(membership.org_name);
+          if (!membership || membership.role !== "admin") {
+            router.replace(`/protected/org/${orgId}`);
+            return;
+          }
+          setOrgName(membership.org_name);
+        } else {
+          router.replace(`/protected/org/${orgId}`);
+          return;
         }
 
         if (reviewersRes.ok) {

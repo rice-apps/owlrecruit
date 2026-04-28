@@ -71,6 +71,11 @@ export async function GET(
     return NextResponse.json({ error: "Opening not found" }, { status: 404 });
   }
 
+  const { data: reviewerRows } = await supabase
+    .from("opening_reviewers")
+    .select("user_id")
+    .eq("opening_id", openingId);
+
   log.flush(200);
   return NextResponse.json({
     opening: {
@@ -86,6 +91,7 @@ export async function GET(
             description: item?.description || "",
           }))
         : [],
+      reviewer_ids: (reviewerRows ?? []).map((r) => r.user_id),
     },
   });
 }
@@ -148,6 +154,7 @@ export async function PATCH(
   if (closes_at !== undefined) updates.closes_at = closes_at || null;
   if (status !== undefined) updates.status = status;
   if (rubric !== undefined) updates.rubric = rubric;
+
   if (reviewer_ids !== undefined) {
     if (!Array.isArray(reviewer_ids)) {
       log.flush(400);
@@ -156,15 +163,6 @@ export async function PATCH(
         { status: 400 },
       );
     }
-
-    updates.reviewer_ids = Array.from(
-      new Set(
-        reviewer_ids
-          .filter((id: unknown) => typeof id === "string")
-          .map((id: string) => id.trim())
-          .filter(Boolean),
-      ),
-    );
   }
 
   const { error: updateError } = await supabase
@@ -176,6 +174,29 @@ export async function PATCH(
     log.error("error updating opening", updateError);
     log.flush(500);
     return NextResponse.json({ error: updateError.message }, { status: 500 });
+  }
+
+  if (reviewer_ids !== undefined) {
+    const uniqueIds = Array.from(
+      new Set(
+        (reviewer_ids as unknown[])
+          .filter((id): id is string => typeof id === "string")
+          .map((id) => id.trim())
+          .filter(Boolean),
+      ),
+    );
+    await supabase
+      .from("opening_reviewers")
+      .delete()
+      .eq("opening_id", openingId);
+    if (uniqueIds.length > 0) {
+      await supabase.from("opening_reviewers").insert(
+        uniqueIds.map((userId) => ({
+          opening_id: openingId,
+          user_id: userId,
+        })),
+      );
+    }
   }
 
   log.set({ updated_fields: Object.keys(updates) });

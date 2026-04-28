@@ -299,21 +299,6 @@ export function ApplyForm({
     );
   }
 
-  if (userEmail && !userEmail.endsWith("@rice.edu")) {
-    return (
-      <Box>
-        {header}
-        <Alert color="yellow" radius="md">
-          <Text size="sm">
-            A Rice University email address (<strong>@rice.edu</strong>) is
-            required to apply. You are signed in as <strong>{userEmail}</strong>
-            .
-          </Text>
-        </Alert>
-      </Box>
-    );
-  }
-
   if (alreadyApplied) {
     return (
       <Box>
@@ -330,6 +315,21 @@ export function ApplyForm({
             >
               applications page
             </a>
+            .
+          </Text>
+        </Alert>
+      </Box>
+    );
+  }
+
+  if (userEmail && !userEmail.endsWith("@rice.edu")) {
+    return (
+      <Box>
+        {header}
+        <Alert color="yellow" radius="md">
+          <Text size="sm">
+            A Rice University email address (<strong>@rice.edu</strong>) is
+            required to apply. You are signed in as <strong>{userEmail}</strong>
             .
           </Text>
         </Alert>

@@ -14,16 +14,21 @@ type TabId = (typeof allTabs)[number]["id"];
 
 interface OpeningTabsProps {
   useNativeForm: boolean;
+  isAdmin: boolean;
+  isMember: boolean;
 }
 
-export function OpeningTabs({ useNativeForm }: OpeningTabsProps) {
+export function OpeningTabs({ isAdmin, isMember }: OpeningTabsProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const currentTab = (searchParams.get("tab") as TabId) || "overview";
 
-  const tabs = useNativeForm
-    ? allTabs.filter((t) => t.id !== "upload")
-    : allTabs;
+  const tabs = allTabs.filter((t) => {
+    if (t.id === "upload") return isAdmin;
+    if (t.id === "questions") return isAdmin;
+    if (t.id === "applicants") return isMember;
+    return true;
+  });
 
   const buildHref = (tabId: string) => {
     const params = new URLSearchParams(searchParams.toString());

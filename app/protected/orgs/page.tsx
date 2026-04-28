@@ -33,7 +33,6 @@ export default async function MyOrgsPage() {
         description,
         created_at,
         updated_at,
-        social_links,
         logo_url
       )
     `,

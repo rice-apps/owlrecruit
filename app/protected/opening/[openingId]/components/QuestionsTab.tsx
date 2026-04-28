@@ -250,7 +250,7 @@ export function QuestionsTab({ openingId, orgId }: QuestionsTabProps) {
           id,
           applicant_id,
           form_responses,
-          user:users_id (name, email),
+          user:user_id (name, email),
           applicant:applicant_id (name, net_id)
         `,
         )

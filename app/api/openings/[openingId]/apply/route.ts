@@ -122,7 +122,7 @@ export async function POST(request: Request, { params }: { params: Params }) {
   const { error: insertError } = await supabase.from("applications").insert({
     opening_id: openingId,
     applicant_id: applicant.id,
-    users_id: user.id,
+    user_id: user.id,
     form_responses: enrichedResponses,
     status: "Applied",
   });

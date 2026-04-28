@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "13.0.5";
   };
+  graphql_public: {
+    Tables: {
+      [_ in never]: never;
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json;
+          operationName?: string;
+          query?: string;
+          variables?: Json;
+        };
+        Returns: Json;
+      };
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
+  };
   public: {
     Tables: {
       applicants: {
@@ -84,7 +109,7 @@ export type Database = {
           resume_url: string | null;
           status: Database["public"]["Enums"]["status"] | null;
           updated_at: string | null;
-          users_id: string | null;
+          user_id: string | null;
         };
         Insert: {
           applicant_id: string;
@@ -95,7 +120,7 @@ export type Database = {
           resume_url?: string | null;
           status?: Database["public"]["Enums"]["status"] | null;
           updated_at?: string | null;
-          users_id?: string | null;
+          user_id?: string | null;
         };
         Update: {
           applicant_id?: string;
@@ -106,7 +131,7 @@ export type Database = {
           resume_url?: string | null;
           status?: Database["public"]["Enums"]["status"] | null;
           updated_at?: string | null;
-          users_id?: string | null;
+          user_id?: string | null;
         };
         Relationships: [
           {
@@ -124,8 +149,8 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "applications_users_id_fkey";
-            columns: ["users_id"];
+            foreignKeyName: "applications_user_id_fkey";
+            columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "users";
             referencedColumns: ["id"];
@@ -222,6 +247,42 @@ export type Database = {
           },
         ];
       };
+      opening_reviewers: {
+        Row: {
+          created_at: string | null;
+          id: string;
+          opening_id: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string | null;
+          id?: string;
+          opening_id: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string | null;
+          id?: string;
+          opening_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "opening_reviewers_opening_fkey";
+            columns: ["opening_id"];
+            isOneToOne: false;
+            referencedRelation: "openings";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "opening_reviewers_user_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       openings: {
         Row: {
           application_link: string | null;
@@ -230,8 +291,7 @@ export type Database = {
           description: string | null;
           id: string;
           org_id: string;
-          reviewer_ids: string[] | null;
-          rubric: Json[] | null;
+          rubric: Json | null;
           status: Database["public"]["Enums"]["opening_status"] | null;
           title: string;
           updated_at: string | null;
@@ -243,8 +303,7 @@ export type Database = {
           description?: string | null;
           id?: string;
           org_id: string;
-          reviewer_ids?: string[] | null;
-          rubric?: Json[] | null;
+          rubric?: Json | null;
           status?: Database["public"]["Enums"]["opening_status"] | null;
           title: string;
           updated_at?: string | null;
@@ -256,8 +315,7 @@ export type Database = {
           description?: string | null;
           id?: string;
           org_id?: string;
-          reviewer_ids?: string[] | null;
-          rubric?: Json[] | null;
+          rubric?: Json | null;
           status?: Database["public"]["Enums"]["opening_status"] | null;
           title?: string;
           updated_at?: string | null;
@@ -399,18 +457,16 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      create_org_with_admin: {
+        Args: { creator_id: string; org_description: string; org_name: string };
+        Returns: string;
+      };
+      is_org_admin: { Args: { p_org_id: string }; Returns: boolean };
+      is_org_member: { Args: { p_org_id: string }; Returns: boolean };
     };
     Enums: {
       opening_status: "draft" | "open" | "closed";
       org_role: "admin" | "reviewer";
-      score:
-        | "Inclined (Strong)"
-        | "Inclined"
-        | "Inclined (Lean)"
-        | "Disinclined (Lean)"
-        | "Disinclined"
-        | "Disinclined (Strong)";
       status:
         | "No Status"
         | "Applied"
@@ -546,18 +602,13 @@ export type CompositeTypes<
     : never;
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       opening_status: ["draft", "open", "closed"],
       org_role: ["admin", "reviewer"],
-      score: [
-        "Inclined (Strong)",
-        "Inclined",
-        "Inclined (Lean)",
-        "Disinclined (Lean)",
-        "Disinclined",
-        "Disinclined (Strong)",
-      ],
       status: [
         "No Status",
         "Applied",
