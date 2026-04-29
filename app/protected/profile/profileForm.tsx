@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Anchor, Button, Group, Stack, TextInput } from "@mantine/core";
+import { useForm } from "@mantine/form";
 import { createClient } from "@/lib/supabase/client";
 import OrganizationsSection, {
   type OrgMembership,
@@ -25,34 +26,28 @@ export default function ProfileForm({
   orgMemberships,
 }: ProfileFormProps) {
   const router = useRouter();
-  const [first, setFirst] = useState(firstName);
-  const [last, setLast] = useState(lastName);
-  const [emailVal, setEmailVal] = useState(email);
-  const [saved, setSaved] = useState({
-    first: firstName,
-    last: lastName,
-    email,
-  });
   const [saving, setSaving] = useState(false);
 
-  const handleReset = () => {
-    setFirst(saved.first);
-    setLast(saved.last);
-    setEmailVal(saved.email);
-  };
+  const form = useForm({
+    initialValues: { first: firstName, last: lastName, email },
+    validate: {
+      email: (v) =>
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? null : "Invalid email address",
+    },
+  });
 
-  const handleSave = async () => {
+  const handleSave = form.onSubmit(async (values) => {
     setSaving(true);
     try {
       const supabase = createClient();
 
       const { error: nameError } = await supabase
         .from("users")
-        .update({ name: `${first} ${last}`.trim() })
+        .update({ name: `${values.first} ${values.last}`.trim() })
         .eq("id", userId);
 
       const { error: emailError } = await supabase.auth.updateUser({
-        email: emailVal,
+        email: values.email,
       });
 
       if (nameError || emailError) {
@@ -64,54 +59,53 @@ export default function ProfileForm({
         return;
       }
 
-      setSaved({ first, last, email: emailVal });
+      form.resetDirty();
       notif.show({ color: "green", message: "Profile saved." });
       router.refresh();
     } finally {
       setSaving(false);
     }
-  };
+  });
 
   return (
-    <Stack gap="lg">
-      <Group grow>
+    <form onSubmit={handleSave}>
+      <Stack gap="lg">
+        <Group grow>
+          <TextInput
+            label="First name"
+            placeholder="John"
+            {...form.getInputProps("first")}
+          />
+          <TextInput
+            label="Last name"
+            placeholder="Doe"
+            {...form.getInputProps("last")}
+          />
+        </Group>
+
         <TextInput
-          label="First name"
-          value={first}
-          onChange={(e) => setFirst(e.currentTarget.value)}
-          placeholder="John"
+          label="Rice Email"
+          type="email"
+          placeholder="john.doe@rice.edu"
+          {...form.getInputProps("email")}
         />
-        <TextInput
-          label="Last name"
-          value={last}
-          onChange={(e) => setLast(e.currentTarget.value)}
-          placeholder="Doe"
-        />
-      </Group>
 
-      <TextInput
-        label="Rice Email"
-        type="email"
-        value={emailVal}
-        onChange={(e) => setEmailVal(e.currentTarget.value)}
-        placeholder="john.doe@rice.edu"
-      />
+        <OrganizationsSection memberships={orgMemberships} userId={userId} />
 
-      <OrganizationsSection memberships={orgMemberships} userId={userId} />
-
-      <Group justify="flex-end">
-        <Anchor
-          onClick={handleReset}
-          c="dimmed"
-          size="sm"
-          style={{ cursor: "pointer" }}
-        >
-          Reset
-        </Anchor>
-        <Button onClick={handleSave} loading={saving} color="dark" radius="xl">
-          Save changes
-        </Button>
-      </Group>
-    </Stack>
+        <Group justify="flex-end">
+          <Anchor
+            onClick={() => form.reset()}
+            c="dimmed"
+            size="sm"
+            style={{ cursor: "pointer" }}
+          >
+            Reset
+          </Anchor>
+          <Button type="submit" loading={saving} color="dark" radius="xl">
+            Save changes
+          </Button>
+        </Group>
+      </Stack>
+    </form>
   );
 }

@@ -15,34 +15,33 @@ import {
   TextInput,
   Title,
 } from "@mantine/core";
+import { useForm } from "@mantine/form";
 import { Dropzone, IMAGE_MIME_TYPE } from "@mantine/dropzone";
 import { AlertCircle, UploadCloud01 } from "@untitled-ui/icons-react";
 import { notifications } from "@mantine/notifications";
 
 export default function NewOrgPage() {
   const router = useRouter();
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const form = useForm({
+    initialValues: { name: "", description: "" },
+    validate: {
+      name: (v) => (v.trim() ? null : "Organization name is required"),
+    },
+  });
+
+  const handleSubmit = form.onSubmit(async (values) => {
     setError(null);
-
-    if (!name.trim()) {
-      setError("Organization name is required");
-      return;
-    }
-
     setSubmitting(true);
     try {
       const res = await fetch("/api/orgs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: name.trim(),
-          description: description.trim() || null,
+          name: values.name.trim(),
+          description: values.description.trim() || null,
         }),
       });
 
@@ -60,7 +59,7 @@ export default function NewOrgPage() {
     } finally {
       setSubmitting(false);
     }
-  };
+  });
 
   return (
     <Center py="xl">
@@ -74,18 +73,16 @@ export default function NewOrgPage() {
             <TextInput
               label="Organization Name"
               required
-              value={name}
-              onChange={(e) => setName(e.currentTarget.value)}
               placeholder="e.g. RiceApps"
+              {...form.getInputProps("name")}
             />
 
             <Textarea
               label="Description"
-              value={description}
-              onChange={(e) => setDescription(e.currentTarget.value)}
               placeholder="What does your organization do?"
               minRows={3}
               autosize
+              {...form.getInputProps("description")}
             />
 
             {/* Logo upload — no-op for MVP */}

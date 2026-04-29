@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "@mantine/form";
 import {
   Stack,
   Card,
@@ -47,35 +48,36 @@ export function OpeningFormPage({
   const { orgName, eligibleReviewers } = useOpeningFormContext(orgId);
   const isEditMode = mode === "edit";
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [title, setTitle] = useState(initialOpening?.title || "");
-  const [description, setDescription] = useState(
-    initialOpening?.description || "",
-  );
   const [applicationMethod, setApplicationMethod] = useState<
     "native" | "external"
   >(initialOpening?.application_link ? "external" : "native");
-  const [applicationLink, setApplicationLink] = useState(
-    initialOpening?.application_link || "",
-  );
-  const [closesAt, setClosesAt] = useState<string | null>(
-    initialOpening?.closes_at ?? null,
-  );
-  const [status, setStatus] = useState<"draft" | "open" | "closed">(
-    initialOpening?.status || "draft",
-  );
-  const [selectedReviewers, setSelectedReviewers] = useState<string[]>([]);
   const [rubricOpen, setRubricOpen] = useState(
     Boolean(initialOpening?.rubric?.length),
   );
-  const [rubric, setRubric] = useState<RubricItem[]>(
-    (initialOpening?.rubric || []).map((item) => ({
-      name: item.name || "",
-      max_val: Number(item.max_val) || 10,
-      description: item.description || "",
-    })),
-  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const form = useForm({
+    initialValues: {
+      title: initialOpening?.title || "",
+      description: initialOpening?.description || "",
+      applicationLink: initialOpening?.application_link || "",
+      closesAt: (initialOpening?.closes_at ?? null) as string | null,
+      status: (initialOpening?.status || "draft") as
+        | "draft"
+        | "open"
+        | "closed",
+      selectedReviewers: [] as string[],
+      rubric: (initialOpening?.rubric || []).map((item) => ({
+        name: item.name || "",
+        max_val: Number(item.max_val) || 10,
+        description: item.description || "",
+      })) as RubricItem[],
+    },
+    validate: {
+      title: (v) => (v.trim() ? null : "Position title is required"),
+    },
+  });
 
   const reviewerOptions = eligibleReviewers.map((r) => {
     const u = Array.isArray(r.users) ? r.users[0] : r.users;
@@ -83,34 +85,28 @@ export function OpeningFormPage({
   });
 
   const updateRubricItem = (index: number, patch: Partial<RubricItem>) => {
-    const updated = [...rubric];
+    const updated = [...form.values.rubric];
     updated[index] = { ...updated[index], ...patch };
-    setRubric(updated);
+    form.setFieldValue("rubric", updated);
   };
 
-  const normalizedRubric = rubric
-    .filter((item) => String(item.name).trim())
-    .map((item) => ({
-      name: String(item.name).trim(),
-      max_val: Number(item.max_val) || 0,
-      description: String(item.description).trim() || "",
-    }));
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = form.onSubmit(async (values) => {
     setError(null);
-
-    if (!title.trim()) {
-      setError("Position title is required");
-      return;
-    }
 
     if (isEditMode && !openingId) {
       setError("Opening ID is required for editing");
       return;
     }
 
-    if (rubric.length > 0) {
+    const normalizedRubric = values.rubric
+      .filter((item) => String(item.name).trim())
+      .map((item) => ({
+        name: String(item.name).trim(),
+        max_val: Number(item.max_val) || 0,
+        description: String(item.description).trim() || "",
+      }));
+
+    if (values.rubric.length > 0) {
       if (normalizedRubric.some((r) => !r.name)) {
         setError("All criteria must have a name.");
         return;
@@ -134,21 +130,23 @@ export function OpeningFormPage({
 
     try {
       const payload: Record<string, unknown> = {
-        title: title.trim(),
-        description: description.trim() || null,
+        title: values.title.trim(),
+        description: values.description.trim() || null,
         application_link:
           applicationMethod === "external"
-            ? applicationLink.trim() || null
+            ? values.applicationLink.trim() || null
             : null,
-        closes_at: closesAt ?? null,
-        status,
+        closes_at: values.closesAt ?? null,
+        status: values.status,
         rubric: isEditMode
           ? normalizedRubric
           : normalizedRubric.length > 0
             ? normalizedRubric
             : undefined,
         reviewer_ids:
-          selectedReviewers.length > 0 ? selectedReviewers : undefined,
+          values.selectedReviewers.length > 0
+            ? values.selectedReviewers
+            : undefined,
       };
 
       if (!isEditMode) {
@@ -188,7 +186,7 @@ export function OpeningFormPage({
     } finally {
       setIsSubmitting(false);
     }
-  };
+  });
 
   const pageTitle = isEditMode ? "Edit Opening" : "Create position";
 
@@ -229,9 +227,8 @@ export function OpeningFormPage({
             <TextInput
               label="Position Name"
               required
-              value={title}
-              onChange={(e) => setTitle(e.currentTarget.value)}
               placeholder="e.g. Software Developer"
+              {...form.getInputProps("title")}
             />
 
             <div>
@@ -242,8 +239,10 @@ export function OpeningFormPage({
                 value={applicationMethod}
                 onChange={(val) => {
                   setApplicationMethod(val as "native" | "external");
-                  if (val === "native") setApplicationLink("");
-                  else if (!applicationLink) setApplicationLink("https://");
+                  if (val === "native")
+                    form.setFieldValue("applicationLink", "");
+                  else if (!form.values.applicationLink)
+                    form.setFieldValue("applicationLink", "https://");
                 }}
                 data={[
                   { label: "Native Form", value: "native" },
@@ -258,27 +257,25 @@ export function OpeningFormPage({
               ) : (
                 <TextInput
                   type="url"
-                  value={applicationLink}
-                  onChange={(e) => setApplicationLink(e.currentTarget.value)}
                   placeholder="https://forms.google.com/..."
+                  {...form.getInputProps("applicationLink")}
                 />
               )}
             </div>
 
             <Textarea
               label="Description"
-              value={description}
-              onChange={(e) => setDescription(e.currentTarget.value)}
               placeholder="Describe the position and responsibilities..."
               minRows={3}
               autosize
+              {...form.getInputProps("description")}
             />
 
             <DateTimePicker
               label="Due Date"
               placeholder="Select date and time"
-              value={closesAt}
-              onChange={setClosesAt}
+              value={form.values.closesAt}
+              onChange={(val) => form.setFieldValue("closesAt", val)}
               clearable
             />
 
@@ -288,9 +285,12 @@ export function OpeningFormPage({
                   Status
                 </Text>
                 <SegmentedControl
-                  value={status}
+                  value={form.values.status}
                   onChange={(val) =>
-                    setStatus(val as "draft" | "open" | "closed")
+                    form.setFieldValue(
+                      "status",
+                      val as "draft" | "open" | "closed",
+                    )
                   }
                   data={[
                     { label: "Draft", value: "draft" },
@@ -306,10 +306,9 @@ export function OpeningFormPage({
                 label="Assign Reviewers"
                 placeholder="Search members by name"
                 data={reviewerOptions}
-                value={selectedReviewers}
-                onChange={setSelectedReviewers}
                 searchable
                 clearable
+                {...form.getInputProps("selectedReviewers")}
               />
             )}
 
@@ -329,8 +328,12 @@ export function OpeningFormPage({
                   size="sm"
                   onClick={() => {
                     setRubricOpen(true);
-                    if (rubric.length === 0) {
-                      setRubric([{ name: "", max_val: 10, description: "" }]);
+                    if (form.values.rubric.length === 0) {
+                      form.insertListItem("rubric", {
+                        name: "",
+                        max_val: 10,
+                        description: "",
+                      });
                     }
                   }}
                 >
@@ -375,7 +378,7 @@ export function OpeningFormPage({
                       </Table.Tr>
                     </Table.Thead>
                     <Table.Tbody>
-                      {rubric.map((item, index) => (
+                      {form.values.rubric.map((item, index) => (
                         <Table.Tr key={index}>
                           <Table.Td>
                             <TextInput
@@ -419,7 +422,7 @@ export function OpeningFormPage({
                               variant="subtle"
                               color="red"
                               onClick={() =>
-                                setRubric(rubric.filter((_, i) => i !== index))
+                                form.removeListItem("rubric", index)
                               }
                             >
                               <Trash01 width={14} height={14} />
@@ -434,7 +437,7 @@ export function OpeningFormPage({
                     <Text size="sm" fw={600}>
                       Total Score:{" "}
                       <Text component="span" c="dimmed" fw={400}>
-                        {rubric.reduce(
+                        {form.values.rubric.reduce(
                           (sum, r) => sum + (Number(r.max_val) || 0),
                           0,
                         )}
@@ -447,10 +450,11 @@ export function OpeningFormPage({
                         color="owlTeal"
                         size="xs"
                         onClick={() =>
-                          setRubric([
-                            ...rubric,
-                            { name: "", max_val: 10, description: "" },
-                          ])
+                          form.insertListItem("rubric", {
+                            name: "",
+                            max_val: 10,
+                            description: "",
+                          })
                         }
                       >
                         Add criterion +
@@ -461,7 +465,7 @@ export function OpeningFormPage({
                         color="red"
                         size="xs"
                         onClick={() => {
-                          setRubric([]);
+                          form.setFieldValue("rubric", []);
                           setRubricOpen(false);
                         }}
                       >

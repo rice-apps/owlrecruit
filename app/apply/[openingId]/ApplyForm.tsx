@@ -5,6 +5,7 @@ import Script from "next/script";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { parseQuestionText } from "@/lib/question-utils";
+import { useForm } from "@mantine/form";
 import {
   Alert,
   Box,
@@ -101,6 +102,7 @@ function FormField({
   question,
   value,
   onChange,
+  error,
 }: {
   question: {
     label: string;
@@ -110,6 +112,7 @@ function FormField({
   };
   value: string | string[];
   onChange: (v: string | string[]) => void;
+  error?: string;
 }) {
   switch (question.type) {
     case "textarea":
@@ -118,6 +121,7 @@ function FormField({
           value={typeof value === "string" ? value : ""}
           onChange={(e) => onChange(e.currentTarget.value)}
           required={question.is_required ?? false}
+          error={error}
           minRows={3}
           autosize
         />
@@ -133,6 +137,7 @@ function FormField({
           onChange={(val) => onChange(val ?? "")}
           placeholder="Select an option…"
           required={question.is_required ?? false}
+          error={error}
         />
       );
     case "checkbox":
@@ -154,6 +159,11 @@ function FormField({
               />
             );
           })}
+          {error && (
+            <Text size="xs" c="red">
+              {error}
+            </Text>
+          )}
         </Stack>
       );
     case "url":
@@ -163,6 +173,7 @@ function FormField({
           value={typeof value === "string" ? value : ""}
           onChange={(e) => onChange(e.currentTarget.value)}
           required={question.is_required ?? false}
+          error={error}
           placeholder="https://"
         />
       );
@@ -173,6 +184,7 @@ function FormField({
           value={typeof value === "string" ? value : ""}
           onChange={(e) => onChange(e.currentTarget.value)}
           required={question.is_required ?? false}
+          error={error}
         />
       );
   }
@@ -198,18 +210,32 @@ export function ApplyForm({
     ...parseQuestionText(q.question_text),
   }));
 
-  const [formState, setFormState] = useState<Record<string, string | string[]>>(
-    () =>
-      Object.fromEntries(
-        parsedQuestions.map((q) => [q.label, q.type === "checkbox" ? [] : ""]),
-      ),
-  );
+  const form = useForm<Record<string, string | string[]>>({
+    initialValues: Object.fromEntries(
+      parsedQuestions.map((q) => [q.label, q.type === "checkbox" ? [] : ""]),
+    ),
+    validate: Object.fromEntries(
+      parsedQuestions
+        .filter((q) => q.is_required)
+        .map((q) => [
+          q.label,
+          (v: string | string[]) =>
+            Array.isArray(v)
+              ? v.length === 0
+                ? "Required"
+                : null
+              : v
+                ? null
+                : "Required",
+        ]),
+    ),
+  });
+
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = form.onSubmit(async (values) => {
     setSubmitting(true);
     setError(null);
 
@@ -217,7 +243,7 @@ export function ApplyForm({
       const res = await fetch(`/api/openings/${openingId}/apply`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ form_responses: formState }),
+        body: JSON.stringify({ form_responses: values }),
       });
 
       if (res.ok) {
@@ -229,7 +255,7 @@ export function ApplyForm({
     } finally {
       setSubmitting(false);
     }
-  };
+  });
 
   const header = (
     <Box mb="xl">
@@ -380,11 +406,10 @@ export function ApplyForm({
                 <FormField
                   question={q}
                   value={
-                    formState[q.label] ?? (q.type === "checkbox" ? [] : "")
+                    form.values[q.label] ?? (q.type === "checkbox" ? [] : "")
                   }
-                  onChange={(v) =>
-                    setFormState((prev) => ({ ...prev, [q.label]: v }))
-                  }
+                  onChange={(v) => form.setFieldValue(q.label, v)}
+                  error={form.errors[q.label] as string | undefined}
                 />
               </Box>
             ))}
