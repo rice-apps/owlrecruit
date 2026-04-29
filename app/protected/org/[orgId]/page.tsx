@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { Text, Alert, ActionIcon, Stack } from "@mantine/core";
+import { OpeningStatus } from "@/types/app";
 import { Edit02 } from "@untitled-ui/icons-react";
 import { EditMembersDialog } from "@/components/edit-members-dialog";
 import {
@@ -24,7 +25,7 @@ export default async function ReviewerOrgPage({
   const supabase = await createClient();
 
   const { data: userData } = await supabase.auth.getUser();
-  const userId = userData?.user?.id;
+  const userId = userData?.user?.id ?? "";
 
   const { data: membership, error: membershipError } = await supabase
     .from("org_members")
@@ -34,12 +35,10 @@ export default async function ReviewerOrgPage({
     .single();
 
   if (membershipError) {
-    logger.error("Failed to fetch org membership", {
-      orgId,
-      userId,
-      code: membershipError.code,
-      message: membershipError.message,
-    });
+    logger.error(
+      { err: membershipError, org_id: orgId, user_id: userId },
+      "failed to fetch org membership",
+    );
   }
 
   const membershipRole =
@@ -50,7 +49,7 @@ export default async function ReviewerOrgPage({
 
   const { data: orgData } = await supabase
     .from("orgs")
-    .select("name, description, logo_url")
+    .select("name, description")
     .eq("id", orgId)
     .single();
 
@@ -79,27 +78,31 @@ export default async function ReviewerOrgPage({
     .order("user_id", { ascending: true });
 
   if (membersError) {
-    logger.error("Failed to fetch org members", {
-      orgId,
-      code: membersError.code,
-      message: membersError.message,
-    });
+    logger.error(
+      { err: membersError, org_id: orgId },
+      "failed to fetch org members",
+    );
   }
 
-  const members: OrgMemberRecord[] = (membersData ?? []).map((m) => {
-    const usersRaw = m.users;
-    const user = Array.isArray(usersRaw) ? usersRaw[0] : usersRaw;
-    return {
-      id: m.id,
-      user_id: m.user_id,
-      role: m.role as "admin" | "reviewer",
-      users: user ?? null,
-    };
-  });
+  const members: OrgMemberRecord[] = (membersData ?? []).map((m) => ({
+    id: m.id,
+    user_id: m.user_id,
+    role: m.role as "admin" | "reviewer",
+    users:
+      (m.users as unknown as {
+        id: string;
+        name: string | null;
+        email: string;
+      } | null) ?? null,
+  }));
+
+  // RLS already filters out draft/closed openings for non-members
+  const displayOpenings = openings ?? [];
 
   const displayOrgName = orgData?.name || "Organization";
-  const openPositionCount =
-    openings?.filter((o) => o.status === "open").length ?? 0;
+  const openPositionCount = displayOpenings.filter(
+    (o) => o.status === OpeningStatus.OPEN,
+  ).length;
 
   return (
     <Stack gap="lg" pb="xl" style={{ flex: 1, width: "100%", minWidth: 0 }}>
@@ -109,7 +112,6 @@ export default async function ReviewerOrgPage({
         orgDescription={orgData?.description ?? null}
         isAdmin={isAdmin}
         hasRoleError={Boolean(membershipError)}
-        logoUrl={orgData?.logo_url ?? null}
         memberCount={members.length}
         openPositionCount={openPositionCount}
       />
@@ -152,8 +154,7 @@ export default async function ReviewerOrgPage({
         }
       >
         <OpeningsGrid
-          openings={openings ?? []}
-          orgId={orgId}
+          openings={displayOpenings}
           orgName={displayOrgName}
           isAdmin={isAdmin}
         />

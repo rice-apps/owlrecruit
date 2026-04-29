@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import { NextResponse } from "next/server";
+import { createRequestLogger } from "@/lib/logger";
+import { ok, err } from "@/lib/api-response";
 
 type Params = Promise<{ orgId: string; userId: string }>;
 
@@ -16,10 +17,7 @@ async function getAuthContext(orgId: string) {
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return {
-      supabase,
-      error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
-    };
+    return { supabase, error: err("Unauthorized", 401) };
   }
 
   // Caller's membership
@@ -47,27 +45,34 @@ async function getAuthContext(orgId: string) {
 }
 
 export async function PUT(request: Request, { params }: { params: Params }) {
+  const { orgId, userId } = await params;
+  const log = createRequestLogger({
+    method: "PUT",
+    path: `/api/org/${orgId}/members/${userId}`,
+    org_id: orgId,
+    target_user_id: userId,
+  });
   try {
-    const { orgId, userId } = await params;
     const body = await request.json();
     const { role } = body;
+    log.set({ new_role: role });
 
     if (!role || !["admin", "reviewer"].includes(role)) {
-      return NextResponse.json(
-        { error: "Invalid or missing role" },
-        { status: 400 },
-      );
+      log.flush(400);
+      return err("Invalid or missing role", 400);
     }
 
     const ctx = await getAuthContext(orgId);
-    if (ctx.error) return ctx.error;
+    if (ctx.error) {
+      log.flush(401);
+      return ctx.error;
+    }
+    log.set({ user_id: ctx.callerId });
 
     // Only admins can change roles
     if (ctx.callerRole !== "admin") {
-      return NextResponse.json(
-        { error: "Only admins can change member roles" },
-        { status: 403 },
-      );
+      log.flush(403);
+      return err("Only admins can change member roles", 403);
     }
 
     // Prevent demoting the last admin
@@ -80,9 +85,10 @@ export async function PUT(request: Request, { params }: { params: Params }) {
         .single();
 
       if (targetMembership?.role === "admin" && ctx.adminCount <= 1) {
-        return NextResponse.json(
-          { error: "Cannot demote the only admin. Transfer admin role first." },
-          { status: 403 },
+        log.flush(403);
+        return err(
+          "Cannot demote the only admin. Transfer admin role first.",
+          403,
         );
       }
     }
@@ -94,44 +100,51 @@ export async function PUT(request: Request, { params }: { params: Params }) {
       .eq("user_id", userId);
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      log.error("error updating member role", error);
+      log.flush(500);
+      return err(error.message, 500);
     }
 
-    return NextResponse.json({ success: true });
+    log.flush(200);
+    return ok(null);
   } catch {
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 },
-    );
+    log.flush(500);
+    return err("Internal Server Error", 500);
   }
 }
 
 export async function DELETE(request: Request, { params }: { params: Params }) {
+  const { orgId, userId } = await params;
+  const log = createRequestLogger({
+    method: "DELETE",
+    path: `/api/org/${orgId}/members/${userId}`,
+    org_id: orgId,
+    target_user_id: userId,
+  });
   try {
-    const { orgId, userId } = await params;
-
     const ctx = await getAuthContext(orgId);
-    if (ctx.error) return ctx.error;
+    if (ctx.error) {
+      log.flush(401);
+      return ctx.error;
+    }
+    log.set({ user_id: ctx.callerId });
 
     const isSelf = ctx.callerId === userId;
 
     if (isSelf) {
       // Leaving the org — block if they're the only admin
       if (ctx.callerRole === "admin" && ctx.adminCount <= 1) {
-        return NextResponse.json(
-          {
-            error: "Cannot leave as the only admin. Transfer admin role first.",
-          },
-          { status: 403 },
+        log.flush(403);
+        return err(
+          "Cannot leave as the only admin. Transfer admin role first.",
+          403,
         );
       }
     } else {
       // Removing someone else — must be an admin
       if (ctx.callerRole !== "admin") {
-        return NextResponse.json(
-          { error: "Only admins can remove members" },
-          { status: 403 },
-        );
+        log.flush(403);
+        return err("Only admins can remove members", 403);
       }
 
       // Prevent removing the last admin
@@ -143,10 +156,8 @@ export async function DELETE(request: Request, { params }: { params: Params }) {
         .single();
 
       if (targetMembership?.role === "admin" && ctx.adminCount <= 1) {
-        return NextResponse.json(
-          { error: "Cannot remove the only admin" },
-          { status: 403 },
-        );
+        log.flush(403);
+        return err("Cannot remove the only admin", 403);
       }
     }
 
@@ -157,14 +168,16 @@ export async function DELETE(request: Request, { params }: { params: Params }) {
       .eq("user_id", userId);
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      log.error("error removing member", error);
+      log.flush(500);
+      return err(error.message, 500);
     }
 
-    return NextResponse.json({ success: true });
+    log.set({ action: isSelf ? "self_leave" : "admin_remove" });
+    log.flush(200);
+    return ok(null);
   } catch {
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 },
-    );
+    log.flush(500);
+    return err("Internal Server Error", 500);
   }
 }

@@ -17,6 +17,11 @@ import { DotsVertical } from "@untitled-ui/icons-react";
 import { getOpeningStatusLabel } from "@/lib/status";
 import { formatDate } from "@/lib/utils";
 import { OpeningStatusBadge } from "@/components/StatusBadge";
+import {
+  type OpeningStatus,
+  OpeningStatus as OS,
+  DEFAULT_OPENING_STATUS,
+} from "@/types/app";
 
 interface OpeningItem {
   id: string;
@@ -28,29 +33,28 @@ interface OpeningItem {
 
 interface OpeningsGridProps {
   openings: OpeningItem[];
-  orgId: string;
   orgName: string;
   isAdmin: boolean;
 }
 
-type FilterStatus = "open" | "closed" | "draft";
-
-const FILTER_OPTIONS: { label: string; value: FilterStatus }[] = [
-  { label: "Open", value: "open" },
-  { label: "Closed", value: "closed" },
-  { label: "Draft", value: "draft" },
+const FILTER_OPTIONS: { label: string; value: OpeningStatus }[] = [
+  { label: "Open", value: OS.OPEN },
+  { label: "Closed", value: OS.CLOSED },
+  { label: "Draft", value: OS.DRAFT },
 ];
 
 export function OpeningsGrid({
   openings,
-  orgId,
   orgName,
   isAdmin,
 }: OpeningsGridProps) {
-  const [selectedStatus, setSelectedStatus] = useState<FilterStatus>("open");
+  const [selectedStatus, setSelectedStatus] = useState<OpeningStatus>(OS.OPEN);
 
   const filteredOpenings = useMemo(
-    () => openings.filter((o) => (o.status ?? "draft") === selectedStatus),
+    () =>
+      openings.filter(
+        (o) => (o.status ?? DEFAULT_OPENING_STATUS) === selectedStatus,
+      ),
     [openings, selectedStatus],
   );
 
@@ -74,7 +78,7 @@ export function OpeningsGrid({
       {/* Open / Closed / Draft toggle */}
       <Group gap="xs">
         {FILTER_OPTIONS.filter(
-          (option) => option.value !== "draft" || isAdmin,
+          (option) => option.value !== OS.DRAFT || isAdmin,
         ).map((option) => (
           <Button
             key={option.value}
@@ -120,7 +124,7 @@ export function OpeningsGrid({
                     <Menu.Dropdown>
                       <Menu.Item>Edit</Menu.Item>
                       <Menu.Item>
-                        {opening.status === "open"
+                        {opening.status === OS.OPEN
                           ? "Close position"
                           : "Open position"}
                       </Menu.Item>
@@ -131,13 +135,11 @@ export function OpeningsGrid({
               )}
 
               <Link
-                href={`/protected/org/${orgId}/opening/${opening.id}`}
+                href={`/protected/opening/${opening.id}`}
                 style={{ textDecoration: "none", color: "inherit" }}
               >
-                {/* Org initial as avatar */}
-                <Avatar radius="md" size={48} color="gray">
-                  {(opening.title || orgName || "O").charAt(0).toUpperCase()}
-                </Avatar>
+                {/* Org avatar */}
+                <Avatar radius="md" size={48} color="initials" name={orgName} />
 
                 <Text fw={700} size="md" mt="sm" lineClamp={2}>
                   {opening.title || "Untitled Opening"}
@@ -148,7 +150,7 @@ export function OpeningsGrid({
                 </Text>
 
                 <OpeningStatusBadge
-                  status={opening.status ?? "draft"}
+                  status={opening.status ?? DEFAULT_OPENING_STATUS}
                   size="sm"
                 />
 

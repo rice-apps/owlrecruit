@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 
-import type { OpeningStatus } from "@/types/app";
+import { type OpeningStatus, OpeningStatus as OS } from "@/types/app";
 
 interface OpeningStatusButtonProps {
   orgId: string;
@@ -13,21 +14,21 @@ interface OpeningStatusButtonProps {
 }
 
 const nextStatus: Record<OpeningStatus, OpeningStatus> = {
-  draft: "open",
-  open: "closed",
-  closed: "open",
+  [OS.DRAFT]: OS.OPEN,
+  [OS.OPEN]: OS.CLOSED,
+  [OS.CLOSED]: OS.OPEN,
 };
 
 const buttonLabel: Record<OpeningStatus, string> = {
-  draft: "Publish",
-  open: "Close",
-  closed: "Reopen",
+  [OS.DRAFT]: "Publish",
+  [OS.OPEN]: "Close",
+  [OS.CLOSED]: "Reopen",
 };
 
 const buttonColor: Record<OpeningStatus, string> = {
-  draft: "owlTeal",
-  open: "red",
-  closed: "green",
+  [OS.DRAFT]: "owlTeal",
+  [OS.OPEN]: "red",
+  [OS.CLOSED]: "green",
 };
 
 export function OpeningStatusButton({
@@ -51,7 +52,14 @@ export function OpeningStatusButton({
       if (res.ok) {
         setCurrentStatus(target);
         router.refresh();
+      } else {
+        notifications.show({
+          color: "red",
+          message: "Failed to update status.",
+        });
       }
+    } catch {
+      notifications.show({ color: "red", message: "Failed to update status." });
     } finally {
       setLoading(false);
     }

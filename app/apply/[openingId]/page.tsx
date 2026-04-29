@@ -1,6 +1,7 @@
 import { Box, Text } from "@mantine/core";
 import { createClient } from "@/lib/supabase/server";
 import { ApplyForm } from "./ApplyForm";
+import { OpeningStatus } from "@/types/app";
 
 interface Props {
   params: Promise<{ openingId: string }>;
@@ -32,7 +33,7 @@ export default async function ApplyPage({ params }: Props) {
     );
   }
 
-  if (opening.status !== "open") {
+  if (opening.status !== OpeningStatus.OPEN) {
     return (
       <Box ta="center" py="5rem">
         <Text size="lg" fw={500} c="dimmed">
@@ -48,26 +49,33 @@ export default async function ApplyPage({ params }: Props) {
     .eq("opening_id", openingId)
     .order("sort_order", { ascending: true });
 
-  const orgRow = Array.isArray(opening.orgs) ? opening.orgs[0] : opening.orgs;
-  const orgName = (orgRow as { name: string } | null)?.name ?? "Unknown Org";
+  const orgName =
+    (opening.orgs as unknown as { name: string } | null)?.name ?? "Unknown Org";
 
   let alreadyApplied = false;
-  if (user?.email?.endsWith("@rice.edu")) {
-    const netId = user.email.split("@")[0];
-    const { data: applicant } = await supabase
-      .from("applicants")
-      .select("id")
-      .eq("net_id", netId)
+  if (user) {
+    const { data: userRecord } = await supabase
+      .from("users")
+      .select("net_id")
+      .eq("id", user.id)
       .maybeSingle();
 
-    if (applicant) {
-      const { data: existing } = await supabase
-        .from("applications")
+    if (userRecord?.net_id) {
+      const { data: applicant } = await supabase
+        .from("applicants")
         .select("id")
-        .eq("opening_id", openingId)
-        .eq("applicant_id", applicant.id)
+        .eq("net_id", userRecord.net_id)
         .maybeSingle();
-      alreadyApplied = !!existing;
+
+      if (applicant) {
+        const { data: existing } = await supabase
+          .from("applications")
+          .select("id")
+          .eq("opening_id", openingId)
+          .eq("applicant_id", applicant.id)
+          .maybeSingle();
+        alreadyApplied = !!existing;
+      }
     }
   }
 

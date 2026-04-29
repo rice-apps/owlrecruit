@@ -13,13 +13,18 @@ export async function POST(req: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (user) {
-    logger.info(`Signing out user: ${user.id}`);
-    await supabase.auth.signOut();
+    logger.info({ user_id: user.id }, "signing out user");
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      logger.warn({ err: error }, "error during signout, proceeding anyway");
+    }
   } else {
-    logger.info("No active session found during signout");
+    logger.info("no active session found during signout");
   }
 
-  return NextResponse.redirect(new URL("/", req.url), {
+  const url = req.nextUrl.clone();
+  url.pathname = "/";
+  return NextResponse.redirect(url, {
     status: 302,
   });
 }

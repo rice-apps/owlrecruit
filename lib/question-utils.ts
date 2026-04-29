@@ -14,7 +14,7 @@
 
 export type FieldType = "text" | "textarea" | "select" | "checkbox" | "url";
 
-export interface ParsedQuestion {
+interface ParsedQuestion {
   label: string;
   type: FieldType;
   options: string[] | null;

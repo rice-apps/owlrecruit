@@ -4,6 +4,7 @@ import {
   getOpeningStatusColor,
   getOpeningStatusLabel,
 } from "@/lib/status";
+import { ApplicationStatus, OpeningStatus } from "@/types/app";
 
 interface ApplicationStatusBadgeProps {
   status: string;
@@ -14,7 +15,7 @@ export function ApplicationStatusBadge({
   status,
   size = "sm",
 }: ApplicationStatusBadgeProps) {
-  const isPending = status === "No Status" || !status;
+  const isPending = status === ApplicationStatus.NO_STATUS || !status;
   return (
     <Badge
       color={getApplicationStatusColor(status)}
@@ -36,7 +37,7 @@ export function OpeningStatusBadge({
   status,
   size = "sm",
 }: OpeningStatusBadgeProps) {
-  const isPending = status === "draft" || !status;
+  const isPending = status === OpeningStatus.DRAFT || !status;
   return (
     <Badge
       color={getOpeningStatusColor(status)}

@@ -1,22 +1,25 @@
-import { Avatar, Card, Text, Badge } from "@mantine/core";
-import { Application, Opening, Org } from "@/types/app";
+import { Avatar, Badge, Card, Text } from "@mantine/core";
+import { ApplicationStatus } from "@/types/app";
 import { getApplicationStatusColor } from "@/lib/status";
 
-export interface ApplicationWithDetails extends Application {
-  opening: Pick<Opening, "title" | "closes_at"> & {
-    org: Pick<Org, "name"> & { logo_url?: string | null };
+export interface ApplicationCardData {
+  status: string | null;
+  opening: {
+    title: string;
+    closes_at: string | null;
+    org: { name: string };
   };
 }
 
 interface ApplicationCardProps {
-  application: ApplicationWithDetails;
+  application: ApplicationCardData;
 }
 
 export function ApplicationCard({ application }: ApplicationCardProps) {
   const { opening, status } = application;
   const { org } = opening;
 
-  const isPending = status === "No Status" || !status;
+  const isPending = status === ApplicationStatus.NO_STATUS || !status;
 
   return (
     <Card
@@ -26,14 +29,7 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
       style={{ display: "flex", flexDirection: "column", height: "100%" }}
     >
       {/* Org logo */}
-      <Avatar
-        src={org.logo_url || undefined}
-        radius="md"
-        size={48}
-        color="gray"
-      >
-        {org.name.charAt(0).toUpperCase()}
-      </Avatar>
+      <Avatar radius="md" size={48} color="initials" name={org.name} />
 
       <Text fw={700} size="lg" lh={1.2} mt="sm" mb={4}>
         {opening.title}
@@ -52,7 +48,7 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
         mt="xs"
         w="fit-content"
       >
-        {status || "No Status"}
+        {status || ApplicationStatus.NO_STATUS}
       </Badge>
 
       <Text size="xs" c="dimmed" mt="auto" pt="xs">

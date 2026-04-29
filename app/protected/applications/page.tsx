@@ -16,10 +16,11 @@ import {
 import { AlertCircle, SearchMd } from "@untitled-ui/icons-react";
 import {
   ApplicationCard,
-  type ApplicationWithDetails,
+  type ApplicationCardData,
 } from "@/components/application-card";
-import { logger } from "@/lib/logger";
-import type { Enums } from "@/types/supabase";
+import type { Enums } from "@/types/database";
+import { TERMINAL_STATUSES } from "@/lib/status";
+import { OpeningStatus } from "@/types/app";
 
 interface Application {
   org_id: string;
@@ -32,21 +33,17 @@ interface Application {
   opening_status?: Enums<"opening_status">;
 }
 
-function toCardProps(app: Application): ApplicationWithDetails {
+function toCardProps(app: Application): ApplicationCardData {
   return {
-    id: app.opening_id,
-    org_id: app.org_id,
     status: app.status,
-    created_at: app.created_at,
     opening: {
       title: app.opening_title ?? "Unknown Position",
       closes_at: app.closes_at ?? null,
       org: {
         name: app.org_name ?? "Unknown Organization",
-        logo_url: null,
       },
     },
-  } as unknown as ApplicationWithDetails;
+  };
 }
 
 export default function MyApplicationsPage() {
@@ -65,7 +62,6 @@ export default function MyApplicationsPage() {
         const json = await res.json();
         setApplications(json.applications ?? []);
       } catch (err) {
-        logger.error("Error fetching applications:", err);
         setError(
           err instanceof Error ? err.message : "An unexpected error occurred",
         );
@@ -86,9 +82,8 @@ export default function MyApplicationsPage() {
 
   const active = filtered.filter((app) => {
     if (
-      app.status === "Rejected" ||
-      app.status === "Accepted Offer" ||
-      app.opening_status === "closed"
+      TERMINAL_STATUSES.has(app.status ?? "") ||
+      app.opening_status === OpeningStatus.CLOSED
     )
       return false;
     return !app.closes_at || new Date(app.closes_at) >= new Date();
@@ -96,9 +91,8 @@ export default function MyApplicationsPage() {
 
   const inactive = filtered.filter((app) => {
     if (
-      app.status === "Rejected" ||
-      app.status === "Accepted Offer" ||
-      app.opening_status === "closed"
+      TERMINAL_STATUSES.has(app.status ?? "") ||
+      app.opening_status === OpeningStatus.CLOSED
     )
       return true;
     return app.closes_at != null && new Date(app.closes_at) < new Date();

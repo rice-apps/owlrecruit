@@ -30,7 +30,6 @@ export function MembersStrip({ members }: MembersStripProps) {
         const displayName =
           member.users?.name?.trim() || member.users?.email || "Unknown";
         const email = member.users?.email || "";
-        const initial = displayName.charAt(0).toUpperCase() || "U";
         const isAdmin = member.role === "admin";
 
         return (
@@ -38,9 +37,12 @@ export function MembersStrip({ members }: MembersStripProps) {
             <Group justify="space-between" align="center" py="xs">
               {/* Left: avatar + name + email */}
               <Group gap="sm">
-                <Avatar radius="xl" size={40} color="gray">
-                  {initial}
-                </Avatar>
+                <Avatar
+                  radius="xl"
+                  size={40}
+                  color="initials"
+                  name={displayName}
+                />
                 <Stack gap={0}>
                   <Text size="sm" fw={600}>
                     {displayName}

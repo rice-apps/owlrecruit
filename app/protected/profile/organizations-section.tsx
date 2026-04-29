@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import { ChevronDown } from "@untitled-ui/icons-react";
 import { LeaveOrgButton } from "@/components/leave-org-button";
-import type { Enums } from "@/types/supabase";
+import type { Enums } from "@/types/database";
 
 export interface OrgMembership {
   id: string;
@@ -57,9 +57,12 @@ export default function OrganizationsSection({
             style={{ borderBottom: "1px solid var(--mantine-color-gray-2)" }}
           >
             <Group gap="sm">
-              <Avatar radius="md" color="gray" size={40}>
-                {m.org_name.charAt(0).toUpperCase()}
-              </Avatar>
+              <Avatar
+                radius="md"
+                color="initials"
+                name={m.org_name}
+                size={40}
+              />
               <Text size="sm" fw={600}>
                 {m.org_name}
               </Text>

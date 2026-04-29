@@ -1,8 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
-import { logger } from "@/lib/logger";
+import { createRequestLogger } from "@/lib/logger";
 import { NextResponse } from "next/server";
+import { err } from "@/lib/api-response";
+import { OpeningStatus } from "@/types/app";
 
 export async function GET() {
+  const log = createRequestLogger({
+    method: "GET",
+    path: "/api/user/org-status",
+  });
   try {
     const supabase = await createClient();
     const {
@@ -11,10 +17,12 @@ export async function GET() {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      log.flush(401);
+      return err("Unauthorized", 401);
     }
 
     const userId = user.id;
+    log.set({ user_id: userId });
 
     // Get the user's net_id
     const { data: userData, error: userError } = await supabase
@@ -24,13 +32,12 @@ export async function GET() {
       .single();
 
     if (userError || !userData) {
-      return NextResponse.json(
-        { error: "User not found in database" },
-        { status: 404 },
-      );
+      log.flush(404);
+      return err("User not found in database", 404);
     }
 
     const netId = userData.net_id;
+    log.set({ net_id: netId });
 
     // Fetch org memberships and applications in parallel
     const [membershipsResult, applicationsResult] = await Promise.all([
@@ -74,12 +81,9 @@ export async function GET() {
     const orgIds = new Set([
       ...(memberships?.map((m) => m.org_id) || []),
       ...(applications
-        ?.map((a) => {
-          const opening = Array.isArray(a.openings)
-            ? a.openings[0]
-            : a.openings;
-          return opening?.org_id;
-        })
+        ?.map(
+          (a) => (a.openings as unknown as { org_id: string } | null)?.org_id,
+        )
         .filter(Boolean) || []),
     ]);
 
@@ -89,7 +93,10 @@ export async function GET() {
         ? await supabase
             .from("orgs")
             .select("id, name")
-            .in("id", Array.from(orgIds))
+            .in(
+              "id",
+              Array.from(orgIds).filter((id): id is string => id != null),
+            )
         : { data: [], error: null };
 
     if (orgsResult.error) {
@@ -113,9 +120,12 @@ export async function GET() {
     // Transform applications
     const transformedApplications =
       applications?.map((application) => {
-        const opening = Array.isArray(application.openings)
-          ? application.openings[0]
-          : application.openings;
+        const opening = application.openings as unknown as {
+          org_id: string;
+          title: string;
+          closes_at: string | null;
+          status: string;
+        } | null;
         return {
           org_id: opening?.org_id || "",
           opening_id: application.opening_id,
@@ -124,19 +134,22 @@ export async function GET() {
           opening_title: opening?.title || "Unknown Position",
           org_name: orgMap.get(opening?.org_id || "") || "Unknown Organization",
           closes_at: opening?.closes_at || null,
-          opening_status: opening?.status || "open",
+          opening_status: opening?.status || OpeningStatus.OPEN,
         };
       }) || [];
 
+    log.set({
+      membership_count: transformedMemberships.length,
+      application_count: transformedApplications.length,
+    });
+    log.flush(200);
     return NextResponse.json({
       memberships: transformedMemberships,
       applications: transformedApplications,
     });
   } catch (error) {
-    logger.error("Error fetching user org status:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 },
-    );
+    log.error("unexpected error fetching user org status", error);
+    log.flush(500);
+    return err("Internal Server Error", 500);
   }
 }

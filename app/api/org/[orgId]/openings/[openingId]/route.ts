@@ -1,50 +1,31 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
-
-async function requireAdminForOrg(orgId: string) {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return {
-      error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
-      supabase: null,
-    };
-  }
-
-  const { data: membership } = await supabase
-    .from("org_members")
-    .select("role")
-    .eq("user_id", user.id)
-    .eq("org_id", orgId)
-    .single();
-
-  if (membership?.role !== "admin") {
-    return {
-      error: NextResponse.json(
-        { error: "Only admins can access opening configuration" },
-        { status: 403 },
-      ),
-      supabase: null,
-    };
-  }
-
-  return { error: null, supabase };
-}
+import { createRequestLogger } from "@/lib/logger";
+import { DEFAULT_OPENING_STATUS } from "@/types/app";
+import { requireOrgAdmin } from "@/lib/auth";
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ orgId: string; openingId: string }> },
 ) {
   const { orgId, openingId } = await params;
+  const log = createRequestLogger({
+    method: "GET",
+    path: `/api/org/${orgId}/openings/${openingId}`,
+    org_id: orgId,
+    opening_id: openingId,
+  });
 
-  const { error, supabase } = await requireAdminForOrg(orgId);
-  if (error || !supabase) {
-    return error;
+  const supabase = await createClient();
+  let userId: string;
+  try {
+    const ctx = await requireOrgAdmin(supabase, orgId);
+    userId = ctx.userId;
+  } catch (res) {
+    log.flush(403);
+    return res as NextResponse;
   }
+  log.set({ user_id: userId });
 
   const { data: openingData } = await supabase
     .from("openings")
@@ -56,23 +37,38 @@ export async function GET(
     .single();
 
   if (!openingData) {
+    log.flush(404);
     return NextResponse.json({ error: "Opening not found" }, { status: 404 });
   }
 
+  const { data: reviewerRows } = await supabase
+    .from("opening_reviewers")
+    .select("user_id")
+    .eq("opening_id", openingId);
+
+  log.flush(200);
   return NextResponse.json({
     opening: {
       title: openingData.title || "",
       description: openingData.description || "",
       application_link: openingData.application_link || "",
       closes_at: openingData.closes_at || "",
-      status: openingData.status || "draft",
+      status: openingData.status || DEFAULT_OPENING_STATUS,
       rubric: Array.isArray(openingData.rubric)
-        ? openingData.rubric.map((item) => ({
-            name: item?.name || "",
-            max_val: item?.max_val || 10,
-            description: item?.description || "",
-          }))
+        ? openingData.rubric.map((item) => {
+            const r = item as {
+              name?: string;
+              max_val?: number;
+              description?: string;
+            } | null;
+            return {
+              name: r?.name || "",
+              max_val: r?.max_val || 10,
+              description: r?.description || "",
+            };
+          })
         : [],
+      reviewer_ids: (reviewerRows ?? []).map((r) => r.user_id),
     },
   });
 }
@@ -82,10 +78,23 @@ export async function PATCH(
   { params }: { params: Promise<{ orgId: string; openingId: string }> },
 ) {
   const { orgId, openingId } = await params;
-  const { error, supabase } = await requireAdminForOrg(orgId);
-  if (error || !supabase) {
-    return error;
+  const log = createRequestLogger({
+    method: "PATCH",
+    path: `/api/org/${orgId}/openings/${openingId}`,
+    org_id: orgId,
+    opening_id: openingId,
+  });
+
+  const supabase = await createClient();
+  let userId: string;
+  try {
+    const ctx = await requireOrgAdmin(supabase, orgId);
+    userId = ctx.userId;
+  } catch (res) {
+    log.flush(403);
+    return res as NextResponse;
   }
+  log.set({ user_id: userId });
 
   const { data: opening } = await supabase
     .from("openings")
@@ -94,10 +103,12 @@ export async function PATCH(
     .single();
 
   if (!opening) {
+    log.flush(404);
     return NextResponse.json({ error: "Opening not found" }, { status: 404 });
   }
 
   if (opening.org_id !== orgId) {
+    log.flush(400);
     return NextResponse.json(
       { error: "Opening does not belong to this organization" },
       { status: 400 },
@@ -124,22 +135,15 @@ export async function PATCH(
   if (closes_at !== undefined) updates.closes_at = closes_at || null;
   if (status !== undefined) updates.status = status;
   if (rubric !== undefined) updates.rubric = rubric;
+
   if (reviewer_ids !== undefined) {
     if (!Array.isArray(reviewer_ids)) {
+      log.flush(400);
       return NextResponse.json(
         { error: "reviewer_ids must be an array of user IDs" },
         { status: 400 },
       );
     }
-
-    updates.reviewer_ids = Array.from(
-      new Set(
-        reviewer_ids
-          .filter((id: unknown) => typeof id === "string")
-          .map((id: string) => id.trim())
-          .filter(Boolean),
-      ),
-    );
   }
 
   const { error: updateError } = await supabase
@@ -148,8 +152,35 @@ export async function PATCH(
     .eq("id", openingId);
 
   if (updateError) {
+    log.error("error updating opening", updateError);
+    log.flush(500);
     return NextResponse.json({ error: updateError.message }, { status: 500 });
   }
 
+  if (reviewer_ids !== undefined) {
+    const uniqueIds = Array.from(
+      new Set(
+        (reviewer_ids as unknown[])
+          .filter((id): id is string => typeof id === "string")
+          .map((id) => id.trim())
+          .filter(Boolean),
+      ),
+    );
+    await supabase
+      .from("opening_reviewers")
+      .delete()
+      .eq("opening_id", openingId);
+    if (uniqueIds.length > 0) {
+      await supabase.from("opening_reviewers").insert(
+        uniqueIds.map((userId) => ({
+          opening_id: openingId,
+          user_id: userId,
+        })),
+      );
+    }
+  }
+
+  log.set({ updated_fields: Object.keys(updates) });
+  log.flush(200);
   return NextResponse.json({ success: true });
 }

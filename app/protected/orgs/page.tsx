@@ -32,23 +32,18 @@ export default async function MyOrgsPage() {
         name,
         description,
         created_at,
-        updated_at,
-        social_links,
-        logo_url
+        updated_at
       )
     `,
     )
     .eq("user_id", userId);
 
   const orgs: OrgWithRole[] = (memberships ?? [])
-    .filter(
-      (m): m is typeof m & { orgs: NonNullable<typeof m.orgs> } =>
-        m.orgs !== null,
-    )
-    .map((m) => {
-      const orgData = Array.isArray(m.orgs) ? m.orgs[0] : m.orgs;
-      return { ...orgData, role: m.role };
-    });
+    .filter((m) => m.orgs !== null)
+    .map((m) => ({
+      ...(m.orgs as unknown as OrgWithRole),
+      role: m.role as OrgWithRole["role"],
+    }));
 
   return (
     <Stack gap="lg">
@@ -88,9 +83,12 @@ export default async function MyOrgsPage() {
             >
               <Card radius="lg" withBorder={false} shadow="sm">
                 <Group gap="sm" mb="sm">
-                  <Avatar radius="md" size={44} color="gray">
-                    {org.name.charAt(0).toUpperCase()}
-                  </Avatar>
+                  <Avatar
+                    radius="md"
+                    size={44}
+                    color="initials"
+                    name={org.name}
+                  />
                   <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
                     <Text fw={600} size="sm" truncate>
                       {org.name}

@@ -1,27 +1,16 @@
-export type OpeningStatus = "draft" | "open" | "closed";
+import type { OpeningStatus } from "@/types/app";
 
 export interface EligibleReviewer {
   id: string;
   user_id: string;
   role: string;
-  users:
-    | { id: string; name: string | null; email: string }
-    | { id: string; name: string | null; email: string }[]
-    | null;
+  users: { id: string; name: string | null; email: string } | null;
 }
 
 export interface RubricItem {
   name: string;
   max_val: number | string;
   description: string;
-}
-
-export interface OpeningFormData {
-  title: string;
-  description: string;
-  application_link: string;
-  closes_at: string;
-  status: OpeningStatus;
 }
 
 export interface OpeningInitialData {

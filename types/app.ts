@@ -1,4 +1,4 @@
-import { Database } from "./supabase";
+import { Database } from "./database";
 import type { FieldType } from "@/lib/question-utils";
 
 export type { FieldType };
@@ -22,9 +22,29 @@ export type Question = Tables<"questions">;
 
 // -- Enums --
 export type ApplicationStatus = Enums<"status">;
-export type Score = Enums<"score">;
 export type OpeningStatus = Enums<"opening_status">;
 export type OrgRole = Enums<"org_role">;
+
+// -- Status constants --
+// satisfies Record<string, string> (not the DB enum) so these remain valid
+// when applications.status moves to a text column for user-defined statuses.
+export const ApplicationStatus = {
+  NO_STATUS: "No Status",
+  APPLIED: "Applied",
+  INTERVIEWING: "Interviewing",
+  OFFER: "Offer",
+  ACCEPTED_OFFER: "Accepted Offer",
+  REJECTED: "Rejected",
+} as const satisfies Record<string, string>;
+
+export const OpeningStatus = {
+  DRAFT: "draft",
+  OPEN: "open",
+  CLOSED: "closed",
+} as const satisfies Record<string, string>;
+
+export const DEFAULT_APPLICATION_STATUS = ApplicationStatus.APPLIED;
+export const DEFAULT_OPENING_STATUS = OpeningStatus.DRAFT;
 
 // -- Rich question type (decoded from question_text) --
 export interface TypedQuestion {

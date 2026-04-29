@@ -16,7 +16,7 @@ import {
 import { SearchMd } from "@untitled-ui/icons-react";
 import { ApplicationStatusBadge } from "@/components/StatusBadge";
 import { formatDate } from "@/lib/utils";
-import { logger } from "@/lib/logger";
+import { OpeningStatus } from "@/types/app";
 
 interface Opening {
   id: string;
@@ -27,31 +27,27 @@ interface Opening {
   org_id: string;
   application_link: string | null;
   closes_at: string | null;
-  org: { name: string; logo_url?: string | null };
+  org: { name: string };
   applicationStatus: string | null;
 }
 
 export function DiscoverFeed() {
   const [openings, setOpenings] = useState<Opening[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     async function fetchOpenings() {
       setLoading(true);
       try {
-        const params = new URLSearchParams({
-          statuses: "open",
-          datePosted: "all",
-          deadline: "all",
-          sort: "recent",
-        });
+        const params = new URLSearchParams({ statuses: OpeningStatus.OPEN });
         const res = await fetch(`/api/openings?${params}`);
         if (!res.ok) throw new Error("Failed to fetch openings");
         const json = await res.json();
-        setOpenings(json.data ?? json);
-      } catch (error) {
-        logger.error("Error fetching openings:", error);
+        setOpenings(json.data ?? []);
+      } catch {
+        setFetchError(true);
       } finally {
         setLoading(false);
       }
@@ -95,6 +91,10 @@ export function DiscoverFeed() {
         <Center py="xl">
           <Loader size="sm" />
         </Center>
+      ) : fetchError ? (
+        <Center py="xl">
+          <Text c="dimmed">Failed to load openings. Please try again.</Text>
+        </Center>
       ) : filtered.length === 0 ? (
         <Center py="xl">
           <Text c="dimmed">No open roles found.</Text>
@@ -120,13 +120,11 @@ export function DiscoverFeed() {
               >
                 {/* Org logo */}
                 <Avatar
-                  src={opening.org.logo_url || undefined}
                   radius="md"
                   size={48}
-                  color="gray"
-                >
-                  {opening.org.name.charAt(0).toUpperCase()}
-                </Avatar>
+                  color="initials"
+                  name={opening.org.name}
+                />
 
                 <Text fw={700} size="md" mt="sm" lh={1.3}>
                   {opening.title}

@@ -18,7 +18,6 @@ import {
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { Users01 } from "@untitled-ui/icons-react";
-import { logger } from "@/lib/logger";
 
 type Member = {
   id: string;
@@ -83,9 +82,8 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
       });
       if (!res.ok) throw new Error("Failed to fetch members");
       const json = await res.json();
-      setMembers((json.data ?? json) as Member[]);
-    } catch (error) {
-      logger.error("Failed to fetch members:", error);
+      setMembers((json.data ?? []) as Member[]);
+    } catch {
     } finally {
       setIsLoading(false);
     }
@@ -116,9 +114,8 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
           );
           if (!res.ok) throw new Error("Failed to search users");
           const json = await res.json();
-          setSearchResults((json.data ?? json) as SearchedUser[]);
-        } catch (error) {
-          logger.error("Failed to search users:", error);
+          setSearchResults((json.data ?? []) as SearchedUser[]);
+        } catch {
         } finally {
           setIsSearching(false);
         }
@@ -253,8 +250,7 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
       await Promise.all(promises);
       router.refresh();
       setOpen(false);
-    } catch (error) {
-      logger.error("Failed to save changes:", error);
+    } catch {
       notifications.show({
         color: "red",
         message: "Failed to save changes. Please try again.",
@@ -335,9 +331,12 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
                     }}
                   >
                     <Group gap="sm">
-                      <Avatar size={32} radius="md" color="owlTeal">
-                        {user.name.charAt(0).toUpperCase()}
-                      </Avatar>
+                      <Avatar
+                        size={32}
+                        radius="md"
+                        color="initials"
+                        name={user.name}
+                      />
                       <div>
                         <Text size="sm" fw={500}>
                           {user.name}
@@ -408,9 +407,12 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
                     }}
                   >
                     <Group gap="sm">
-                      <Avatar size={40} radius="md" color="owlTeal">
-                        {member.users.name?.charAt(0).toUpperCase() || "U"}
-                      </Avatar>
+                      <Avatar
+                        size={40}
+                        radius="md"
+                        color="initials"
+                        name={member.users.name || ""}
+                      />
                       <div>
                         <Group gap="xs">
                           <Text

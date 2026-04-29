@@ -20,7 +20,11 @@ function extractOrgId(pathname: string): string | null {
 }
 
 function isAdminRoute(pathname: string): boolean {
-  return pathname.includes("/admin/") || pathname.endsWith("/admin");
+  return (
+    pathname.includes("/admin/") ||
+    pathname.endsWith("/admin") ||
+    pathname.endsWith("/new-opening")
+  );
 }
 
 export async function middleware(request: NextRequest) {
@@ -76,23 +80,22 @@ export async function middleware(request: NextRequest) {
   const orgId = extractOrgId(pathname);
 
   if (orgId) {
-    const { data: membership, error: membershipError } = await supabase
+    const { data: membership } = await supabase
       .from("org_members")
       .select("role")
       .eq("user_id", user.sub)
       .eq("org_id", orgId)
       .single();
 
-    if (membershipError || !membership) {
+    if (!membership) {
       if (isApiRoute(pathname)) {
         return NextResponse.json(
           { error: "Forbidden: Not a member of this organization" },
           { status: 403 },
         );
       }
-      const url = request.nextUrl.clone();
-      url.pathname = "/protected/discover";
-      return NextResponse.redirect(url);
+      // Non-members can view public org pages; skip admin check
+      return supabaseResponse;
     }
 
     if (isAdminRoute(pathname) && membership.role !== "admin") {
