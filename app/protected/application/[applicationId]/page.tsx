@@ -60,10 +60,12 @@ interface ReviewerScoreSummary {
 }
 
 interface ReviewsSummaryResponse {
-  summary?: {
-    rubric?: RubricCriterion[];
-    reviewerScores?: ReviewerScoreSummary[];
-    resumeUrl?: string | null;
+  data?: {
+    summary?: {
+      rubric?: RubricCriterion[];
+      reviewerScores?: ReviewerScoreSummary[];
+      resumeUrl?: string | null;
+    } | null;
   } | null;
 }
 
@@ -211,18 +213,18 @@ export default function ApplicationReviewPage() {
 
         if (!isMounted) return;
 
-        const rubricSummary = payload.summary?.rubric
+        const rubricSummary = payload.data?.summary?.rubric
           ? computeRubricSummary(
-              payload.summary.rubric,
-              (payload.summary.reviewerScores ?? []).map(
+              payload.data.summary.rubric,
+              (payload.data.summary.reviewerScores ?? []).map(
                 (review) => review?.scoreSkills ?? {},
               ),
             )
           : null;
 
-        const rubricDefinition = payload.summary?.rubric ?? [];
+        const rubricDefinition = payload.data?.summary?.rubric ?? [];
         const reviewerFeedback: ReviewerFeedbackPreview[] = (
-          payload.summary?.reviewerScores ?? []
+          payload.data?.summary?.reviewerScores ?? []
         ).flatMap((review) => {
           const scoreSkills = review?.scoreSkills ?? {};
           const rubricScores = rubricDefinition.flatMap((criterion) => {
@@ -272,7 +274,7 @@ export default function ApplicationReviewPage() {
         setSummaryData({
           rubricSummary,
           reviewerFeedback,
-          resumeUrl: payload.summary?.resumeUrl ?? null,
+          resumeUrl: payload.data?.summary?.resumeUrl ?? null,
         });
       } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError")

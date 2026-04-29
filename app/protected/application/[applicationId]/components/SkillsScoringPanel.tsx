@@ -64,9 +64,10 @@ export function SkillsScoringPanel({
         `/api/org/${orgId}/applications/${applicantId}/reviews`,
       );
       if (res.ok) {
-        const data = await res.json();
-        if (data.myScoreSkills) {
-          setScores(data.myScoreSkills);
+        const json = await res.json();
+        const payload = json.data ?? json;
+        if (payload.myScoreSkills) {
+          setScores(payload.myScoreSkills);
         }
       }
     } catch {

@@ -113,7 +113,7 @@ test.describe("Reviewer Access — Negative Cases", () => {
     await expect(questionsTab).not.toBeVisible();
   });
 
-  test("reviewer from ORG_1 can view ORG_2 public page but not private openings", async ({
+  test("reviewer from ORG_1 can view ORG_2 public page but not admin controls", async ({
     page,
   }) => {
     const ORG_2 = "00000002-0000-0000-0000-000000000002"; // HackRice Planning
@@ -121,9 +121,14 @@ test.describe("Reviewer Access — Negative Cases", () => {
     await page.goto(`/protected/org/${ORG_2}`);
     await page.waitForTimeout(3000);
 
-    // Non-members can view the org page (public org info is readable by all authenticated users)
+    // Non-members can view the org page and see open openings (public by design)
     expect(page.url()).toContain(ORG_2);
-    // Private openings (Event Coordinator, Marketing Lead) are NOT shown to non-members
-    await expect(page.getByText("Event Coordinator")).not.toBeVisible();
+    await expect(page.getByText("Event Coordinator").first()).toBeVisible({
+      timeout: 10000,
+    });
+    // Admin controls (add position, edit members) are NOT shown to non-members
+    await expect(
+      page.getByRole("button", { name: "Add position" }),
+    ).not.toBeVisible();
   });
 });

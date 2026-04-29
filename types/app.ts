@@ -22,7 +22,6 @@ export type Question = Tables<"questions">;
 
 // -- Enums --
 export type ApplicationStatus = Enums<"status">;
-export type Score = Enums<"score">;
 export type OpeningStatus = Enums<"opening_status">;
 export type OrgRole = Enums<"org_role">;
 

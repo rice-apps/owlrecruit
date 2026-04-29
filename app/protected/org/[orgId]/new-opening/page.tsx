@@ -116,7 +116,7 @@ export default function NewOpeningPage() {
       }
     };
     fetchData();
-  }, [orgId]);
+  }, [orgId, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

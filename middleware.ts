@@ -20,7 +20,11 @@ function extractOrgId(pathname: string): string | null {
 }
 
 function isAdminRoute(pathname: string): boolean {
-  return pathname.includes("/admin/") || pathname.endsWith("/admin");
+  return (
+    pathname.includes("/admin/") ||
+    pathname.endsWith("/admin") ||
+    pathname.endsWith("/new-opening")
+  );
 }
 
 export async function middleware(request: NextRequest) {
