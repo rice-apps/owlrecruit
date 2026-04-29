@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { createRequestLogger } from "@/lib/logger";
+import type { TablesUpdate } from "@/types/database";
 
 export async function PATCH(
   request: Request,
@@ -52,7 +53,7 @@ export async function PATCH(
     );
   }
 
-  const updates: Record<string, unknown> = {};
+  const updates: TablesUpdate<"orgs"> = {};
   if (name !== undefined) updates.name = name.trim();
   if (description !== undefined)
     updates.description = description?.trim() || null;

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createRequestLogger } from "@/lib/logger";
 import { DEFAULT_OPENING_STATUS } from "@/types/app";
 import { requireOrgAdmin } from "@/lib/auth";
+import type { TablesUpdate } from "@/types/database";
 
 export async function GET(
   _request: Request,
@@ -126,7 +127,7 @@ export async function PATCH(
     reviewer_ids,
   } = body;
 
-  const updates: Record<string, unknown> = {};
+  const updates: TablesUpdate<"openings"> = {};
   if (title !== undefined) updates.title = title.trim();
   if (description !== undefined)
     updates.description = description?.trim() || null;
