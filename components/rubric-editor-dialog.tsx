@@ -14,18 +14,14 @@ import {
   Text,
 } from "@mantine/core";
 import { AlertCircle, Plus, Trash01 } from "@untitled-ui/icons-react";
-
-interface Rubric {
-  name: string;
-  max_val: number;
-}
+import type { RubricItem } from "@/components/opening-form/types";
 
 interface RubricEditorDialogProps {
   orgId: string;
   openingId: string;
-  initialRubric: Rubric[];
+  initialRubric: RubricItem[];
   trigger: React.ReactNode;
-  onSuccess: (updatedRubric: Rubric[]) => void;
+  onSuccess: (updatedRubric: RubricItem[]) => void;
 }
 
 export function RubricEditorDialog({
@@ -36,7 +32,7 @@ export function RubricEditorDialog({
   onSuccess,
 }: RubricEditorDialogProps) {
   const [open, setOpen] = useState(false);
-  const [rubric, setRubric] = useState<Rubric[]>(initialRubric);
+  const [rubric, setRubric] = useState<RubricItem[]>(initialRubric);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,7 +49,7 @@ export function RubricEditorDialog({
       setError("All skills must have a name.");
       return;
     }
-    if (rubric.some((r) => r.max_val <= 0)) {
+    if (rubric.some((r) => Number(r.max_val) <= 0)) {
       setError("Max score must be greater than 0.");
       return;
     }
@@ -151,7 +147,9 @@ export function RubricEditorDialog({
           <Button
             variant="outline"
             leftSection={<Plus width={16} height={16} />}
-            onClick={() => setRubric([...rubric, { name: "", max_val: 10 }])}
+            onClick={() =>
+              setRubric([...rubric, { name: "", max_val: 10, description: "" }])
+            }
             style={{ borderStyle: "dashed" }}
           >
             Add Skill

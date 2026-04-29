@@ -33,9 +33,7 @@ export function useOpeningFormContext(orgId: string) {
           const reviewerData = (json.data ?? json) as EligibleReviewer[];
           setEligibleReviewers(Array.isArray(reviewerData) ? reviewerData : []);
         }
-      } catch {
-        // fetch errors are non-critical; the UI will render with empty state
-      }
+      } catch {}
     };
 
     fetchData();

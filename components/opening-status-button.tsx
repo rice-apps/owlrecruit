@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 
 import { type OpeningStatus, OpeningStatus as OS } from "@/types/app";
 
@@ -51,7 +52,14 @@ export function OpeningStatusButton({
       if (res.ok) {
         setCurrentStatus(target);
         router.refresh();
+      } else {
+        notifications.show({
+          color: "red",
+          message: "Failed to update status.",
+        });
       }
+    } catch {
+      notifications.show({ color: "red", message: "Failed to update status." });
     } finally {
       setLoading(false);
     }

@@ -1,5 +1,5 @@
 import { Avatar, Card, Text, Badge } from "@mantine/core";
-import { Application, Opening, Org } from "@/types/app";
+import { Application, ApplicationStatus, Opening, Org } from "@/types/app";
 import { getApplicationStatusColor } from "@/lib/status";
 
 export interface ApplicationWithDetails extends Application {
@@ -16,7 +16,7 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
   const { opening, status } = application;
   const { org } = opening;
 
-  const isPending = status === "No Status" || !status;
+  const isPending = status === ApplicationStatus.NO_STATUS || !status;
 
   return (
     <Card
@@ -51,7 +51,7 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
         mt="xs"
         w="fit-content"
       >
-        {status || "No Status"}
+        {status || ApplicationStatus.NO_STATUS}
       </Badge>
 
       <Text size="xs" c="dimmed" mt="auto" pt="xs">

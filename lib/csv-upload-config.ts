@@ -19,3 +19,5 @@ export const ERROR_MESSAGES = {
 export const VALIDATION_CONFIG = {
   skipInvalidRows: true,
 } as const;
+
+export const UNKNOWN_APPLICANT_NAME = "-";

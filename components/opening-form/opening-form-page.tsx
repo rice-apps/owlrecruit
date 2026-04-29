@@ -82,10 +82,10 @@ export function OpeningFormPage({
     },
   });
 
-  const reviewerOptions = eligibleReviewers.map((r) => {
-    const u = Array.isArray(r.users) ? r.users[0] : r.users;
-    return { value: r.user_id, label: u?.name || u?.email || r.user_id };
-  });
+  const reviewerOptions = eligibleReviewers.map((r) => ({
+    value: r.user_id,
+    label: r.users?.name || r.users?.email || r.user_id,
+  }));
 
   const updateRubricItem = (index: number, patch: Partial<RubricItem>) => {
     const updated = [...form.values.rubric];

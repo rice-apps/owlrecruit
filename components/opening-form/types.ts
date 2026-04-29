@@ -4,10 +4,7 @@ export interface EligibleReviewer {
   id: string;
   user_id: string;
   role: string;
-  users:
-    | { id: string; name: string | null; email: string }
-    | { id: string; name: string | null; email: string }[]
-    | null;
+  users: { id: string; name: string | null; email: string } | null;
 }
 
 export interface RubricItem {

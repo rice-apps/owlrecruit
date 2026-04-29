@@ -60,11 +60,7 @@ function SignInForApplyBtn() {
   );
 
   useEffect(() => {
-    (
-      window as unknown as {
-        handleApplySignIn: (r: { credential: string }) => Promise<void>;
-      }
-    ).handleApplySignIn = handleSignIn;
+    window.handleApplySignIn = handleSignIn;
   }, [handleSignIn]);
 
   return (
@@ -75,7 +71,7 @@ function SignInForApplyBtn() {
       />
       <div
         id="g_id_onload"
-        data-client_id="530339823745-p2p8i1r4e6ki8f1ra93aar28n5pil04f.apps.googleusercontent.com"
+        data-client_id={process.env.NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID}
         data-context="signin"
         data-ux_mode="popup"
         data-callback="handleApplySignIn"

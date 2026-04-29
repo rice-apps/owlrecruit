@@ -7,12 +7,6 @@ import Script from "next/script";
 
 const supabase = createClient();
 
-declare global {
-  interface Window {
-    handleSignInWithGoogle: (response: { credential: string }) => Promise<void>;
-  }
-}
-
 export default function SignUpGoogleBtn() {
   const [authError, setAuthError] = useState(false);
 

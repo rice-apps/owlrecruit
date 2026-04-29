@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { notifications } from "@mantine/notifications";
 import { RubricEditorDialog } from "@/components/rubric-editor-dialog";
+import type { RubricItem } from "@/components/opening-form/types";
 import {
   Box,
   Button,
@@ -12,11 +13,6 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-
-interface Rubric {
-  name: string;
-  max_val: number;
-}
 
 interface SkillsScoringPanelProps {
   orgId: string;
@@ -31,7 +27,7 @@ export function SkillsScoringPanel({
   applicantId,
   isAdmin,
 }: SkillsScoringPanelProps) {
-  const [rubrics, setRubrics] = useState<Rubric[]>([]);
+  const [rubrics, setRubrics] = useState<RubricItem[]>([]);
   const [loadingRubrics, setLoadingRubrics] = useState(true);
   const [scores, setScores] = useState<Record<string, number>>({});
   const [savingScore, setSavingScore] = useState(false);
@@ -104,7 +100,7 @@ export function SkillsScoringPanel({
   };
 
   const totalScore = Object.values(scores).reduce((a, b) => a + b, 0);
-  const maxTotalScore = rubrics.reduce((a, b) => a + b.max_val, 0);
+  const maxTotalScore = rubrics.reduce((a, b) => a + Number(b.max_val), 0);
 
   return (
     <Stack gap="md" p="md">
@@ -143,7 +139,7 @@ export function SkillsScoringPanel({
                 <Group gap="xs" align="center">
                   <NumberInput
                     min={0}
-                    max={rubric.max_val}
+                    max={Number(rubric.max_val)}
                     value={scores[rubric.name] ?? ""}
                     onChange={(val) => {
                       const newScores = { ...scores };
@@ -151,7 +147,11 @@ export function SkillsScoringPanel({
                         delete newScores[rubric.name];
                       } else {
                         const n = Number(val);
-                        if (!isNaN(n) && n >= 0 && n <= rubric.max_val) {
+                        if (
+                          !isNaN(n) &&
+                          n >= 0 &&
+                          n <= Number(rubric.max_val)
+                        ) {
                           newScores[rubric.name] = n;
                         }
                       }

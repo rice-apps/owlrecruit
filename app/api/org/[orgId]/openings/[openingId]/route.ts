@@ -2,42 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { createRequestLogger } from "@/lib/logger";
 import { DEFAULT_OPENING_STATUS } from "@/types/app";
-
-async function requireAdminForOrg(orgId: string) {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return {
-      error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
-      supabase: null,
-      userId: null,
-    };
-  }
-
-  const { data: membership } = await supabase
-    .from("org_members")
-    .select("role")
-    .eq("user_id", user.id)
-    .eq("org_id", orgId)
-    .single();
-
-  if (membership?.role !== "admin") {
-    return {
-      error: NextResponse.json(
-        { error: "Only admins can access opening configuration" },
-        { status: 403 },
-      ),
-      supabase: null,
-      userId: null,
-    };
-  }
-
-  return { error: null, supabase, userId: user.id };
-}
+import { requireOrgAdmin } from "@/lib/auth";
 
 export async function GET(
   _request: Request,
@@ -51,10 +16,14 @@ export async function GET(
     opening_id: openingId,
   });
 
-  const { error, supabase, userId } = await requireAdminForOrg(orgId);
-  if (error || !supabase) {
-    log.flush(error ? (error.status ?? 403) : 403);
-    return error;
+  const supabase = await createClient();
+  let userId: string;
+  try {
+    const ctx = await requireOrgAdmin(supabase, orgId);
+    userId = ctx.userId;
+  } catch (res) {
+    log.flush(403);
+    return res as NextResponse;
   }
   log.set({ user_id: userId });
 
@@ -109,10 +78,14 @@ export async function PATCH(
     opening_id: openingId,
   });
 
-  const { error, supabase, userId } = await requireAdminForOrg(orgId);
-  if (error || !supabase) {
-    log.flush(error ? (error.status ?? 403) : 403);
-    return error;
+  const supabase = await createClient();
+  let userId: string;
+  try {
+    const ctx = await requireOrgAdmin(supabase, orgId);
+    userId = ctx.userId;
+  } catch (res) {
+    log.flush(403);
+    return res as NextResponse;
   }
   log.set({ user_id: userId });
 

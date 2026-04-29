@@ -34,6 +34,7 @@ interface Opening {
 export function DiscoverFeed() {
   const [openings, setOpenings] = useState<Opening[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
@@ -51,6 +52,7 @@ export function DiscoverFeed() {
         const json = await res.json();
         setOpenings(json.data ?? json);
       } catch {
+        setFetchError(true);
       } finally {
         setLoading(false);
       }
@@ -93,6 +95,10 @@ export function DiscoverFeed() {
       {loading ? (
         <Center py="xl">
           <Loader size="sm" />
+        </Center>
+      ) : fetchError ? (
+        <Center py="xl">
+          <Text c="dimmed">Failed to load openings. Please try again.</Text>
         </Center>
       ) : filtered.length === 0 ? (
         <Center py="xl">

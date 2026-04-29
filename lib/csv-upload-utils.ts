@@ -3,8 +3,10 @@ import {
   CSV_RESERVED_COLUMNS,
   ERROR_MESSAGES,
   REQUIRED_CSV_COLUMNS,
+  UNKNOWN_APPLICANT_NAME,
   VALIDATION_CONFIG,
 } from "./csv-upload-config";
+import { DEFAULT_APPLICATION_STATUS } from "@/types/app";
 
 // =============================================================================
 // TYPE DEFINITIONS
@@ -68,7 +70,7 @@ export function buildApplicationRecord(
     opening_id: openingId,
     applicant_id: userId,
     form_responses: formResponses,
-    status: status ?? "Applied",
+    status: status ?? DEFAULT_APPLICATION_STATUS,
   };
 }
 
@@ -96,7 +98,10 @@ export async function ensureApplicant(
 ): Promise<UserResult> {
   const existing = await lookupApplicantByNetId(supabase, netid);
   if (existing) {
-    if (existing.name === "-" && name !== "-") {
+    if (
+      existing.name === UNKNOWN_APPLICANT_NAME &&
+      name !== UNKNOWN_APPLICANT_NAME
+    ) {
       const { data, error } = await supabase
         .from("applicants")
         .update({ name })
@@ -176,7 +181,7 @@ export async function processCSVRows<T>(
 
     if (!user) {
       try {
-        user = await ensureApplicant(supabase, netid, "-");
+        user = await ensureApplicant(supabase, netid, UNKNOWN_APPLICANT_NAME);
       } catch (err: unknown) {
         errors.push({
           row: rowNumber,
