@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     let query = supabase.from("openings").select(
       `
         *,
-        org:orgs(name, logo_url)
+        org:orgs(name)
       `,
     );
 

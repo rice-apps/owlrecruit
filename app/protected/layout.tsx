@@ -34,8 +34,7 @@ export default async function ProtectedLayout({
         name,
         description,
         created_at,
-        updated_at,
-        logo_url
+        updated_at
       )
     `,
     )

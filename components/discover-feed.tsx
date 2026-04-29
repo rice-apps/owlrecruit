@@ -27,7 +27,7 @@ interface Opening {
   org_id: string;
   application_link: string | null;
   closes_at: string | null;
-  org: { name: string; logo_url?: string | null };
+  org: { name: string };
   applicationStatus: string | null;
 }
 
@@ -120,7 +120,6 @@ export function DiscoverFeed() {
               >
                 {/* Org logo */}
                 <Avatar
-                  src={opening.org.logo_url || undefined}
                   radius="md"
                   size={48}
                   color="initials"

@@ -7,7 +7,7 @@ export interface ApplicationCardData {
   opening: {
     title: string;
     closes_at: string | null;
-    org: { name: string; logo_url?: string | null };
+    org: { name: string };
   };
 }
 
@@ -29,13 +29,7 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
       style={{ display: "flex", flexDirection: "column", height: "100%" }}
     >
       {/* Org logo */}
-      <Avatar
-        src={org.logo_url || undefined}
-        radius="md"
-        size={48}
-        color="initials"
-        name={org.name}
-      />
+      <Avatar radius="md" size={48} color="initials" name={org.name} />
 
       <Text fw={700} size="lg" lh={1.2} mt="sm" mb={4}>
         {opening.title}

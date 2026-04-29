@@ -29,8 +29,6 @@ export async function POST(request: Request) {
       );
     }
 
-    const logo_url: string | null = null;
-
     // Atomically create org and assign creator as admin
     const { data: newOrgId, error: rpcError } = await supabase.rpc(
       "create_org_with_admin",
@@ -45,22 +43,6 @@ export async function POST(request: Request) {
       log.error("supabase RPC error creating org", rpcError);
       log.flush(500);
       return NextResponse.json({ error: rpcError.message }, { status: 500 });
-    }
-
-    if (logo_url && newOrgId) {
-      const { error: updateError } = await supabase
-        .from("orgs")
-        .update({ logo_url })
-        .eq("id", newOrgId);
-
-      if (updateError) {
-        log.error("error attaching logo to org", updateError);
-        log.flush(500);
-        return NextResponse.json(
-          { error: updateError.message },
-          { status: 500 },
-        );
-      }
     }
 
     log.set({ org_id: newOrgId });

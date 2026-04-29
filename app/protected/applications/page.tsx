@@ -41,7 +41,6 @@ function toCardProps(app: Application): ApplicationCardData {
       closes_at: app.closes_at ?? null,
       org: {
         name: app.org_name ?? "Unknown Organization",
-        logo_url: null,
       },
     },
   };

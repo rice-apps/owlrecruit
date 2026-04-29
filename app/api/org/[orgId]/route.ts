@@ -40,21 +40,9 @@ export async function PATCH(
     );
   }
 
-  const contentType = request.headers.get("content-type") || "";
-  let name: string | undefined;
-  let description: string | undefined;
-  let logoFile: File | null = null;
-
-  if (contentType.includes("application/json")) {
-    const body = await request.json();
-    name = body.name;
-    description = body.description;
-  } else if (contentType.includes("multipart/form-data")) {
-    const formData = await request.formData();
-    name = formData.get("name") as string | undefined;
-    description = formData.get("description") as string | undefined;
-    logoFile = formData.get("logo") as File | null;
-  }
+  const body = await request.json();
+  const name: string | undefined = body.name;
+  const description: string | undefined = body.description;
 
   if (name !== undefined && !name?.trim()) {
     log.flush(400);
@@ -68,32 +56,6 @@ export async function PATCH(
   if (name !== undefined) updates.name = name.trim();
   if (description !== undefined)
     updates.description = description?.trim() || null;
-
-  // Handle logo upload if provided
-  if (logoFile && logoFile.size > 0) {
-    const ext = logoFile.name.split(".").pop();
-    const path = `logos/${crypto.randomUUID()}.${ext}`;
-    const bytes = await logoFile.arrayBuffer();
-
-    const { error: uploadError } = await supabase.storage
-      .from("org-assets")
-      .upload(path, bytes, { contentType: logoFile.type });
-
-    if (uploadError) {
-      log.error("logo upload failed", uploadError);
-      log.flush(500);
-      return NextResponse.json(
-        { error: "Failed to upload logo" },
-        { status: 500 },
-      );
-    }
-
-    const { data: urlData } = supabase.storage
-      .from("org-assets")
-      .getPublicUrl(path);
-
-    updates.logo_url = urlData.publicUrl;
-  }
 
   const { error: updateError } = await supabase
     .from("orgs")

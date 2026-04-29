@@ -50,7 +50,6 @@ CREATE TABLE public.orgs (
   description text,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
-  logo_url text,
   CONSTRAINT orgs_pkey PRIMARY KEY (id)
 );
 

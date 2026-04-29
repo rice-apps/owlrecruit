@@ -17,7 +17,6 @@ type OrgPageHeaderProps = {
   orgDescription: string | null;
   isAdmin: boolean;
   hasRoleError: boolean;
-  logoUrl?: string | null;
   memberCount: number;
   openPositionCount: number;
 };
@@ -28,7 +27,6 @@ export function OrgPageHeader({
   orgDescription,
   isAdmin,
   hasRoleError,
-  logoUrl,
   memberCount,
   openPositionCount,
 }: OrgPageHeaderProps) {
@@ -38,7 +36,6 @@ export function OrgPageHeader({
         {/* Left: logo + name + counts */}
         <Group align="center" gap="md">
           <Avatar
-            src={logoUrl || undefined}
             radius="md"
             size={56}
             color="initials"

@@ -49,7 +49,7 @@ export default async function ReviewerOrgPage({
 
   const { data: orgData } = await supabase
     .from("orgs")
-    .select("name, description, logo_url")
+    .select("name, description")
     .eq("id", orgId)
     .single();
 
@@ -112,7 +112,6 @@ export default async function ReviewerOrgPage({
         orgDescription={orgData?.description ?? null}
         isAdmin={isAdmin}
         hasRoleError={Boolean(membershipError)}
-        logoUrl={orgData?.logo_url ?? null}
         memberCount={members.length}
         openPositionCount={openPositionCount}
       />
