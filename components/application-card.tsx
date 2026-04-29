@@ -8,8 +8,17 @@ export interface ApplicationWithDetails extends Application {
   };
 }
 
+export interface ApplicationCardData {
+  status: string | null;
+  opening: {
+    title: string;
+    closes_at: string | null;
+    org: { name: string; logo_url?: string | null };
+  };
+}
+
 interface ApplicationCardProps {
-  application: ApplicationWithDetails;
+  application: ApplicationCardData;
 }
 
 export function ApplicationCard({ application }: ApplicationCardProps) {

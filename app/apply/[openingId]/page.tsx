@@ -49,8 +49,8 @@ export default async function ApplyPage({ params }: Props) {
     .eq("opening_id", openingId)
     .order("sort_order", { ascending: true });
 
-  const orgRow = Array.isArray(opening.orgs) ? opening.orgs[0] : opening.orgs;
-  const orgName = (orgRow as { name: string } | null)?.name ?? "Unknown Org";
+  const orgName =
+    (opening.orgs as unknown as { name: string } | null)?.name ?? "Unknown Org";
 
   let alreadyApplied = false;
   if (user) {

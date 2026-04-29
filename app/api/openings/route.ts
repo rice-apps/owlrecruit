@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createRequestLogger } from "@/lib/logger";
-import { NextResponse } from "next/server";
+import { err, ok } from "@/lib/api-response";
+import { requireOrgAdmin } from "@/lib/auth";
 import { OpeningStatus } from "@/types/app";
 
 export async function GET(request: Request) {
@@ -12,11 +13,8 @@ export async function GET(request: Request) {
     const statuses = searchParams.get("statuses")?.split(",") || [
       OpeningStatus.OPEN,
     ];
-    const datePosted = searchParams.get("datePosted") || "all";
-    const deadline = searchParams.get("deadline") || "all";
-    const sort = searchParams.get("sort") || "recent";
 
-    log.set({ statuses, date_posted: datePosted, deadline, sort });
+    log.set({ statuses });
 
     let query = supabase.from("openings").select(
       `
@@ -25,54 +23,20 @@ export async function GET(request: Request) {
       `,
     );
 
-    // Filter by status(es)
     if (statuses.length === 1) {
       query = query.eq("status", statuses[0]);
     } else {
       query = query.in("status", statuses);
     }
 
-    // Filter by date posted
-    if (datePosted !== "all") {
-      const cutoffDate = new Date();
-      if (datePosted === "7days") {
-        cutoffDate.setDate(cutoffDate.getDate() - 7);
-      } else if (datePosted === "30days") {
-        cutoffDate.setDate(cutoffDate.getDate() - 30);
-      }
-      query = query.gte("created_at", cutoffDate.toISOString());
-    }
-
-    // Filter by application deadline
-    if (deadline === "closing-soon") {
-      const now = new Date();
-      const sevenDaysFromNow = new Date(
-        now.getTime() + 7 * 24 * 60 * 60 * 1000,
-      );
-      query = query.gte("closes_at", now.toISOString());
-      query = query.lte("closes_at", sevenDaysFromNow.toISOString());
-    } else if (deadline === "no-deadline") {
-      query = query.is("closes_at", null);
-    }
-
-    // Apply ordering based on sort parameter
-    if (sort === "recent") {
-      query = query.order("created_at", { ascending: false });
-    } else if (sort === "closing-soon") {
-      query = query.order("closes_at", { ascending: true, nullsFirst: false });
-    } else if (sort === "org-name") {
-      query = query.order("name", { referencedTable: "orgs", ascending: true });
-    }
+    query = query.order("created_at", { ascending: false });
 
     const { data: openings, error: fetchError } = await query;
 
     if (fetchError) {
       log.error("error fetching openings", fetchError);
       log.flush(500);
-      return NextResponse.json(
-        { error: "Failed to fetch openings" },
-        { status: 500 },
-      );
+      return err("Failed to fetch openings", 500);
     }
 
     // Attach the current user's application status to each opening (if logged in)
@@ -119,14 +83,11 @@ export async function GET(request: Request) {
 
     log.set({ result_count: enriched.length });
     log.flush(200);
-    return NextResponse.json(enriched);
+    return ok(enriched);
   } catch (error) {
     log.error("unexpected error in openings GET", error);
     log.flush(500);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 },
-    );
+    return err("Internal Server Error", 500);
   }
 }
 
@@ -135,14 +96,6 @@ export async function POST(request: Request) {
   try {
     const supabase = await createClient();
 
-    const { data: authData, error: authError } = await supabase.auth.getUser();
-    if (authError || !authData.user) {
-      log.flush(401);
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    const user = authData.user;
-    log.set({ user_id: user.id });
-
     const body = await request.json();
     const { org_id, title, description, application_link, closes_at, status } =
       body;
@@ -150,27 +103,11 @@ export async function POST(request: Request) {
 
     if (!title?.trim()) {
       log.flush(400);
-      return NextResponse.json(
-        { error: "Position title is required" },
-        { status: 400 },
-      );
+      return err("Position title is required", 400);
     }
 
-    // Verify user has permission to create opening in this org
-    const { data: membership, error: membershipError } = await supabase
-      .from("org_members")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("org_id", org_id)
-      .single();
-
-    if (membershipError || !membership || membership.role !== "admin") {
-      log.flush(403);
-      return NextResponse.json(
-        { error: "Unauthorized: Only admins can manage openings" },
-        { status: 403 },
-      );
-    }
+    const { userId } = await requireOrgAdmin(supabase, org_id);
+    log.set({ user_id: userId });
 
     const { data, error } = await supabase
       .from("openings")
@@ -188,18 +125,16 @@ export async function POST(request: Request) {
     if (error) {
       log.error("error inserting opening", error);
       log.flush(500);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return err(error.message, 500);
     }
 
     log.set({ opening_id: data.id });
     log.flush(200);
-    return NextResponse.json(data);
-  } catch (error) {
-    log.error("unexpected error in openings POST", error);
+    return ok(data);
+  } catch (e) {
+    if (e instanceof Response) return e;
+    log.error("unexpected error in openings POST", e);
     log.flush(500);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 },
-    );
+    return err("Internal Server Error", 500);
   }
 }

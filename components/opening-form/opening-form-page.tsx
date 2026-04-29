@@ -4,22 +4,22 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "@mantine/form";
 import {
-  Stack,
-  Card,
-  Title,
-  Text,
-  TextInput,
-  Textarea,
-  SegmentedControl,
-  MultiSelect,
-  Button,
-  Group,
-  Anchor,
-  Alert,
-  Box,
-  Table,
-  NumberInput,
   ActionIcon,
+  Alert,
+  Anchor,
+  Box,
+  Button,
+  Card,
+  Group,
+  MultiSelect,
+  NumberInput,
+  SegmentedControl,
+  Stack,
+  Table,
+  Text,
+  Textarea,
+  TextInput,
+  Title,
 } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
 import { AlertCircle, Trash01 } from "@untitled-ui/icons-react";
@@ -27,12 +27,10 @@ import { Breadcrumb } from "@/components/Breadcrumb";
 import { useOpeningFormContext } from "./use-opening-form-context";
 import type { OpeningInitialData, RubricItem } from "./types";
 import {
-  type OpeningStatus,
-  OpeningStatus as OS,
   DEFAULT_OPENING_STATUS,
+  OpeningStatus as OS,
+  type OpeningStatus,
 } from "@/types/app";
-
-const MAX_RUBRIC_SCORE = 1_000_000_000_000;
 
 interface OpeningFormPageProps {
   mode: "create" | "edit";
@@ -121,10 +119,6 @@ export function OpeningFormPage({
       }
       if (normalizedRubric.some((r) => r.max_val <= 0)) {
         setError("Max score must be greater than 0.");
-        return;
-      }
-      if (normalizedRubric.some((r) => r.max_val > MAX_RUBRIC_SCORE)) {
-        setError("Max score must be ≤ 1,000,000,000,000.");
         return;
       }
     }
@@ -398,7 +392,7 @@ export function OpeningFormPage({
                                 item.max_val === "" ? "" : Number(item.max_val)
                               }
                               min={1}
-                              max={MAX_RUBRIC_SCORE}
+                              max={100}
                               onChange={(val) =>
                                 updateRubricItem(index, { max_val: val })
                               }

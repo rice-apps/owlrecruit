@@ -5,6 +5,7 @@
  */
 
 import { Suspense } from "react";
+import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ActionIcon, Box, Card, Group, Stack, Text } from "@mantine/core";
 import Link from "next/link";
@@ -22,6 +23,7 @@ import {
   OpeningStatus,
   DEFAULT_OPENING_STATUS,
 } from "@/types/app";
+import { ALLOWED_EMAIL_DOMAIN } from "@/lib/config";
 import { logger } from "@/lib/logger";
 import { Breadcrumb } from "@/components/Breadcrumb";
 
@@ -37,7 +39,7 @@ interface OpeningData {
   application_link: string | null;
   closes_at: string | null;
   org_id: string;
-  orgs: Array<{ name: string }> | { name: string };
+  orgs: { name: string } | null;
 }
 
 interface ApplicationRow {
@@ -76,14 +78,11 @@ export default async function OpeningOverviewPage({
     .single()) as { data: OpeningData | null; error: unknown };
 
   if (!openingData) {
-    throw new Error("Opening not found");
+    notFound();
   }
 
   const orgId = openingData.org_id;
-  const orgName =
-    (Array.isArray(openingData.orgs)
-      ? openingData.orgs[0]?.name
-      : openingData.orgs?.name) || "Organization";
+  const orgName = openingData.orgs?.name || "Organization";
 
   // Determine current user's role for tab visibility
   const { data: authData } = await supabase.auth.getClaims();
@@ -140,7 +139,7 @@ export default async function OpeningOverviewPage({
       return {
         id: app.applicant_id,
         name: userData.name || "Unknown",
-        email: app.user?.email || `${userData.net_id}@rice.edu`,
+        email: app.user?.email || `${userData.net_id}@${ALLOWED_EMAIL_DOMAIN}`,
         netId: userData.net_id || "",
         status: (app.status || AppStatus.NO_STATUS) as ApplicationStatus,
         applicationId: app.id,

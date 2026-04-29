@@ -82,7 +82,7 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
       });
       if (!res.ok) throw new Error("Failed to fetch members");
       const json = await res.json();
-      setMembers((json.data ?? json) as Member[]);
+      setMembers((json.data ?? []) as Member[]);
     } catch {
     } finally {
       setIsLoading(false);
@@ -114,7 +114,7 @@ export function EditMembersDialog({ orgId }: { orgId: string }) {
           );
           if (!res.ok) throw new Error("Failed to search users");
           const json = await res.json();
-          setSearchResults((json.data ?? json) as SearchedUser[]);
+          setSearchResults((json.data ?? []) as SearchedUser[]);
         } catch {
         } finally {
           setIsSearching(false);

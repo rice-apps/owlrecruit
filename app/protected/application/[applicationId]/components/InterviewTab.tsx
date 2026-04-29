@@ -31,10 +31,7 @@ interface InterviewRecord {
   round_number: number;
   created_at: string | null;
   updated_at: string | null;
-  interviewer:
-    | { id: string; name: string | null }
-    | { id: string; name: string | null }[]
-    | null;
+  interviewer: { id: string; name: string | null } | null;
 }
 
 interface InterviewTabProps {
@@ -45,9 +42,7 @@ interface InterviewTabProps {
 function getInterviewerName(
   interviewer: InterviewRecord["interviewer"],
 ): string {
-  if (!interviewer) return "Unknown";
-  const u = Array.isArray(interviewer) ? interviewer[0] : interviewer;
-  return u?.name || "Unknown";
+  return interviewer?.name || "Unknown";
 }
 
 export function InterviewTab({ orgId, applicationId }: InterviewTabProps) {
@@ -76,7 +71,7 @@ export function InterviewTab({ orgId, applicationId }: InterviewTabProps) {
       );
       if (!res.ok) throw new Error("Failed to fetch interview records");
       const json = await res.json();
-      const data: InterviewRecord[] = json.data ?? json;
+      const data: InterviewRecord[] = json.data ?? [];
       setRecords(data);
     } catch {
       setError("Unable to load interview records.");

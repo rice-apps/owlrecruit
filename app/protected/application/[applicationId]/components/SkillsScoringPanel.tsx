@@ -39,9 +39,8 @@ export function SkillsScoringPanel({
         const res = await fetch(`/api/org/${orgId}/openings/${openingId}`);
         if (res.ok) {
           const json = await res.json();
-          const opening = json.data ?? json;
-          if (opening?.rubric) {
-            setRubrics(opening.rubric);
+          if (json.opening?.rubric) {
+            setRubrics(json.opening.rubric);
           }
         }
       } catch {
@@ -61,9 +60,8 @@ export function SkillsScoringPanel({
       );
       if (res.ok) {
         const json = await res.json();
-        const payload = json.data ?? json;
-        if (payload.myScoreSkills) {
-          setScores(payload.myScoreSkills);
+        if (json.data?.myScoreSkills) {
+          setScores(json.data.myScoreSkills);
         }
       }
     } catch {

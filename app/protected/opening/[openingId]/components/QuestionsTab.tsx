@@ -28,6 +28,7 @@ import {
 import type { FieldType } from "@/lib/question-utils";
 import { encodeQuestionText, parseQuestionText } from "@/lib/question-utils";
 import { createClient } from "@/lib/supabase/client";
+import { ALLOWED_EMAIL_DOMAIN } from "@/lib/config";
 
 interface Question {
   id: string;
@@ -431,7 +432,7 @@ export function QuestionsTab({ openingId, orgId }: QuestionsTabProps) {
         if (!query) return true;
         const userData = app.user || app.applicant;
         const userEmail =
-          app.user?.email || `${app.applicant?.net_id}@rice.edu`;
+          app.user?.email || `${app.applicant?.net_id}@${ALLOWED_EMAIL_DOMAIN}`;
         return (
           userData?.name?.toLowerCase().includes(query) ||
           userEmail?.toLowerCase().includes(query) ||
@@ -446,7 +447,9 @@ export function QuestionsTab({ openingId, orgId }: QuestionsTabProps) {
             ? `Applicant ${applications.indexOf(app) + 1}`
             : userData?.name || "Unknown",
           response: responses[label],
-          email: app.user?.email || `${app.applicant?.net_id}@rice.edu`,
+          email:
+            app.user?.email ||
+            `${app.applicant?.net_id}@${ALLOWED_EMAIL_DOMAIN}`,
         };
       })
       .filter(

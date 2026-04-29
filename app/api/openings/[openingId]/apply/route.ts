@@ -4,6 +4,7 @@ import { ensureApplicant } from "@/lib/csv-upload-utils";
 import { parseQuestionText } from "@/lib/question-utils";
 import { createRequestLogger } from "@/lib/logger";
 import { DEFAULT_APPLICATION_STATUS, OpeningStatus } from "@/types/app";
+import { ALLOWED_EMAIL_DOMAIN } from "@/lib/config";
 
 type Params = Promise<{ openingId: string }>;
 
@@ -30,10 +31,12 @@ export async function POST(request: Request, { params }: { params: Params }) {
   log.set({ user_id: user.id });
 
   const email = user.email ?? "";
-  if (!email.endsWith("@rice.edu")) {
+  if (!email.endsWith(`@${ALLOWED_EMAIL_DOMAIN}`)) {
     log.flush(400);
     return NextResponse.json(
-      { error: "A Rice University email (@rice.edu) is required to apply." },
+      {
+        error: `A Rice University email (@${ALLOWED_EMAIL_DOMAIN}) is required to apply.`,
+      },
       { status: 400 },
     );
   }

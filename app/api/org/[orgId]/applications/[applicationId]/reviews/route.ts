@@ -32,11 +32,10 @@ export async function GET(
       return err("Application not found", 404);
     }
 
-    const opening = (
-      Array.isArray(application.openings)
-        ? application.openings[0]
-        : application.openings
-    ) as { org_id: string; rubric: unknown[] | null } | null;
+    const opening = application.openings as unknown as {
+      org_id: string;
+      rubric: unknown[] | null;
+    } | null;
     const appOrgId = opening?.org_id;
 
     if (appOrgId !== orgId) {
@@ -61,9 +60,7 @@ export async function GET(
       content: c.content,
       createdAt: c.created_at,
       userName:
-        (Array.isArray(c.user)
-          ? (c.user[0] as { name: string } | undefined)?.name
-          : (c.user as { name: string } | null)?.name) ?? "Unknown",
+        (c.user as unknown as { name: string } | null)?.name ?? "Unknown",
     }));
 
     const rubric = (
@@ -88,9 +85,8 @@ export async function GET(
       id: review.id,
       reviewerId: review.reviewer_id,
       reviewerName:
-        (Array.isArray(review.reviewer)
-          ? (review.reviewer[0] as { name: string } | undefined)?.name
-          : (review.reviewer as { name: string } | null)?.name) ?? "Unknown",
+        (review.reviewer as unknown as { name: string } | null)?.name ??
+        "Unknown",
       scoreSkills: review.score_skills as Record<string, number> | null,
       createdAt: review.created_at,
       updatedAt: review.updated_at,
@@ -190,12 +186,9 @@ export async function POST(
       return err("Application not found", 404);
     }
 
-    const opening = application.openings as
-      | { org_id: string }
-      | { org_id: string }[];
-    const appOrgId = Array.isArray(opening)
-      ? opening[0]?.org_id
-      : opening.org_id;
+    const appOrgId = (
+      application.openings as unknown as { org_id: string } | null
+    )?.org_id;
 
     if (appOrgId !== orgId) {
       log.flush(400);

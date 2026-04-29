@@ -16,7 +16,7 @@ import {
 import { AlertCircle, SearchMd } from "@untitled-ui/icons-react";
 import {
   ApplicationCard,
-  type ApplicationWithDetails,
+  type ApplicationCardData,
 } from "@/components/application-card";
 import type { Enums } from "@/types/supabase";
 import { TERMINAL_STATUSES } from "@/lib/status";
@@ -33,12 +33,9 @@ interface Application {
   opening_status?: Enums<"opening_status">;
 }
 
-function toCardProps(app: Application): ApplicationWithDetails {
+function toCardProps(app: Application): ApplicationCardData {
   return {
-    id: app.opening_id,
-    org_id: app.org_id,
     status: app.status,
-    created_at: app.created_at,
     opening: {
       title: app.opening_title ?? "Unknown Position",
       closes_at: app.closes_at ?? null,
@@ -47,7 +44,7 @@ function toCardProps(app: Application): ApplicationWithDetails {
         logo_url: null,
       },
     },
-  } as unknown as ApplicationWithDetails;
+  };
 }
 
 export default function MyApplicationsPage() {

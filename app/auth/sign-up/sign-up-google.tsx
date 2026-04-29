@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Modal, Text, Button, Stack } from "@mantine/core";
 import { createClient } from "@/lib/supabase/client";
 import Script from "next/script";
+import { ALLOWED_EMAIL_DOMAIN } from "@/lib/config";
 
 const supabase = createClient();
 
@@ -46,7 +47,7 @@ export default function SignUpGoogleBtn() {
         data-ux_mode="popup"
         data-callback="handleSignInWithGoogle"
         data-auto_prompt="false"
-        data-hosted_domain="rice.edu"
+        data-hosted_domain={ALLOWED_EMAIL_DOMAIN}
       />
       <div
         className="g_id_signin"
@@ -67,7 +68,7 @@ export default function SignUpGoogleBtn() {
         <Stack>
           <Text size="sm">
             OwlRecruit requires a Rice University email address. Please sign in
-            with your <strong>@rice.edu</strong> account.
+            with your <strong>@{ALLOWED_EMAIL_DOMAIN}</strong> account.
           </Text>
           <Button onClick={() => setAuthError(false)} fullWidth>
             Close

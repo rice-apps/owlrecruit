@@ -38,9 +38,10 @@ export async function GET(
   const existingApplicants = applications
     .filter((app) => app.applicant)
     .map((app) => {
-      const applicant = Array.isArray(app.applicant)
-        ? app.applicant[0]
-        : app.applicant;
+      const applicant = app.applicant as unknown as {
+        net_id: string;
+        name: string | null;
+      };
       return {
         netId: applicant.net_id,
         applicantId: app.applicant_id,

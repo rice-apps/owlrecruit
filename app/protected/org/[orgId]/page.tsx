@@ -84,16 +84,17 @@ export default async function ReviewerOrgPage({
     );
   }
 
-  const members: OrgMemberRecord[] = (membersData ?? []).map((m) => {
-    const usersRaw = m.users;
-    const user = Array.isArray(usersRaw) ? usersRaw[0] : usersRaw;
-    return {
-      id: m.id,
-      user_id: m.user_id,
-      role: m.role as "admin" | "reviewer",
-      users: user ?? null,
-    };
-  });
+  const members: OrgMemberRecord[] = (membersData ?? []).map((m) => ({
+    id: m.id,
+    user_id: m.user_id,
+    role: m.role as "admin" | "reviewer",
+    users:
+      (m.users as unknown as {
+        id: string;
+        name: string | null;
+        email: string;
+      } | null) ?? null,
+  }));
 
   // RLS already filters out draft/closed openings for non-members
   const displayOpenings = openings ?? [];

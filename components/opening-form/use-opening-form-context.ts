@@ -30,7 +30,7 @@ export function useOpeningFormContext(orgId: string) {
 
         if (reviewersRes.ok) {
           const json = await reviewersRes.json();
-          const reviewerData = (json.data ?? json) as EligibleReviewer[];
+          const reviewerData = (json.data ?? []) as EligibleReviewer[];
           setEligibleReviewers(Array.isArray(reviewerData) ? reviewerData : []);
         }
       } catch {}

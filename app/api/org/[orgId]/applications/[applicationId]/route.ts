@@ -42,12 +42,9 @@ export async function PATCH(
       return err("Application not found", 404);
     }
 
-    const opening = application.openings as
-      | { org_id: string }
-      | { org_id: string }[];
-    const appOrgId = Array.isArray(opening)
-      ? opening[0]?.org_id
-      : opening.org_id;
+    const appOrgId = (
+      application.openings as unknown as { org_id: string } | null
+    )?.org_id;
 
     if (appOrgId !== orgId) {
       log.flush(400);

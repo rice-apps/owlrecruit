@@ -5,6 +5,7 @@ import Script from "next/script";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { parseQuestionText } from "@/lib/question-utils";
+import { ALLOWED_EMAIL_DOMAIN } from "@/lib/config";
 import { useForm } from "@mantine/form";
 import {
   Alert,
@@ -344,15 +345,15 @@ export function ApplyForm({
     );
   }
 
-  if (userEmail && !userEmail.endsWith("@rice.edu")) {
+  if (userEmail && !userEmail.endsWith(`@${ALLOWED_EMAIL_DOMAIN}`)) {
     return (
       <Box>
         {header}
         <Alert color="yellow" radius="md">
           <Text size="sm">
-            A Rice University email address (<strong>@rice.edu</strong>) is
-            required to apply. You are signed in as <strong>{userEmail}</strong>
-            .
+            A Rice University email address (
+            <strong>@{ALLOWED_EMAIL_DOMAIN}</strong>) is required to apply. You
+            are signed in as <strong>{userEmail}</strong>.
           </Text>
         </Alert>
       </Box>

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createRequestLogger } from "@/lib/logger";
 import { NextResponse } from "next/server";
+import { err } from "@/lib/api-response";
 import { OpeningStatus } from "@/types/app";
 
 export async function GET() {
@@ -17,7 +18,7 @@ export async function GET() {
 
     if (authError || !user) {
       log.flush(401);
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return err("Unauthorized", 401);
     }
 
     const userId = user.id;
@@ -32,10 +33,7 @@ export async function GET() {
 
     if (userError || !userData) {
       log.flush(404);
-      return NextResponse.json(
-        { error: "User not found in database" },
-        { status: 404 },
-      );
+      return err("User not found in database", 404);
     }
 
     const netId = userData.net_id;
@@ -83,12 +81,9 @@ export async function GET() {
     const orgIds = new Set([
       ...(memberships?.map((m) => m.org_id) || []),
       ...(applications
-        ?.map((a) => {
-          const opening = Array.isArray(a.openings)
-            ? a.openings[0]
-            : a.openings;
-          return opening?.org_id;
-        })
+        ?.map(
+          (a) => (a.openings as unknown as { org_id: string } | null)?.org_id,
+        )
         .filter(Boolean) || []),
     ]);
 
@@ -122,9 +117,12 @@ export async function GET() {
     // Transform applications
     const transformedApplications =
       applications?.map((application) => {
-        const opening = Array.isArray(application.openings)
-          ? application.openings[0]
-          : application.openings;
+        const opening = application.openings as unknown as {
+          org_id: string;
+          title: string;
+          closes_at: string | null;
+          status: string;
+        } | null;
         return {
           org_id: opening?.org_id || "",
           opening_id: application.opening_id,
@@ -149,9 +147,6 @@ export async function GET() {
   } catch (error) {
     log.error("unexpected error fetching user org status", error);
     log.flush(500);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 },
-    );
+    return err("Internal Server Error", 500);
   }
 }

@@ -40,14 +40,11 @@ export default async function MyOrgsPage() {
     .eq("user_id", userId);
 
   const orgs: OrgWithRole[] = (memberships ?? [])
-    .filter(
-      (m): m is typeof m & { orgs: NonNullable<typeof m.orgs> } =>
-        m.orgs !== null,
-    )
-    .map((m) => {
-      const orgData = Array.isArray(m.orgs) ? m.orgs[0] : m.orgs;
-      return { ...orgData, role: m.role };
-    });
+    .filter((m) => m.orgs !== null)
+    .map((m) => ({
+      ...(m.orgs as unknown as OrgWithRole),
+      role: m.role as OrgWithRole["role"],
+    }));
 
   return (
     <Stack gap="lg">

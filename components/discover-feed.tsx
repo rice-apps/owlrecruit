@@ -41,16 +41,11 @@ export function DiscoverFeed() {
     async function fetchOpenings() {
       setLoading(true);
       try {
-        const params = new URLSearchParams({
-          statuses: OpeningStatus.OPEN,
-          datePosted: "all",
-          deadline: "all",
-          sort: "recent",
-        });
+        const params = new URLSearchParams({ statuses: OpeningStatus.OPEN });
         const res = await fetch(`/api/openings?${params}`);
         if (!res.ok) throw new Error("Failed to fetch openings");
         const json = await res.json();
-        setOpenings(json.data ?? json);
+        setOpenings(json.data ?? []);
       } catch {
         setFetchError(true);
       } finally {

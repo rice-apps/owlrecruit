@@ -36,15 +36,14 @@ export default async function ProfilePage() {
     .select("id, org_id, role, orgs(id, name)")
     .eq("user_id", userData.user.id);
 
-  const orgMemberships: OrgMembership[] = (rawMemberships ?? []).map((m) => {
-    const org = Array.isArray(m.orgs) ? m.orgs[0] : m.orgs;
-    return {
-      id: m.id,
-      org_id: m.org_id,
-      role: m.role,
-      org_name: org?.name ?? "Unknown Organization",
-    };
-  });
+  const orgMemberships: OrgMembership[] = (rawMemberships ?? []).map((m) => ({
+    id: m.id,
+    org_id: m.org_id,
+    role: m.role,
+    org_name:
+      (m.orgs as unknown as { id: string; name: string } | null)?.name ??
+      "Unknown Organization",
+  }));
 
   return (
     <Paper radius="lg" shadow="sm" p="xl">
