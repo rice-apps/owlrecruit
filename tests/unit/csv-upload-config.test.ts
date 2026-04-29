@@ -4,20 +4,12 @@ import {
   DEFAULT_UPLOAD_STATUS,
   CSV_RESERVED_COLUMNS,
   REQUIRED_CSV_COLUMNS,
-  KANBAN_COLUMNS,
   ERROR_MESSAGES,
   VALIDATION_CONFIG,
 } from "@/lib/csv-upload-config";
 
 describe("APPLICATION_STATUSES", () => {
-  it("each status has a value and display", () => {
-    for (const entry of Object.values(APPLICATION_STATUSES)) {
-      expect(entry.value).toBeTruthy();
-      expect(entry.display).toBeTruthy();
-    }
-  });
-
-  it("status values match the DB enum", () => {
+  it("values match the DB enum", () => {
     const validDbValues = [
       "No Status",
       "Applied",
@@ -26,16 +18,17 @@ describe("APPLICATION_STATUSES", () => {
       "Accepted Offer",
       "Rejected",
     ];
-    for (const entry of Object.values(APPLICATION_STATUSES)) {
-      expect(validDbValues).toContain(entry.value);
+    for (const value of Object.values(APPLICATION_STATUSES)) {
+      expect(validDbValues).toContain(value);
     }
   });
 });
 
 describe("DEFAULT_UPLOAD_STATUS", () => {
-  it("is a valid application status value", () => {
-    const validValues = Object.values(APPLICATION_STATUSES).map((s) => s.value);
-    expect(validValues).toContain(DEFAULT_UPLOAD_STATUS);
+  it("is a valid application status", () => {
+    expect(Object.values(APPLICATION_STATUSES)).toContain(
+      DEFAULT_UPLOAD_STATUS,
+    );
   });
 });
 
@@ -48,27 +41,6 @@ describe("CSV_RESERVED_COLUMNS", () => {
 describe("REQUIRED_CSV_COLUMNS", () => {
   it("requires netid", () => {
     expect(REQUIRED_CSV_COLUMNS).toContain("netid");
-  });
-});
-
-describe("KANBAN_COLUMNS", () => {
-  it("has at least one column", () => {
-    expect(KANBAN_COLUMNS.length).toBeGreaterThan(0);
-  });
-
-  it("each column has id, title, and status", () => {
-    for (const col of KANBAN_COLUMNS) {
-      expect(col.id).toBeTruthy();
-      expect(col.title).toBeTruthy();
-      expect(col.status).toBeTruthy();
-    }
-  });
-
-  it("all column statuses match known APPLICATION_STATUSES values", () => {
-    const validValues = Object.values(APPLICATION_STATUSES).map((s) => s.value);
-    for (const col of KANBAN_COLUMNS) {
-      expect(validValues).toContain(col.status);
-    }
   });
 });
 

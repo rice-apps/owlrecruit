@@ -135,8 +135,6 @@ export async function POST(
     openingId,
     buildApplicationRecord,
     DEFAULT_UPLOAD_STATUS,
-    "applications",
-    undefined,
   );
 
   if (applicationRecords.length === 0) {
