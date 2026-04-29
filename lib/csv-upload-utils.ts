@@ -108,7 +108,10 @@ export async function ensureApplicant(
         .eq("id", existing.id)
         .select()
         .single();
-      if (!error && data) return data;
+      if (error || !data) {
+        throw new Error(`Failed to update applicant name: ${error?.message}`);
+      }
+      return data;
     }
     return existing;
   }
