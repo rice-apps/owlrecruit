@@ -16,7 +16,12 @@ import { ApplicantsList } from "./components/ApplicantsList";
 import { OverviewTab } from "./components/OverviewTab";
 import { UploadTab } from "./components/UploadTab";
 import { QuestionsTab } from "./components/QuestionsTab";
-import type { ApplicationStatus } from "@/types/app";
+import {
+  type ApplicationStatus,
+  ApplicationStatus as AppStatus,
+  OpeningStatus,
+  DEFAULT_OPENING_STATUS,
+} from "@/types/app";
 import { logger } from "@/lib/logger";
 import { Breadcrumb } from "@/components/Breadcrumb";
 
@@ -137,7 +142,7 @@ export default async function OpeningOverviewPage({
         name: userData.name || "Unknown",
         email: app.user?.email || `${userData.net_id}@rice.edu`,
         netId: userData.net_id || "",
-        status: (app.status || "No Status") as ApplicationStatus,
+        status: (app.status || AppStatus.NO_STATUS) as ApplicationStatus,
         applicationId: app.id,
         createdAt: app.created_at,
       };
@@ -202,7 +207,9 @@ export default async function OpeningOverviewPage({
               <Text fw={700} size="xl">
                 {openingData?.title || "Untitled Opening"}
               </Text>
-              <OpeningStatusBadge status={openingData?.status || "draft"} />
+              <OpeningStatusBadge
+                status={openingData?.status || DEFAULT_OPENING_STATUS}
+              />
             </Group>
             {openingData?.description && (
               <Text c="dimmed">{openingData.description}</Text>
@@ -213,7 +220,7 @@ export default async function OpeningOverviewPage({
               orgId={orgId}
               openingId={openingId}
               status={
-                (openingData?.status as "open" | "closed" | "draft") || "draft"
+                (openingData?.status as OpeningStatus) || DEFAULT_OPENING_STATUS
               }
             />
             <Link href={`/protected/opening/${openingId}/edit`}>

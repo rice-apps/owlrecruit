@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { Text, Alert, ActionIcon, Stack } from "@mantine/core";
+import { OpeningStatus } from "@/types/app";
 import { Edit02 } from "@untitled-ui/icons-react";
 import { EditMembersDialog } from "@/components/edit-members-dialog";
 import {
@@ -99,7 +100,7 @@ export default async function ReviewerOrgPage({
 
   const displayOrgName = orgData?.name || "Organization";
   const openPositionCount = displayOpenings.filter(
-    (o) => o.status === "open",
+    (o) => o.status === OpeningStatus.OPEN,
   ).length;
 
   return (

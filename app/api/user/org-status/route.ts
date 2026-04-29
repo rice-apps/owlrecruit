@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createRequestLogger } from "@/lib/logger";
 import { NextResponse } from "next/server";
+import { OpeningStatus } from "@/types/app";
 
 export async function GET() {
   const log = createRequestLogger({
@@ -132,7 +133,7 @@ export async function GET() {
           opening_title: opening?.title || "Unknown Position",
           org_name: orgMap.get(opening?.org_id || "") || "Unknown Organization",
           closes_at: opening?.closes_at || null,
-          opening_status: opening?.status || "open",
+          opening_status: opening?.status || OpeningStatus.OPEN,
         };
       }) || [];
 

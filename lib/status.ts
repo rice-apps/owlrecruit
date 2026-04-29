@@ -1,30 +1,24 @@
 import type { MantineColor } from "@mantine/core";
+import { ApplicationStatus, OpeningStatus } from "@/types/app";
 
-// Application statuses (matches DB enum)
-const APPLICATION_STATUS_LABELS: Record<string, string> = {
-  "No Status": "No Status",
-  Applied: "Applied",
-  Interviewing: "Interviewing",
-  Offer: "Offer",
-  "Accepted Offer": "Accepted Offer",
-  Rejected: "Rejected",
-};
+export const APPLICATION_STATUS_LIST = Object.values(ApplicationStatus);
 
-export const APPLICATION_STATUS_LIST = Object.keys(APPLICATION_STATUS_LABELS);
-
-export const TERMINAL_STATUSES = new Set(["Accepted Offer", "Rejected"]);
+export const TERMINAL_STATUSES: Set<string> = new Set([
+  ApplicationStatus.ACCEPTED_OFFER,
+  ApplicationStatus.REJECTED,
+]);
 
 export function getApplicationStatusColor(status: string): MantineColor {
   switch (status) {
-    case "Applied":
+    case ApplicationStatus.APPLIED:
       return "blue";
-    case "Interviewing":
+    case ApplicationStatus.INTERVIEWING:
       return "orange";
-    case "Offer":
+    case ApplicationStatus.OFFER:
       return "violet";
-    case "Accepted Offer":
+    case ApplicationStatus.ACCEPTED_OFFER:
       return "green";
-    case "Rejected":
+    case ApplicationStatus.REJECTED:
       return "red";
     default:
       return "gray";
@@ -34,11 +28,11 @@ export function getApplicationStatusColor(status: string): MantineColor {
 // Opening statuses
 export function getOpeningStatusColor(status: string): MantineColor {
   switch (status) {
-    case "open":
+    case OpeningStatus.OPEN:
       return "green";
-    case "closed":
+    case OpeningStatus.CLOSED:
       return "red";
-    case "draft":
+    case OpeningStatus.DRAFT:
       return "gray";
     default:
       return "gray";
@@ -47,11 +41,11 @@ export function getOpeningStatusColor(status: string): MantineColor {
 
 export function getOpeningStatusLabel(status: string): string {
   switch (status) {
-    case "open":
+    case OpeningStatus.OPEN:
       return "Open";
-    case "closed":
+    case OpeningStatus.CLOSED:
       return "Closed";
-    case "draft":
+    case OpeningStatus.DRAFT:
       return "Draft";
     default:
       return status;

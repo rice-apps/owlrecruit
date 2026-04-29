@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { createRequestLogger } from "@/lib/logger";
+import { OpeningStatus } from "@/types/app";
 
 export async function GET(
   request: Request,
@@ -134,7 +135,7 @@ export async function POST(
       description: description?.trim() || null,
       application_link: application_link?.trim() || null,
       closes_at: closes_at || null,
-      status: status || "open",
+      status: status || OpeningStatus.OPEN,
       rubric: rubric ?? null,
     })
     .select()

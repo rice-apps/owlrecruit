@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createRequestLogger } from "@/lib/logger";
 import { NextResponse } from "next/server";
+import { OpeningStatus } from "@/types/app";
 
 export async function GET(request: Request) {
   const log = createRequestLogger({ method: "GET", path: "/api/search" });
@@ -25,7 +26,7 @@ export async function GET(request: Request) {
           org:orgs(name)
         `,
         )
-        .eq("status", "open")
+        .eq("status", OpeningStatus.OPEN)
         .ilike("title", `%${query}%`)
         .order("created_at", { ascending: false }),
 

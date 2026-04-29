@@ -1,6 +1,7 @@
 import { Box, Text } from "@mantine/core";
 import { createClient } from "@/lib/supabase/server";
 import { ApplyForm } from "./ApplyForm";
+import { OpeningStatus } from "@/types/app";
 
 interface Props {
   params: Promise<{ openingId: string }>;
@@ -32,7 +33,7 @@ export default async function ApplyPage({ params }: Props) {
     );
   }
 
-  if (opening.status !== "open") {
+  if (opening.status !== OpeningStatus.OPEN) {
     return (
       <Box ta="center" py="5rem">
         <Text size="lg" fw={500} c="dimmed">

@@ -1,4 +1,4 @@
-type OpeningStatus = "draft" | "open" | "closed";
+import type { OpeningStatus } from "@/types/app";
 
 export interface EligibleReviewer {
   id: string;

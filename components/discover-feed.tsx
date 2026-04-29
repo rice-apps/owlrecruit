@@ -16,6 +16,7 @@ import {
 import { SearchMd } from "@untitled-ui/icons-react";
 import { ApplicationStatusBadge } from "@/components/StatusBadge";
 import { formatDate } from "@/lib/utils";
+import { OpeningStatus } from "@/types/app";
 
 interface Opening {
   id: string;
@@ -40,7 +41,7 @@ export function DiscoverFeed() {
       setLoading(true);
       try {
         const params = new URLSearchParams({
-          statuses: "open",
+          statuses: OpeningStatus.OPEN,
           datePosted: "all",
           deadline: "all",
           sort: "recent",

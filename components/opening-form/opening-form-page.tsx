@@ -26,6 +26,11 @@ import { AlertCircle, Trash01 } from "@untitled-ui/icons-react";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { useOpeningFormContext } from "./use-opening-form-context";
 import type { OpeningInitialData, RubricItem } from "./types";
+import {
+  type OpeningStatus,
+  OpeningStatus as OS,
+  DEFAULT_OPENING_STATUS,
+} from "@/types/app";
 
 const MAX_RUBRIC_SCORE = 1_000_000_000_000;
 
@@ -63,10 +68,8 @@ export function OpeningFormPage({
       description: initialOpening?.description || "",
       applicationLink: initialOpening?.application_link || "",
       closesAt: (initialOpening?.closes_at ?? null) as string | null,
-      status: (initialOpening?.status || "draft") as
-        | "draft"
-        | "open"
-        | "closed",
+      status: (initialOpening?.status ||
+        DEFAULT_OPENING_STATUS) as OpeningStatus,
       selectedReviewers: [] as string[],
       rubric: (initialOpening?.rubric || []).map((item) => ({
         name: item.name || "",
@@ -287,15 +290,12 @@ export function OpeningFormPage({
                 <SegmentedControl
                   value={form.values.status}
                   onChange={(val) =>
-                    form.setFieldValue(
-                      "status",
-                      val as "draft" | "open" | "closed",
-                    )
+                    form.setFieldValue("status", val as OpeningStatus)
                   }
                   data={[
-                    { label: "Draft", value: "draft" },
-                    { label: "Open", value: "open" },
-                    { label: "Closed", value: "closed" },
+                    { label: "Draft", value: OS.DRAFT },
+                    { label: "Open", value: OS.OPEN },
+                    { label: "Closed", value: OS.CLOSED },
                   ]}
                 />
               </div>

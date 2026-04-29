@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { createRequestLogger } from "@/lib/logger";
+import { DEFAULT_OPENING_STATUS } from "@/types/app";
 
 async function requireAdminForOrg(orgId: string) {
   const supabase = await createClient();
@@ -83,7 +84,7 @@ export async function GET(
       description: openingData.description || "",
       application_link: openingData.application_link || "",
       closes_at: openingData.closes_at || "",
-      status: openingData.status || "draft",
+      status: openingData.status || DEFAULT_OPENING_STATUS,
       rubric: Array.isArray(openingData.rubric)
         ? openingData.rubric.map((item) => ({
             name: item?.name || "",

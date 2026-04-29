@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { ensureApplicant } from "@/lib/csv-upload-utils";
 import { createRequestLogger } from "@/lib/logger";
+import { DEFAULT_APPLICATION_STATUS } from "@/types/app";
 import type {
   ColumnMapping,
   CustomQuestion,
@@ -142,7 +143,7 @@ export async function POST(request: Request, { params }: { params: Params }) {
       opening_id: openingId,
       applicant_id: applicant.id,
       form_responses: formResponses,
-      status: "Applied",
+      status: DEFAULT_APPLICATION_STATUS,
     });
   }
 

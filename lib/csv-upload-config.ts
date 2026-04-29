@@ -1,13 +1,3 @@
-export const APPLICATION_STATUSES = {
-  UPLOADED: "No Status",
-  APPLIED: "Applied",
-  INTERVIEWING: "Interviewing",
-  OFFER: "Offer",
-  REJECTED: "Rejected",
-} as const;
-
-export const DEFAULT_UPLOAD_STATUS = APPLICATION_STATUSES.APPLIED;
-
 export const CSV_RESERVED_COLUMNS = {
   NETID: "netid",
   RESUME: "resume",

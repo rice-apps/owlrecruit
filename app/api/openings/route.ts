@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createRequestLogger } from "@/lib/logger";
 import { NextResponse } from "next/server";
+import { OpeningStatus } from "@/types/app";
 
 export async function GET(request: Request) {
   const log = createRequestLogger({ method: "GET", path: "/api/openings" });
@@ -8,7 +9,9 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const supabase = await createClient();
 
-    const statuses = searchParams.get("statuses")?.split(",") || ["open"];
+    const statuses = searchParams.get("statuses")?.split(",") || [
+      OpeningStatus.OPEN,
+    ];
     const datePosted = searchParams.get("datePosted") || "all";
     const deadline = searchParams.get("deadline") || "all";
     const sort = searchParams.get("sort") || "recent";
@@ -177,7 +180,7 @@ export async function POST(request: Request) {
         description: description?.trim() || null,
         application_link: application_link?.trim() || null,
         closes_at: closes_at || null,
-        status: status || "open",
+        status: status || OpeningStatus.OPEN,
       })
       .select()
       .single();

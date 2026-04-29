@@ -19,6 +19,8 @@ import {
   type ApplicationWithDetails,
 } from "@/components/application-card";
 import type { Enums } from "@/types/supabase";
+import { TERMINAL_STATUSES } from "@/lib/status";
+import { OpeningStatus } from "@/types/app";
 
 interface Application {
   org_id: string;
@@ -84,9 +86,8 @@ export default function MyApplicationsPage() {
 
   const active = filtered.filter((app) => {
     if (
-      app.status === "Rejected" ||
-      app.status === "Accepted Offer" ||
-      app.opening_status === "closed"
+      TERMINAL_STATUSES.has(app.status ?? "") ||
+      app.opening_status === OpeningStatus.CLOSED
     )
       return false;
     return !app.closes_at || new Date(app.closes_at) >= new Date();
@@ -94,9 +95,8 @@ export default function MyApplicationsPage() {
 
   const inactive = filtered.filter((app) => {
     if (
-      app.status === "Rejected" ||
-      app.status === "Accepted Offer" ||
-      app.opening_status === "closed"
+      TERMINAL_STATUSES.has(app.status ?? "") ||
+      app.opening_status === OpeningStatus.CLOSED
     )
       return true;
     return app.closes_at != null && new Date(app.closes_at) < new Date();

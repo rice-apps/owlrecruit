@@ -2,7 +2,10 @@
 
 import { useMemo } from "react";
 import { Card, SimpleGrid, Stack, Text } from "@mantine/core";
-import type { ApplicationStatus } from "@/types/app";
+import {
+  type ApplicationStatus,
+  ApplicationStatus as AppStatus,
+} from "@/types/app";
 
 interface Applicant {
   id: string;
@@ -22,12 +25,13 @@ export function OverviewTab({ applicants }: OverviewTabProps) {
   const totalSubmissions = applicants.length;
 
   const acceptedCount = useMemo(
-    () => applicants.filter((a) => a.status === "Accepted Offer").length,
+    () =>
+      applicants.filter((a) => a.status === AppStatus.ACCEPTED_OFFER).length,
     [applicants],
   );
 
   const rejectedCount = useMemo(
-    () => applicants.filter((a) => a.status === "Rejected").length,
+    () => applicants.filter((a) => a.status === AppStatus.REJECTED).length,
     [applicants],
   );
 

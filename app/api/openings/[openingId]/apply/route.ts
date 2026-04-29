@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { ensureApplicant } from "@/lib/csv-upload-utils";
 import { parseQuestionText } from "@/lib/question-utils";
 import { createRequestLogger } from "@/lib/logger";
+import { DEFAULT_APPLICATION_STATUS, OpeningStatus } from "@/types/app";
 
 type Params = Promise<{ openingId: string }>;
 
@@ -55,7 +56,7 @@ export async function POST(request: Request, { params }: { params: Params }) {
     return NextResponse.json({ error: "Opening not found" }, { status: 404 });
   }
 
-  if (opening.status !== "open") {
+  if (opening.status !== OpeningStatus.OPEN) {
     log.set({ opening_status: opening.status });
     log.flush(409);
     return NextResponse.json(
@@ -124,7 +125,7 @@ export async function POST(request: Request, { params }: { params: Params }) {
     applicant_id: applicant.id,
     user_id: user.id,
     form_responses: enrichedResponses,
-    status: "Applied",
+    status: DEFAULT_APPLICATION_STATUS,
   });
 
   if (insertError) {

@@ -1,14 +1,13 @@
 import { describe, it, expect } from "vitest";
 import {
-  APPLICATION_STATUSES,
-  DEFAULT_UPLOAD_STATUS,
   CSV_RESERVED_COLUMNS,
   REQUIRED_CSV_COLUMNS,
   ERROR_MESSAGES,
   VALIDATION_CONFIG,
 } from "@/lib/csv-upload-config";
+import { ApplicationStatus, DEFAULT_APPLICATION_STATUS } from "@/types/app";
 
-describe("APPLICATION_STATUSES", () => {
+describe("ApplicationStatus", () => {
   it("values match the DB enum", () => {
     const validDbValues = [
       "No Status",
@@ -18,16 +17,16 @@ describe("APPLICATION_STATUSES", () => {
       "Accepted Offer",
       "Rejected",
     ];
-    for (const value of Object.values(APPLICATION_STATUSES)) {
+    for (const value of Object.values(ApplicationStatus)) {
       expect(validDbValues).toContain(value);
     }
   });
 });
 
-describe("DEFAULT_UPLOAD_STATUS", () => {
+describe("DEFAULT_APPLICATION_STATUS", () => {
   it("is a valid application status", () => {
-    expect(Object.values(APPLICATION_STATUSES)).toContain(
-      DEFAULT_UPLOAD_STATUS,
+    expect(Object.values(ApplicationStatus)).toContain(
+      DEFAULT_APPLICATION_STATUS,
     );
   });
 });

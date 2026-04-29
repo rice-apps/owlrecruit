@@ -1,7 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import type { NextRequest } from "next/server";
 import Papa from "papaparse";
-import { DEFAULT_UPLOAD_STATUS, ERROR_MESSAGES } from "@/lib/csv-upload-config";
+import { ERROR_MESSAGES } from "@/lib/csv-upload-config";
+import { DEFAULT_APPLICATION_STATUS } from "@/types/app";
 import {
   processCSVRows,
   buildApplicationRecord,
@@ -134,7 +135,7 @@ export async function POST(
     orgId,
     openingId,
     buildApplicationRecord,
-    DEFAULT_UPLOAD_STATUS,
+    DEFAULT_APPLICATION_STATUS,
   );
 
   if (applicationRecords.length === 0) {
