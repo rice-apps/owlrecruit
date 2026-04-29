@@ -7,11 +7,6 @@ export type Json =
   | Json[];
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "13.0.5";
-  };
   graphql_public: {
     Tables: {
       [_ in never]: never;
@@ -463,6 +458,7 @@ export type Database = {
       };
       is_org_admin: { Args: { p_org_id: string }; Returns: boolean };
       is_org_member: { Args: { p_org_id: string }; Returns: boolean };
+      restrict_to_rice_email: { Args: { event: Json }; Returns: Json };
     };
     Enums: {
       opening_status: "draft" | "open" | "closed";
