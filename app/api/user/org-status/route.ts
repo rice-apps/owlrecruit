@@ -93,7 +93,10 @@ export async function GET() {
         ? await supabase
             .from("orgs")
             .select("id, name")
-            .in("id", Array.from(orgIds))
+            .in(
+              "id",
+              Array.from(orgIds).filter((id): id is string => id != null),
+            )
         : { data: [], error: null };
 
     if (orgsResult.error) {

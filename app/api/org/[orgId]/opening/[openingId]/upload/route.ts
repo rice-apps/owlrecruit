@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { ensureApplicant } from "@/lib/csv-upload-utils";
 import { createRequestLogger } from "@/lib/logger";
 import { DEFAULT_APPLICATION_STATUS } from "@/types/app";
+import type { TablesInsert } from "@/types/database";
 import type {
   ColumnMapping,
   CustomQuestion,
@@ -90,7 +91,7 @@ export async function POST(request: Request, { params }: { params: Params }) {
   log.set({ csv_row_count: csvData.length });
 
   const errors: UploadError[] = [];
-  const applicationRecords: Record<string, unknown>[] = [];
+  const applicationRecords: TablesInsert<"applications">[] = [];
 
   for (let i = 0; i < csvData.length; i++) {
     const row = csvData[i];
@@ -139,11 +140,12 @@ export async function POST(request: Request, { params }: { params: Params }) {
     }
 
     applicationRecords.push({
-      org_id: orgId,
       opening_id: openingId,
       applicant_id: applicant.id,
-      form_responses: formResponses,
-      status: DEFAULT_APPLICATION_STATUS,
+      form_responses:
+        formResponses as TablesInsert<"applications">["form_responses"],
+      status:
+        DEFAULT_APPLICATION_STATUS as TablesInsert<"applications">["status"],
     });
   }
 

@@ -227,7 +227,7 @@ test.describe("Access Control", () => {
     }) => {
       const resp = await request.get("/api/openings");
       expect(resp.status()).toBe(200);
-      const openings = await resp.json();
+      const { data: openings } = await resp.json();
       const ids = openings.map((o: { id: string }) => o.id);
       expect(ids).not.toContain(OPENING_UX); // UX Designer is draft
     });
@@ -237,7 +237,7 @@ test.describe("Access Control", () => {
     }) => {
       const resp = await request.get("/api/openings");
       expect(resp.status()).toBe(200);
-      const openings = await resp.json();
+      const { data: openings } = await resp.json();
       const ids = openings.map((o: { id: string }) => o.id);
       expect(ids).not.toContain(OPENING_FI); // Finance Intern is closed
     });
@@ -247,7 +247,7 @@ test.describe("Access Control", () => {
       await warmSession(page, APPLICANT1_EMAIL);
       const resp = await apiGet(page, "/api/openings");
       expect(resp.status()).toBe(200);
-      const openings = await resp.json();
+      const { data: openings } = await resp.json();
       const ids = openings.map((o: { id: string }) => o.id);
       expect(ids).toContain(OPENING_SE); // Software Engineer is open
     });

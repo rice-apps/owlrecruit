@@ -1,12 +1,6 @@
-import { Avatar, Card, Text, Badge } from "@mantine/core";
-import { Application, ApplicationStatus, Opening, Org } from "@/types/app";
+import { Avatar, Badge, Card, Text } from "@mantine/core";
+import { ApplicationStatus } from "@/types/app";
 import { getApplicationStatusColor } from "@/lib/status";
-
-export interface ApplicationWithDetails extends Application {
-  opening: Pick<Opening, "title" | "closes_at"> & {
-    org: Pick<Org, "name"> & { logo_url?: string | null };
-  };
-}
 
 export interface ApplicationCardData {
   status: string | null;

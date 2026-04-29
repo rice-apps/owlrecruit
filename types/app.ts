@@ -1,4 +1,4 @@
-import { Database } from "./supabase";
+import { Database } from "./database";
 import type { FieldType } from "@/lib/question-utils";
 
 export type { FieldType };

@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       "create_org_with_admin",
       {
         org_name: name.trim(),
-        org_description: description?.trim() || null,
+        org_description: description?.trim() || "",
         creator_id: user.id,
       },
     );
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: rpcError.message }, { status: 500 });
     }
 
-    if (logo_url) {
+    if (logo_url && newOrgId) {
       const { error: updateError } = await supabase
         .from("orgs")
         .update({ logo_url })

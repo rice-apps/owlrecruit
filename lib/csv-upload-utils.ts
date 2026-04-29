@@ -1,4 +1,5 @@
 import { SupabaseClient } from "@supabase/supabase-js";
+import type { Json, TablesInsert } from "@/types/database";
 import {
   CSV_RESERVED_COLUMNS,
   ERROR_MESSAGES,
@@ -59,18 +60,17 @@ function extractFormResponses(row: CSVRow): Record<string, unknown> {
 }
 
 export function buildApplicationRecord(
-  orgId: string,
   openingId: string,
-  userId: string,
+  applicantId: string,
   formResponses: Record<string, unknown>,
   status?: string,
-): Record<string, unknown> {
+): TablesInsert<"applications"> {
   return {
-    org_id: orgId,
     opening_id: openingId,
-    applicant_id: userId,
-    form_responses: formResponses,
-    status: status ?? DEFAULT_APPLICATION_STATUS,
+    applicant_id: applicantId,
+    form_responses: formResponses as Json,
+    status: (status ??
+      DEFAULT_APPLICATION_STATUS) as TablesInsert<"applications">["status"],
   };
 }
 
@@ -148,7 +148,6 @@ export async function processCSVRows<T>(
   orgId: string,
   openingId: string,
   buildRecordFn: (
-    orgId: string,
     openingId: string,
     userId: string,
     data: Record<string, unknown>,
@@ -195,7 +194,6 @@ export async function processCSVRows<T>(
 
     records.push(
       buildRecordFn(
-        orgId,
         openingId,
         user.id,
         extractFormResponses(row),

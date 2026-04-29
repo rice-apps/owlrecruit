@@ -55,11 +55,18 @@ export async function GET(
       closes_at: openingData.closes_at || "",
       status: openingData.status || DEFAULT_OPENING_STATUS,
       rubric: Array.isArray(openingData.rubric)
-        ? openingData.rubric.map((item) => ({
-            name: item?.name || "",
-            max_val: item?.max_val || 10,
-            description: item?.description || "",
-          }))
+        ? openingData.rubric.map((item) => {
+            const r = item as {
+              name?: string;
+              max_val?: number;
+              description?: string;
+            } | null;
+            return {
+              name: r?.name || "",
+              max_val: r?.max_val || 10,
+              description: r?.description || "",
+            };
+          })
         : [],
       reviewer_ids: (reviewerRows ?? []).map((r) => r.user_id),
     },

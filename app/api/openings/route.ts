@@ -24,9 +24,9 @@ export async function GET(request: Request) {
     );
 
     if (statuses.length === 1) {
-      query = query.eq("status", statuses[0]);
+      query = query.eq("status", statuses[0] as "draft" | "open" | "closed");
     } else {
-      query = query.in("status", statuses);
+      query = query.in("status", statuses as ("draft" | "open" | "closed")[]);
     }
 
     query = query.order("created_at", { ascending: false });
@@ -40,7 +40,7 @@ export async function GET(request: Request) {
     }
 
     // Attach the current user's application status to each opening (if logged in)
-    let applicationStatusMap: Record<string, string> = {};
+    let applicationStatusMap: Record<string, string | null> = {};
     const { data: authData } = await supabase.auth.getClaims();
     if (authData?.claims && openings && openings.length > 0) {
       log.set({ user_id: authData.claims.sub });

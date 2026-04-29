@@ -18,7 +18,7 @@ import {
   ApplicationCard,
   type ApplicationCardData,
 } from "@/components/application-card";
-import type { Enums } from "@/types/supabase";
+import type { Enums } from "@/types/database";
 import { TERMINAL_STATUSES } from "@/lib/status";
 import { OpeningStatus } from "@/types/app";
 

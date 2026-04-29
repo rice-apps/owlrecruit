@@ -12,7 +12,7 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-import { Json } from "@/types/supabase";
+import { Json } from "@/types/database";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { createClient } from "@/lib/supabase/client";
 import { ApplicantTabs } from "./components/ApplicantTabs";

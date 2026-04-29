@@ -25,7 +25,7 @@ export default async function ReviewerOrgPage({
   const supabase = await createClient();
 
   const { data: userData } = await supabase.auth.getUser();
-  const userId = userData?.user?.id;
+  const userId = userData?.user?.id ?? "";
 
   const { data: membership, error: membershipError } = await supabase
     .from("org_members")

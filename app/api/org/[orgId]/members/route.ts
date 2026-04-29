@@ -39,7 +39,7 @@ export async function GET(
       .eq("org_id", orgId);
 
     if (roles.length > 0) {
-      query = query.in("role", roles);
+      query = query.in("role", roles as ("admin" | "reviewer")[]);
     }
 
     const { data, error } = await query;

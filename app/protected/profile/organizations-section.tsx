@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import { ChevronDown } from "@untitled-ui/icons-react";
 import { LeaveOrgButton } from "@/components/leave-org-button";
-import type { Enums } from "@/types/supabase";
+import type { Enums } from "@/types/database";
 
 export interface OrgMembership {
   id: string;
