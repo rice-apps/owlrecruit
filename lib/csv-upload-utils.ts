@@ -1,8 +1,8 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import {
   CSV_RESERVED_COLUMNS,
-  REQUIRED_CSV_COLUMNS,
   ERROR_MESSAGES,
+  REQUIRED_CSV_COLUMNS,
   VALIDATION_CONFIG,
 } from "./csv-upload-config";
 
