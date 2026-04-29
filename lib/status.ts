@@ -1,7 +1,7 @@
 import type { MantineColor } from "@mantine/core";
 
 // Application statuses (matches DB enum)
-export const APPLICATION_STATUS_LABELS: Record<string, string> = {
+const APPLICATION_STATUS_LABELS: Record<string, string> = {
   "No Status": "No Status",
   Applied: "Applied",
   Interviewing: "Interviewing",
@@ -57,13 +57,3 @@ export function getOpeningStatusLabel(status: string): string {
       return status;
   }
 }
-
-// Reviewer score labels
-export const SCORE_LABELS: Record<string, string> = {
-  "Strong Inclined": "Strong Inclined",
-  Inclined: "Inclined",
-  "Lean Inclined": "Lean Inclined",
-  "Lean Disinclined": "Lean Disinclined",
-  Disinclined: "Disinclined",
-  "Strong Disinclined": "Strong Disinclined",
-};

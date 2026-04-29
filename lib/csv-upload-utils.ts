@@ -6,7 +6,6 @@
  */
 
 import { SupabaseClient } from "@supabase/supabase-js";
-import { logger } from "@/lib/logger";
 import {
   CSV_RESERVED_COLUMNS,
   REQUIRED_CSV_COLUMNS,
@@ -22,30 +21,20 @@ export interface CSVRow {
   [key: string]: unknown;
 }
 
-export interface ProcessingError {
+interface ProcessingError {
   row: number;
   netid?: string;
   error: string;
 }
 
-export interface UserLookupResult {
-  id: string;
-  net_id: string;
-}
-
-export interface OpeningLookupResult {
+interface OpeningLookupResult {
   org_id: string;
 }
 
-export interface UserResult {
+interface UserResult {
   id: string;
   net_id: string;
   name: string;
-}
-
-export interface UploadResult {
-  successCount: number;
-  errors: ProcessingError[];
 }
 
 // =============================================================================
@@ -58,7 +47,7 @@ export interface UploadResult {
  * HOW TO EXTEND:
  * Add custom validation logic here (e.g., email format, phone numbers)
  */
-export function validateRequiredFields(row: CSVRow): string | null {
+function validateRequiredFields(row: CSVRow): string | null {
   for (const requiredCol of REQUIRED_CSV_COLUMNS as readonly string[]) {
     if (!row[requiredCol]) {
       return `Missing required field: ${requiredCol}`;
@@ -70,7 +59,7 @@ export function validateRequiredFields(row: CSVRow): string | null {
 /**
  * Validates that netid is present and non-empty.
  */
-export function validateNetId(netid: unknown): boolean {
+function validateNetId(netid: unknown): boolean {
   return !!netid && typeof netid === "string" && netid.trim().length > 0;
 }
 
@@ -89,7 +78,7 @@ export function validateNetId(netid: unknown): boolean {
  * @param row - The CSV row data
  * @returns Object with question/answer pairs
  */
-export function extractFormResponses(row: CSVRow): Record<string, unknown> {
+function extractFormResponses(row: CSVRow): Record<string, unknown> {
   const formResponses: Record<string, unknown> = {};
   const reservedColumns = Object.values(CSV_RESERVED_COLUMNS) as string[];
 
@@ -137,64 +126,14 @@ export function buildApplicationRecord(
   };
 }
 
-/**
- * Builds a database record for interviews.
- *
- * HOW TO MODIFY:
- * Same as buildApplicationRecord - add fields as needed
- *
- * @param orgId - Organization ID from opening
- * @param openingId - Opening ID from request
- * @param userId - User ID from netid lookup
- * @param feedback - Extracted feedback responses
- * @returns Database record object
- */
-export function buildInterviewRecord(
-  orgId: string,
-  openingId: string,
-  userId: string,
-  feedback: Record<string, unknown>,
-): Record<string, unknown> {
-  return {
-    org_id: orgId,
-    opening_id: openingId,
-    applicant_id: userId,
-    feedback: feedback,
-    // Add more fields here as needed
-    // Example:
-    // interviewer_id: getCurrentUserId(),
-    // interview_date: feedback['Interview Date'],
-  };
-}
-
 // =============================================================================
 // DATABASE LOOKUP FUNCTIONS
 // =============================================================================
 
 /**
- * Looks up a user by their netid in the users table.
- */
-export async function lookupUserByNetId(
-  supabase: SupabaseClient,
-  netid: string,
-): Promise<UserResult | null> {
-  const { data: user, error } = await supabase
-    .from("users")
-    .select("id, net_id, name")
-    .eq("net_id", netid)
-    .maybeSingle();
-
-  if (error || !user) {
-    return null;
-  }
-
-  return user;
-}
-
-/**
  * Looks up an applicant by their netid in the applicants table.
  */
-export async function lookupApplicantByNetId(
+async function lookupApplicantByNetId(
   supabase: SupabaseClient,
   netid: string,
 ): Promise<UserResult | null> {
@@ -385,171 +324,6 @@ export async function processCSVRows<T>(
   }
 
   return { records, errors };
-}
-
-/**
- * Upserts questions into the questions table from form mappings.
- *
- * @param supabase - Supabase client
- * @param openingId - The opening ID to associate questions with
- * @param columnMappings - Mappings for default fields (netid, name, year, major)
- * @param customQuestions - Array of custom questions with user-specified text
- * @returns Number of questions upserted
- */
-export async function upsertQuestionsFromCSV(
-  supabase: SupabaseClient,
-  openingId: string,
-  columnMappings: Record<string, string>,
-  customQuestions: Array<{ id: string; text: string }>,
-): Promise<number> {
-  // Delete existing questions
-  await supabase.from("questions").delete().eq("opening_id", openingId);
-
-  // Collect all question texts: defaults (if mapped) + custom
-  const allQuestions = [
-    ...["name", "netid", "year", "major"].filter(
-      (field) => columnMappings[field],
-    ),
-    ...customQuestions.map((q) => q.text),
-  ];
-
-  if (allQuestions.length === 0) return 0;
-
-  // Build and insert question records
-  const questionRecords = allQuestions.map((text, index) => ({
-    opening_id: openingId,
-    question_text: text,
-    sort_order: index,
-    is_required: null,
-  }));
-
-  const { error } = await supabase.from("questions").insert(questionRecords);
-  if (error) throw new Error(`Failed to insert questions: ${error.message}`);
-
-  return questionRecords.length;
-}
-
-/**
- * High-level helper to process and upload CSV applications.
- */
-export async function processAndUploadApplications(
-  supabase: SupabaseClient,
-  params: {
-    openingId: string;
-    csvData: Record<string, unknown>[];
-    columnMappings: Record<string, string>;
-    customQuestions: Array<{ id: string; text: string }>;
-    existingApplicants?: Map<string, { applicantId: string; name: string }>;
-  },
-): Promise<UploadResult> {
-  const {
-    openingId,
-    csvData,
-    columnMappings,
-    customQuestions,
-    existingApplicants,
-  } = params;
-  const results: UploadResult = { successCount: 0, errors: [] };
-
-  // First, upsert questions into the questions table
-  try {
-    await upsertQuestionsFromCSV(
-      supabase,
-      openingId,
-      columnMappings,
-      customQuestions,
-    );
-  } catch (error: unknown) {
-    logger.error({ err: error }, "failed to upsert questions");
-  }
-
-  for (let i = 0; i < csvData.length; i++) {
-    const row = csvData[i];
-    const rowNumber = i + 1;
-    const netid = row[columnMappings.netid] as string | undefined;
-    const name = row[columnMappings.name] as string | undefined;
-
-    if (!netid || !name) {
-      results.errors.push({
-        row: rowNumber,
-        error: "Missing required fields: NetID or Name",
-      });
-      continue;
-    }
-
-    try {
-      // 1. Ensure Applicant
-      let userId: string;
-
-      // Check cache first
-      if (existingApplicants?.has(netid)) {
-        const existing = existingApplicants.get(netid)!;
-        userId = existing.applicantId;
-
-        // Optional: If existing name is "-" and new name is real, update it?
-        // logic from ensureApplicant:
-        // if (existing.name === "-" && name !== "-") { update... }
-        // We'll trust ensureApplicant logic if we think we need an update,
-        // OR we can just skip if we don't care about name updates for existing applicants.
-        // For efficiency, let's skip the DB read if name is good or we don't assume update.
-        // But if we want perfection:
-        if (existing.name === "-" && name !== "-") {
-          // If name needs update, we call update directly or use ensureApplicant (which does a read first)
-          // calling ensureApplicant is safer but does a read.
-          // We can just call update directly since we have the ID.
-          const { error: updateError } = await supabase
-            .from("applicants")
-            .update({ name })
-            .eq("id", userId);
-          if (updateError)
-            logger.error({ err: updateError }, "error updating applicant name");
-        }
-      } else {
-        // Not in our cache of "applicants for this opening".
-        // They might still exist in global 'applicants' table.
-        const user = await ensureApplicant(supabase, netid, name);
-        userId = user.id;
-      }
-
-      // 2. Build form_responses
-      const formResponses: Record<string, unknown> = {};
-      formResponses.name = name;
-      formResponses.netid = netid;
-      if (columnMappings.year) formResponses.year = row[columnMappings.year];
-      if (columnMappings.major) formResponses.major = row[columnMappings.major];
-
-      customQuestions.forEach((q) => {
-        if (columnMappings[q.id]) {
-          formResponses[q.text] = row[columnMappings[q.id]];
-        }
-      });
-
-      // 3. Upsert Application
-      const { error: appError } = await supabase.from("applications").upsert(
-        {
-          opening_id: openingId,
-          applicant_id: userId,
-          form_responses: formResponses,
-          status: "Applied",
-        },
-        { onConflict: "opening_id, applicant_id" },
-      );
-
-      if (appError) {
-        throw appError;
-      } else {
-        results.successCount++;
-      }
-    } catch (err: unknown) {
-      results.errors.push({
-        row: rowNumber,
-        netid,
-        error: err instanceof Error ? err.message : "Unknown error occurred",
-      });
-    }
-  }
-
-  return results;
 }
 
 // =============================================================================

@@ -1,7 +1,7 @@
 import { type Page } from "@playwright/test";
 import crypto from "crypto";
 
-export interface AuthSession {
+interface AuthSession {
   accessToken: string;
   refreshToken: string;
 }

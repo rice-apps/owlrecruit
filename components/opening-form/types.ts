@@ -1,4 +1,4 @@
-export type OpeningStatus = "draft" | "open" | "closed";
+type OpeningStatus = "draft" | "open" | "closed";
 
 export interface EligibleReviewer {
   id: string;
@@ -14,14 +14,6 @@ export interface RubricItem {
   name: string;
   max_val: number | string;
   description: string;
-}
-
-export interface OpeningFormData {
-  title: string;
-  description: string;
-  application_link: string;
-  closes_at: string;
-  status: OpeningStatus;
 }
 
 export interface OpeningInitialData {

@@ -28,7 +28,3 @@ export function apiPatch(page: Page, path: string, body: unknown) {
     headers: { "Content-Type": "application/json" },
   });
 }
-
-export function apiDelete(page: Page, path: string) {
-  return page.request.delete(path);
-}

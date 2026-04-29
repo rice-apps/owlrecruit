@@ -33,13 +33,13 @@ const pinoLogger = pino({
   }),
 });
 
-export type LogFields = Record<string, unknown>;
+type LogFields = Record<string, unknown>;
 
 // ---------------------------------------------------------------------------
 // Per-request canonical log line builder
 // ---------------------------------------------------------------------------
 
-export interface RequestLogger {
+interface RequestLogger {
   /** Merge additional fields into the pending canonical log line. */
   set(fields: LogFields): void;
   /**

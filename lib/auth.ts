@@ -1,9 +1,9 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { err } from "./api-response";
 
-export type OrgRole = "admin" | "reviewer";
+type OrgRole = "admin" | "reviewer";
 
-export interface OrgMemberContext {
+interface OrgMemberContext {
   userId: string;
   role: OrgRole;
 }
@@ -11,7 +11,7 @@ export interface OrgMemberContext {
 /**
  * Returns the current user's membership in the given org, or null if not a member.
  */
-export async function getOrgMember(
+async function getOrgMember(
   supabase: SupabaseClient,
   orgId: string,
 ): Promise<OrgMemberContext | null> {
@@ -52,14 +52,4 @@ export async function requireOrgAdmin(
   const ctx = await getOrgMember(supabase, orgId);
   if (!ctx || ctx.role !== "admin") throw err("Forbidden: admin only", 403);
   return ctx;
-}
-
-/**
- * Returns the authenticated user's ID, or throws a 401 NextResponse.
- */
-export async function requireAuth(supabase: SupabaseClient): Promise<string> {
-  const { data } = await supabase.auth.getClaims();
-  const userId = data?.claims?.sub as string | undefined;
-  if (!userId) throw err("Unauthorized", 401);
-  return userId;
 }

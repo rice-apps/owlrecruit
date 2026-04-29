@@ -93,33 +93,6 @@ export const REQUIRED_CSV_COLUMNS = [CSV_RESERVED_COLUMNS.NETID];
  * 2. If you want to store CSV data in a different field, change the value
  * 3. Set to null to exclude from database insert
  */
-export const DATABASE_FIELD_MAPPING = {
-  applications: {
-    // Core fields (always included)
-    org_id: "org_id",
-    opening_id: "opening_id",
-    applicant_id: "applicant_id",
-    status: "status",
-
-    // JSON storage field for dynamic questions
-    form_responses: "form_responses",
-
-    // Optional fields - set to null if not in your schema
-    position: null, // Not used currently
-    notes: null, // Not used currently
-    resume: null, // Stored in form_responses instead
-  },
-  interviews: {
-    // Core fields
-    org_id: "org_id",
-    opening_id: "opening_id",
-    applicant_id: "applicant_id",
-
-    // JSON storage field for dynamic feedback
-    feedback: "feedback",
-  },
-} as const;
-
 // =============================================================================
 // KANBAN BOARD CONFIGURATION
 // =============================================================================
@@ -165,8 +138,6 @@ export const KANBAN_COLUMNS = [
  * Number of columns for grid layout.
  * Should match the number of columns in KANBAN_COLUMNS.
  */
-export const KANBAN_GRID_COLS = KANBAN_COLUMNS.length;
-
 // =============================================================================
 // ERROR HANDLING CONFIGURATION
 // =============================================================================

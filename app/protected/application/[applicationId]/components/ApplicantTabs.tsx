@@ -25,5 +25,3 @@ export function ApplicantTabs() {
 
   return <TabBar tabs={tabs} currentTab={currentTab} buildHref={buildHref} />;
 }
-
-export type { TabId };

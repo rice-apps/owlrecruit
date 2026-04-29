@@ -21,7 +21,7 @@ export interface RubricCriterion {
   max_val: number;
 }
 
-export interface RubricCriteriaSummary {
+interface RubricCriteriaSummary {
   name: string;
   maxVal: number;
   average: number | null;

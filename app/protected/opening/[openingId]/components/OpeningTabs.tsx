@@ -38,5 +38,3 @@ export function OpeningTabs({ isAdmin, isMember }: OpeningTabsProps) {
 
   return <TabBar tabs={tabs} currentTab={currentTab} buildHref={buildHref} />;
 }
-
-export type { TabId };
