@@ -1,5 +1,7 @@
+import { FORM_RESPONSE_KEYS } from "./application-fields";
+
 export const CSV_RESERVED_COLUMNS = {
-  NETID: "netid",
+  ...FORM_RESPONSE_KEYS,
   RESUME: "resume",
 } as const;
 
@@ -19,5 +21,3 @@ export const ERROR_MESSAGES = {
 export const VALIDATION_CONFIG = {
   skipInvalidRows: true,
 } as const;
-
-export const UNKNOWN_APPLICANT_NAME = "-";

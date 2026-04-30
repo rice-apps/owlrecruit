@@ -1,10 +1,10 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import type { Json, TablesInsert } from "@/types/database";
+import { UNKNOWN_APPLICANT_NAME } from "./application-fields";
 import {
   CSV_RESERVED_COLUMNS,
   ERROR_MESSAGES,
   REQUIRED_CSV_COLUMNS,
-  UNKNOWN_APPLICANT_NAME,
   VALIDATION_CONFIG,
 } from "./csv-upload-config";
 import { DEFAULT_APPLICATION_STATUS } from "@/types/app";
