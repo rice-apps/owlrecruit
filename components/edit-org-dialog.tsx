@@ -30,7 +30,6 @@ export function EditOrgDialog({
   const [open, setOpen] = React.useState(false);
   const [name, setName] = React.useState(orgName);
   const [description, setDescription] = React.useState(orgDescription ?? "");
-  const [logoFile, setLogoFile] = React.useState<File | null>(null);
   const [isSaving, setIsSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -38,7 +37,6 @@ export function EditOrgDialog({
     if (open) {
       setName(orgName);
       setDescription(orgDescription ?? "");
-      setLogoFile(null);
       setError(null);
     }
   }, [open, orgName, orgDescription]);
@@ -53,16 +51,13 @@ export function EditOrgDialog({
     setError(null);
 
     try {
-      const formData = new FormData();
-      formData.append("name", name.trim());
-      formData.append("description", description.trim() || "");
-      if (logoFile) {
-        formData.append("logo", logoFile);
-      }
-
       const res = await fetch(`/api/org/${orgId}`, {
         method: "PATCH",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          description: description.trim() || "",
+        }),
       });
 
       if (!res.ok) {
