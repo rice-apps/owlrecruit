@@ -209,13 +209,13 @@ export function ApplyForm({
 
   const form = useForm<Record<string, string | string[]>>({
     initialValues: Object.fromEntries(
-      parsedQuestions.map((q) => [q.label, q.type === "checkbox" ? [] : ""]),
+      parsedQuestions.map((q) => [q.id, q.type === "checkbox" ? [] : ""]),
     ),
     validate: Object.fromEntries(
       parsedQuestions
         .filter((q) => q.is_required)
         .map((q) => [
-          q.label,
+          q.id,
           (v: string | string[]) =>
             Array.isArray(v)
               ? v.length === 0
@@ -236,11 +236,15 @@ export function ApplyForm({
     setSubmitting(true);
     setError(null);
 
+    const labeledResponses = Object.fromEntries(
+      parsedQuestions.map((q) => [q.label, values[q.id]]),
+    );
+
     try {
       const res = await fetch(`/api/openings/${openingId}/apply`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ form_responses: values }),
+        body: JSON.stringify({ form_responses: labeledResponses }),
       });
 
       if (res.ok) {
@@ -402,11 +406,9 @@ export function ApplyForm({
                 </Text>
                 <FormField
                   question={q}
-                  value={
-                    form.values[q.label] ?? (q.type === "checkbox" ? [] : "")
-                  }
-                  onChange={(v) => form.setFieldValue(q.label, v)}
-                  error={form.errors[q.label] as string | undefined}
+                  value={form.values[q.id] ?? (q.type === "checkbox" ? [] : "")}
+                  onChange={(v) => form.setFieldValue(q.id, v)}
+                  error={form.errors[q.id] as string | undefined}
                 />
               </Box>
             ))}

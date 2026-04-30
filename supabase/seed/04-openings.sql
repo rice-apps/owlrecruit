@@ -76,3 +76,21 @@ INSERT INTO public.questions (id, opening_id, question_text, sort_order, is_requ
   ('00000004-1000-0000-0000-000000000006', '00000004-0000-0000-0000-000000000004', 'Describe an event you have coordinated previously.', 0, true),
   ('00000004-1000-0000-0000-000000000007', '00000004-0000-0000-0000-000000000004', 'How do you handle last-minute changes to event plans?', 1, true)
 ON CONFLICT (id) DO NOTHING;
+
+-- Research Assistant opening — used by apply-form integration tests (dot-labeled questions).
+INSERT INTO public.openings (id, org_id, title, description, status, closes_at, rubric) VALUES
+  (
+    '00000004-0000-0000-0000-000000000006',
+    '00000002-0000-0000-0000-000000000001',
+    'Research Assistant',
+    'Assist with ongoing research projects.',
+    'open',
+    now() + interval '30 days',
+    '[{"name": "Research Skills", "max_val": 5}]'::jsonb
+  )
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO public.questions (id, opening_id, question_text, sort_order, is_required) VALUES
+  ('00000004-1000-0000-0000-000000000008', '00000004-0000-0000-0000-000000000006', '{"label":"Tell us about yourself.","type":"textarea","options":null}', 0, true),
+  ('00000004-1000-0000-0000-000000000009', '00000004-0000-0000-0000-000000000006', '{"label":"GPA (0.0–4.0)","type":"text","options":null}', 1, false)
+ON CONFLICT (id) DO NOTHING;

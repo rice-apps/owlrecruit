@@ -4,8 +4,10 @@ import { loginAs } from "./helpers/auth";
 // Seed data constants (from supabase/seed/)
 const OPENING_ID = "00000004-0000-0000-0000-000000000001"; // Software Engineer (open)
 const OPENING_ML = "00000004-0000-0000-0000-000000000005"; // Marketing Lead (open, ORG_2)
+const OPENING_DOT_LABELS = "00000004-0000-0000-0000-000000000006"; // Research Assistant (dot-labeled questions)
 const APPLICANT_EMAIL = "applicant1@test.owlrecruit.local";
 const APPLICANT2_EMAIL = "applicant2@test.owlrecruit.local";
+const APPLICANT3_EMAIL = "applicant3@rice.edu"; // rice.edu user — needed to reach the apply form
 
 test.describe("Applicant Flows", () => {
   test("can browse open openings on the discover page", async ({ page }) => {
@@ -97,6 +99,39 @@ test.describe("Applicant Visibility — Negative Cases", () => {
     // The applicants tab should not be present for non-members
     const applicantsTab = page.getByRole("link", { name: "Applicants" });
     await expect(applicantsTab).not.toBeVisible();
+  });
+});
+
+test.describe("Apply form with dot-labeled questions", () => {
+  test("can type into dot-labeled fields without crashing", async ({
+    page,
+  }) => {
+    await loginAs(page, APPLICANT3_EMAIL);
+    await page.goto(`/apply/${OPENING_DOT_LABELS}`);
+
+    const textarea = page.getByRole("textbox").first();
+    await expect(textarea).toBeVisible({ timeout: 10000 });
+    await textarea.fill("I am interested in research.");
+
+    await expect(page.getByRole("alert")).not.toBeVisible();
+  });
+
+  test("can submit an application with dot-labeled questions", async ({
+    page,
+  }) => {
+    await loginAs(page, APPLICANT3_EMAIL);
+    await page.goto(`/apply/${OPENING_DOT_LABELS}`);
+
+    await page
+      .getByRole("textbox")
+      .first()
+      .fill("I am interested in research.");
+
+    await page.getByRole("button", { name: /submit/i }).click();
+
+    await expect(page.getByText(/application submitted/i)).toBeVisible({
+      timeout: 10000,
+    });
   });
 });
 

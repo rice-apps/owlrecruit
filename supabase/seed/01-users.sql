@@ -1,5 +1,7 @@
 -- Seed auth users and corresponding public.users records
 -- Test user emails use @test.owlrecruit.local domain to avoid collisions
+-- Exception: applicant3@rice.edu uses a real domain to test the apply form
+-- (non-rice users see a domain-mismatch error instead of the form).
 --
 -- Test credentials:
 --   admin@test.owlrecruit.local       / TestPassword123!  (org admin)
@@ -7,6 +9,7 @@
 --   interviewer@test.owlrecruit.local / TestPassword123!  (interviewer)
 --   applicant1@test.owlrecruit.local  / TestPassword123!  (applicant with accepted offer)
 --   applicant2@test.owlrecruit.local  / TestPassword123!  (applicant under review)
+--   applicant3@rice.edu               / TestPassword123!  (rice.edu applicant for apply-form tests)
 
 -- Fixed UUIDs for deterministic seeding
 DO $$
@@ -16,6 +19,7 @@ DECLARE
   interviewer_auth_id UUID := '00000001-0000-0000-0000-000000000003';
   app1_auth_id      UUID := '00000001-0000-0000-0000-000000000004';
   app2_auth_id      UUID := '00000001-0000-0000-0000-000000000005';
+  app3_auth_id      UUID := '00000001-0000-0000-0000-000000000006';
 BEGIN
   -- Insert public.users FIRST with the correct display names and net_ids.
   -- Temporarily bypass the FK (id references auth.users.id) so we can insert
@@ -27,7 +31,8 @@ BEGIN
     (reviewer_auth_id,    'Reviewer User',    'reviewer001', 'reviewer@test.owlrecruit.local'),
     (interviewer_auth_id, 'Interviewer User', 'inter001',    'interviewer@test.owlrecruit.local'),
     (app1_auth_id,        'Alice Applicant',  'alice001',    'applicant1@test.owlrecruit.local'),
-    (app2_auth_id,        'Bob Applicant',    'bob001',      'applicant2@test.owlrecruit.local')
+    (app2_auth_id,        'Bob Applicant',    'bob001',      'applicant2@test.owlrecruit.local'),
+    (app3_auth_id,        'Carol Applicant',  'carol001',    'applicant3@rice.edu')
   ON CONFLICT (id) DO UPDATE SET
     name   = EXCLUDED.name,
     net_id = EXCLUDED.net_id,
@@ -53,7 +58,8 @@ BEGIN
     (reviewer_auth_id,    '00000000-0000-0000-0000-000000000000', 'reviewer@test.owlrecruit.local',    now(), extensions.crypt('TestPassword123!', extensions.gen_salt('bf')), '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, '', '', '', '', now(), now(), 'authenticated', 'authenticated'),
     (interviewer_auth_id, '00000000-0000-0000-0000-000000000000', 'interviewer@test.owlrecruit.local', now(), extensions.crypt('TestPassword123!', extensions.gen_salt('bf')), '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, '', '', '', '', now(), now(), 'authenticated', 'authenticated'),
     (app1_auth_id,        '00000000-0000-0000-0000-000000000000', 'applicant1@test.owlrecruit.local',  now(), extensions.crypt('TestPassword123!', extensions.gen_salt('bf')), '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, '', '', '', '', now(), now(), 'authenticated', 'authenticated'),
-    (app2_auth_id,        '00000000-0000-0000-0000-000000000000', 'applicant2@test.owlrecruit.local',  now(), extensions.crypt('TestPassword123!', extensions.gen_salt('bf')), '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, '', '', '', '', now(), now(), 'authenticated', 'authenticated')
+    (app2_auth_id,        '00000000-0000-0000-0000-000000000000', 'applicant2@test.owlrecruit.local',  now(), extensions.crypt('TestPassword123!', extensions.gen_salt('bf')), '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, '', '', '', '', now(), now(), 'authenticated', 'authenticated'),
+    (app3_auth_id,        '00000000-0000-0000-0000-000000000000', 'applicant3@rice.edu',               now(), extensions.crypt('TestPassword123!', extensions.gen_salt('bf')), '{"provider":"email","providers":["email"]}'::jsonb, '{"full_name":"Carol Applicant"}'::jsonb, '', '', '', '', now(), now(), 'authenticated', 'authenticated')
   ON CONFLICT (id) DO NOTHING;
 
   -- Insert auth.identities (required by GoTrue ≥ v2.x for email/password sign-in).
@@ -64,6 +70,7 @@ BEGIN
     (gen_random_uuid(), reviewer_auth_id,    reviewer_auth_id::text,    'email', jsonb_build_object('sub', reviewer_auth_id::text,    'email', 'reviewer@test.owlrecruit.local',    'email_verified', true, 'phone_verified', false), now(), now()),
     (gen_random_uuid(), interviewer_auth_id, interviewer_auth_id::text, 'email', jsonb_build_object('sub', interviewer_auth_id::text, 'email', 'interviewer@test.owlrecruit.local', 'email_verified', true, 'phone_verified', false), now(), now()),
     (gen_random_uuid(), app1_auth_id,        app1_auth_id::text,        'email', jsonb_build_object('sub', app1_auth_id::text,        'email', 'applicant1@test.owlrecruit.local',  'email_verified', true, 'phone_verified', false), now(), now()),
-    (gen_random_uuid(), app2_auth_id,        app2_auth_id::text,        'email', jsonb_build_object('sub', app2_auth_id::text,        'email', 'applicant2@test.owlrecruit.local',  'email_verified', true, 'phone_verified', false), now(), now())
+    (gen_random_uuid(), app2_auth_id,        app2_auth_id::text,        'email', jsonb_build_object('sub', app2_auth_id::text,        'email', 'applicant2@test.owlrecruit.local',  'email_verified', true, 'phone_verified', false), now(), now()),
+    (gen_random_uuid(), app3_auth_id,        app3_auth_id::text,        'email', jsonb_build_object('sub', app3_auth_id::text,        'email', 'applicant3@rice.edu',               'email_verified', true, 'phone_verified', false), now(), now())
   ON CONFLICT (provider_id, provider) DO NOTHING;
 END $$;
