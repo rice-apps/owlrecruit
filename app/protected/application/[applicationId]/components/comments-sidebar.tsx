@@ -43,11 +43,13 @@ export function CommentsSidebar({
     <Box
       style={{
         width: 350,
-        borderLeft: "1px solid var(--mantine-color-gray-2)",
-        height: "100%",
+        border: "1px solid var(--mantine-color-gray-2)",
+        borderRadius: "var(--mantine-radius-lg)",
+        height: "fit-content",
         display: "flex",
         flexDirection: "column",
         background: "white",
+        overflow: "hidden",
       }}
     >
       {/* Tab toggle */}

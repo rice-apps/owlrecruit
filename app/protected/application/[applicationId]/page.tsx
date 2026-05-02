@@ -134,8 +134,7 @@ export default function ApplicationReviewPage() {
   const searchParams = useSearchParams();
   const applicationId = params.applicationId as string;
 
-  const tab = searchParams.get("tab") || "submission";
-  const showReviewSidebar = tab !== "summary" && tab !== "interview";
+  const tab = searchParams.get("tab") || "summary";
   const [applicationData, setApplicationData] =
     useState<FetchedApplication | null>(null);
   const [loading, setLoading] = useState(true);
@@ -524,13 +523,11 @@ export default function ApplicationReviewPage() {
         )}
       </Stack>
 
-      {showReviewSidebar && (
-        <CommentsSidebar
-          applicantId={applicationId}
-          openingId={openingId}
-          orgId={orgId}
-        />
-      )}
+      <CommentsSidebar
+        applicantId={applicationId}
+        openingId={openingId}
+        orgId={orgId}
+      />
     </Box>
   );
 }
