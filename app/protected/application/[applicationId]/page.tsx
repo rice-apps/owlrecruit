@@ -507,12 +507,19 @@ export default function ApplicationReviewPage() {
             shadow="sm"
             withBorder={false}
             p={0}
-            style={{ flex: 1 }}
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              minHeight: 0,
+            }}
           >
             <Box px="xl" pt="xl" pb="sm">
               <ApplicantTabs />
             </Box>
-            <Box px="xl">{renderTabContent()}</Box>
+            <Box px="xl" style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
+              {renderTabContent()}
+            </Box>
           </Card>
         )}
       </Stack>
