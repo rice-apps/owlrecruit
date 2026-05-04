@@ -106,6 +106,14 @@ export async function POST(request: Request, { params }: { params: Params }) {
       continue;
     }
 
+    if (netid.includes("@")) {
+      errors.push({
+        row: rowNumber,
+        error: "NetID must not be an email address",
+      });
+      continue;
+    }
+
     const name = columnMappings.name
       ? ((row[columnMappings.name] as string | undefined)?.trim() ?? "-")
       : "-";
@@ -126,12 +134,6 @@ export async function POST(request: Request, { params }: { params: Params }) {
       netid,
     };
 
-    if (columnMappings.year && row[columnMappings.year]) {
-      formResponses["year"] = row[columnMappings.year];
-    }
-    if (columnMappings.major && row[columnMappings.major]) {
-      formResponses["major"] = row[columnMappings.major];
-    }
     for (const q of customQuestions) {
       const col = columnMappings[q.id];
       if (col && row[col]) {
@@ -151,21 +153,55 @@ export async function POST(request: Request, { params }: { params: Params }) {
 
   if (applicationRecords.length === 0) {
     log.flush(400);
-    return NextResponse.json(
-      { error: "No valid records to insert", errors },
-      { status: 400 },
-    );
+    return NextResponse.json({ successCount: 0, errors }, { status: 400 });
   }
+
+  // Deduplicate by applicant_id — last row wins (handles duplicate CSV rows)
+  const deduped = new Map<string, TablesInsert<"applications">>();
+  for (const record of applicationRecords) {
+    deduped.set(record.applicant_id!, record);
+  }
+  const recordsToUpsert = Array.from(deduped.values());
 
   const { data, error: upsertError } = await supabase
     .from("applications")
-    .upsert(applicationRecords, { onConflict: "opening_id, applicant_id" })
+    .upsert(recordsToUpsert, { onConflict: "opening_id, applicant_id" })
     .select();
 
   if (upsertError) {
     log.error("error upserting applications", upsertError);
     log.flush(500);
     return NextResponse.json({ error: upsertError.message }, { status: 500 });
+  }
+
+  // Register any new custom questions into the opening's questions table
+  if (customQuestions.length > 0) {
+    const { data: existingQs } = await supabase
+      .from("questions")
+      .select("question_text, sort_order")
+      .eq("opening_id", openingId);
+
+    const existingTexts = new Set(
+      (existingQs ?? []).map((q) => q.question_text),
+    );
+    const maxSort = (existingQs ?? []).reduce(
+      (max, q) => Math.max(max, q.sort_order ?? 0),
+      -1,
+    );
+
+    let nextSort = maxSort + 1;
+    const newQs = customQuestions
+      .filter((q) => !existingTexts.has(q.text))
+      .map((q) => ({
+        opening_id: openingId,
+        question_text: q.text,
+        sort_order: nextSort++,
+        is_required: false,
+      }));
+
+    if (newQs.length > 0) {
+      await supabase.from("questions").insert(newQs);
+    }
   }
 
   log.set({ upserted_count: data?.length ?? 0, error_count: errors.length });

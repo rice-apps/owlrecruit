@@ -9,17 +9,20 @@ import {
   Card,
   Group,
   Loader,
+  Select,
   Stack,
   Text,
 } from "@mantine/core";
 import { Json } from "@/types/database";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { createClient } from "@/lib/supabase/client";
+import { parseQuestionText } from "@/lib/question-utils";
+import { FORM_RESPONSE_KEYS } from "@/lib/application-fields";
 import { ApplicantTabs } from "./components/ApplicantTabs";
 import { CommentsSidebar } from "@/app/protected/application/[applicationId]/components/comments-sidebar";
 import { InterviewTab } from "@/app/protected/application/[applicationId]/components/InterviewTab";
-import { ApplicationStatusBadge } from "@/components/StatusBadge";
 import type { ApplicationStatus } from "@/types/app";
+import { APPLICATION_STATUS_LIST } from "@/lib/status";
 import {
   computeRubricSummary,
   type ReviewerFeedbackPreview,
@@ -75,12 +78,10 @@ interface SummaryTabState {
   resumeUrl: string | null;
 }
 
-interface FormResponse {
-  Name?: string;
-  Email?: string;
-  Major?: string;
-  [key: string]: string | number | boolean | null | undefined;
-}
+type FormResponse = Record<
+  string,
+  string | number | boolean | null | undefined
+>;
 
 const UNKNOWN_REVIEWER = "Unknown Reviewer";
 
@@ -134,8 +135,7 @@ export default function ApplicationReviewPage() {
   const searchParams = useSearchParams();
   const applicationId = params.applicationId as string;
 
-  const tab = searchParams.get("tab") || "submission";
-  const showReviewSidebar = tab !== "summary" && tab !== "interview";
+  const tab = searchParams.get("tab") || "summary";
   const [applicationData, setApplicationData] =
     useState<FetchedApplication | null>(null);
   const [loading, setLoading] = useState(true);
@@ -147,6 +147,32 @@ export default function ApplicationReviewPage() {
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState<string | null>(null);
   const [summaryFetchAttempted, setSummaryFetchAttempted] = useState(false);
+  const [orderedQuestionLabels, setOrderedQuestionLabels] = useState<string[]>(
+    [],
+  );
+  const [statusUpdating, setStatusUpdating] = useState(false);
+
+  const handleStatusChange = async (newStatus: string | null) => {
+    if (!newStatus || !orgId || !applicationData) return;
+    setStatusUpdating(true);
+    try {
+      const res = await fetch(
+        `/api/org/${orgId}/applications/${applicationId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: newStatus }),
+        },
+      );
+      if (res.ok) {
+        setApplicationData((prev) =>
+          prev ? { ...prev, status: newStatus as ApplicationStatus } : prev,
+        );
+      }
+    } finally {
+      setStatusUpdating(false);
+    }
+  };
 
   useEffect(() => {
     async function fetchApplicationData() {
@@ -188,6 +214,20 @@ export default function ApplicationReviewPage() {
     setSummaryFetchAttempted(false);
     setSummaryLoading(false);
   }, [applicationId]);
+
+  useEffect(() => {
+    if (!orgId || !openingId) return;
+    fetch(`/api/org/${orgId}/opening/${openingId}/questions`)
+      .then((r) => r.json())
+      .then((json) => {
+        const labels: string[] = (json.questions ?? []).map(
+          (q: { question_text: string }) =>
+            parseQuestionText(q.question_text).label,
+        );
+        setOrderedQuestionLabels(labels);
+      })
+      .catch(() => {});
+  }, [orgId, openingId]);
 
   useEffect(() => {
     if (tab !== "summary" || summaryFetchAttempted || !orgId) return;
@@ -317,18 +357,11 @@ export default function ApplicationReviewPage() {
       : applicationData.applicant
     : null;
   const applicantName =
-    toDisplayString(formData["Name"]) ||
-    toDisplayString(formData["name"]) ||
+    toDisplayString(formData[FORM_RESPONSE_KEYS.NAME]) ||
     applicantRecord?.name ||
     "Unknown Applicant";
-  const applicantEmail =
-    toDisplayString(formData["Email"]) ||
-    toDisplayString(formData["email"]) ||
-    "Unknown Email";
-  const applicantMajor =
-    toDisplayString(formData["Major"]) ||
-    toDisplayString(formData["major"]) ||
-    "Unknown Major";
+  const applicantNetId =
+    toDisplayString(formData[FORM_RESPONSE_KEYS.NETID]) ?? null;
 
   const handleSummaryRetry = () => {
     setSummaryData(null);
@@ -338,34 +371,56 @@ export default function ApplicationReviewPage() {
 
   const renderTabContent = () => {
     switch (tab) {
-      case "submission":
+      case "submission": {
+        const HIDDEN_KEYS: Set<string> = new Set([
+          FORM_RESPONSE_KEYS.NAME,
+          FORM_RESPONSE_KEYS.NETID,
+        ]);
+        const responses =
+          applicationData?.form_responses &&
+          typeof applicationData.form_responses === "object" &&
+          !Array.isArray(applicationData.form_responses)
+            ? (applicationData.form_responses as Record<string, unknown>)
+            : {};
+        const allKeys = Object.keys(responses);
+        const displayKeys =
+          orderedQuestionLabels.length > 0
+            ? [
+                ...orderedQuestionLabels.filter(
+                  (l) => !HIDDEN_KEYS.has(l) && l in responses,
+                ),
+                ...allKeys.filter(
+                  (k) =>
+                    !HIDDEN_KEYS.has(k) && !orderedQuestionLabels.includes(k),
+                ),
+              ]
+            : allKeys.filter((k) => !HIDDEN_KEYS.has(k));
         return (
           <Stack gap="sm">
-            {applicationData?.form_responses &&
-              typeof applicationData.form_responses === "object" &&
-              !Array.isArray(applicationData.form_responses) &&
-              Object.entries(applicationData.form_responses).map(
-                ([key, value]) => (
-                  <Box
-                    key={key}
-                    pb="sm"
-                    style={{
-                      borderBottom: "1px solid var(--mantine-color-gray-2)",
-                    }}
-                  >
-                    <Text fw={600} mb={2}>
-                      {key}
-                    </Text>
-                    <Text c="dimmed">
-                      {typeof value === "object"
-                        ? JSON.stringify(value)
-                        : String(value)}
-                    </Text>
-                  </Box>
-                ),
-              )}
+            {displayKeys.map((key) => {
+              const value = responses[key];
+              return (
+                <Box
+                  key={key}
+                  pb="sm"
+                  style={{
+                    borderBottom: "1px solid var(--mantine-color-gray-2)",
+                  }}
+                >
+                  <Text fw={600} mb={2}>
+                    {key}
+                  </Text>
+                  <Text c="dimmed">
+                    {typeof value === "object"
+                      ? JSON.stringify(value)
+                      : String(value ?? "")}
+                  </Text>
+                </Box>
+              );
+            })}
           </Stack>
         );
+      }
       case "files":
         return (
           <Stack gap="md">
@@ -407,9 +462,6 @@ export default function ApplicationReviewPage() {
 
         return (
           <SummaryTab
-            applicantName={applicantName}
-            applicantEmail={applicantEmail}
-            applicantMajor={applicantMajor}
             resumeUrl={summaryResumeUrl}
             rubricSummary={summaryData.rubricSummary}
             reviewerFeedback={summaryData.reviewerFeedback}
@@ -433,7 +485,7 @@ export default function ApplicationReviewPage() {
         height: "calc(100vh - 4rem)",
       }}
     >
-      <Stack gap="lg" style={{ flex: 1, overflowY: "auto" }}>
+      <Stack gap="lg" style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
         <Breadcrumb
           items={[
             {
@@ -451,23 +503,27 @@ export default function ApplicationReviewPage() {
         <Card radius="lg" shadow="sm" withBorder={false} p="xl">
           <Group justify="space-between" align="flex-start">
             <Box>
-              <Group gap="sm" align="center" mb={4}>
+              <Group gap="sm" align="center" mb={applicantNetId ? 4 : 0}>
                 <Text size="xl" fw={700}>
                   {applicantName}
                 </Text>
                 {applicationData?.status && (
-                  <ApplicationStatusBadge status={applicationData.status} />
+                  <Select
+                    data={APPLICATION_STATUS_LIST}
+                    value={applicationData.status}
+                    onChange={handleStatusChange}
+                    disabled={statusUpdating}
+                    size="xs"
+                    w={140}
+                    comboboxProps={{ withinPortal: true }}
+                  />
                 )}
               </Group>
-              <Group gap="xs" wrap="wrap">
+              {applicantNetId && (
                 <Text size="sm" c="dimmed">
-                  {applicantEmail}
+                  {applicantNetId}
                 </Text>
-                <Text c="dimmed">•</Text>
-                <Text size="sm" c="dimmed">
-                  {applicantMajor}
-                </Text>
-              </Group>
+              )}
             </Box>
           </Group>
         </Card>
@@ -482,23 +538,28 @@ export default function ApplicationReviewPage() {
             shadow="sm"
             withBorder={false}
             p={0}
-            style={{ flex: 1 }}
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              minHeight: 0,
+            }}
           >
             <Box px="xl" pt="xl" pb="sm">
               <ApplicantTabs />
             </Box>
-            <Box px="xl">{renderTabContent()}</Box>
+            <Box px="xl" style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
+              {renderTabContent()}
+            </Box>
           </Card>
         )}
       </Stack>
 
-      {showReviewSidebar && (
-        <CommentsSidebar
-          applicantId={applicationId}
-          openingId={openingId}
-          orgId={orgId}
-        />
-      )}
+      <CommentsSidebar
+        applicantId={applicationId}
+        openingId={openingId}
+        orgId={orgId}
+      />
     </Box>
   );
 }

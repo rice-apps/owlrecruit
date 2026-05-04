@@ -148,9 +148,6 @@ export interface ReviewerFeedbackPreview {
 }
 
 interface SummaryTabProps {
-  applicantName: string;
-  applicantEmail: string;
-  applicantMajor: string;
   resumeUrl: string | null;
   rubricSummary?: RubricSummaryMetrics | null;
   reviewerFeedback?: ReviewerFeedbackPreview[] | null;

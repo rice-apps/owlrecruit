@@ -63,7 +63,8 @@ export default async function ProfilePage() {
             color="initials"
             name={fullName}
           />
-          <Anchor c="owlTeal.6" size="sm" style={{ cursor: "pointer" }}>
+          {/* FIXME: no-op anchor — no onClick or href handler; red text indicates unimplemented profile picture upload */}
+          <Anchor c="red" size="sm" style={{ cursor: "pointer" }}>
             Change profile picture
           </Anchor>
         </Group>

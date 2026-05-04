@@ -3,7 +3,7 @@ import {
   buildApplicationRecord,
   ensureApplicant,
 } from "@/lib/csv-upload-utils";
-import { UNKNOWN_APPLICANT_NAME } from "@/lib/csv-upload-config";
+import { UNKNOWN_APPLICANT_NAME } from "@/lib/application-fields";
 import { DEFAULT_APPLICATION_STATUS } from "@/types/app";
 import type { SupabaseClient } from "@supabase/supabase-js";
 

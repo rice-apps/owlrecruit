@@ -15,7 +15,6 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import {
-  Bell01,
   File02,
   LayoutLeft,
   LogOut01,
@@ -153,13 +152,6 @@ export function AppNavbar({ user, collapsed, onToggle }: AppNavbarProps) {
           label="My Organizations"
           href={orgHref}
           active={pathname.startsWith("/protected/org")}
-          collapsed={collapsed}
-        />
-        <NavItem
-          icon={<Bell01 width={20} height={20} />}
-          label="Notifications"
-          href="#"
-          active={false}
           collapsed={collapsed}
         />
       </Stack>

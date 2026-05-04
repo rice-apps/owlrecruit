@@ -21,6 +21,7 @@ const TEST_USER_IDS: Record<string, string> = {
   "interviewer@test.owlrecruit.local": "00000001-0000-0000-0000-000000000003",
   "applicant1@test.owlrecruit.local": "00000001-0000-0000-0000-000000000004",
   "applicant2@test.owlrecruit.local": "00000001-0000-0000-0000-000000000005",
+  "applicant3@rice.edu": "00000001-0000-0000-0000-000000000006",
 };
 
 function base64url(buf: Buffer): string {

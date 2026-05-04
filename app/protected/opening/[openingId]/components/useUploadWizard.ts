@@ -5,8 +5,6 @@ import Papa from "papaparse";
 export type ColumnMapping = {
   name: string;
   netid: string;
-  year: string;
-  major: string;
   [key: string]: string;
 };
 
@@ -29,10 +27,9 @@ export function useUploadWizard(orgId: string) {
   const [columnMappings, setColumnMappings] = useState<ColumnMapping>({
     name: "",
     netid: "",
-    year: "",
-    major: "",
   });
   const [customQuestions, setCustomQuestions] = useState<CustomQuestion[]>([]);
+  const [autoQuestionsGenerated, setAutoQuestionsGenerated] = useState(false);
   const [uploadErrors, setUploadErrors] = useState<
     { row?: number; error: string }[]
   >([]);
@@ -90,6 +87,9 @@ export function useUploadWizard(orgId: string) {
           const headers = Object.keys(results.data[0] as object);
           setCsvHeaders(headers);
           setCsvData(results.data as Record<string, unknown>[]);
+          setCustomQuestions([]);
+          setColumnMappings({ name: "", netid: "" });
+          setAutoQuestionsGenerated(false);
         }
       },
     });
@@ -157,6 +157,37 @@ export function useUploadWizard(orgId: string) {
     return csvHeaders.filter((header) => !mappedColumns.includes(header));
   };
 
+  // Once name + netid are both picked, auto-create questions for remaining headers
+  useEffect(() => {
+    if (
+      !columnMappings.name ||
+      !columnMappings.netid ||
+      autoQuestionsGenerated ||
+      csvHeaders.length === 0
+    )
+      return;
+    const systemColumns = new Set([columnMappings.name, columnMappings.netid]);
+    const remaining = csvHeaders.filter((h) => !systemColumns.has(h));
+    const autoQuestions: CustomQuestion[] = remaining.map((h, i) => ({
+      id: `q_${Date.now()}_${i}`,
+      text: h,
+    }));
+    setCustomQuestions(autoQuestions);
+    setColumnMappings((prev) => {
+      const next = { ...prev };
+      autoQuestions.forEach((q) => {
+        next[q.id] = q.text;
+      });
+      return next;
+    });
+    setAutoQuestionsGenerated(true);
+  }, [
+    columnMappings.name,
+    columnMappings.netid,
+    autoQuestionsGenerated,
+    csvHeaders,
+  ]);
+
   const isStep3Valid =
     columnMappings.name !== "" && columnMappings.netid !== "";
 
@@ -184,12 +215,11 @@ export function useUploadWizard(orgId: string) {
         },
       );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to upload data");
-      }
-
       const results = await response.json();
+
+      if (!response.ok && !results.errors?.length) {
+        throw new Error(results.error || "Failed to upload data");
+      }
 
       setSuccessCount(results.successCount);
       if (results.errors.length > 0) {

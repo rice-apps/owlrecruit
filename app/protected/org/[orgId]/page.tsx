@@ -121,7 +121,8 @@ export default async function ReviewerOrgPage({
         title="About"
         actions={
           isAdmin ? (
-            <ActionIcon variant="subtle" color="gray" aria-label="Edit about">
+            // FIXME: no-op button — no onClick handler; red color indicates unimplemented edit org description action
+            <ActionIcon variant="subtle" color="red" aria-label="Edit about">
               <Edit02 width={16} height={16} />
             </ActionIcon>
           ) : undefined
