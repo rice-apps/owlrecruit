@@ -20,7 +20,11 @@ const pinoLogger = pino({
   timestamp: pino.stdTimeFunctions.isoTime,
   base: null,
   serializers: {
-    err: pino.stdSerializers.err,
+    err: (err: unknown) => {
+      if (err instanceof Error) return pino.stdSerializers.err(err);
+      if (err != null && typeof err === "object") return err;
+      return String(err);
+    },
   },
   ...(isDev && {
     transport: {
@@ -87,14 +91,19 @@ export function createRequestLogger(context: LogFields): RequestLogger {
       const errorSummary =
         err instanceof Error
           ? err.message
-          : err != null
-            ? String(err)
-            : message;
+          : err != null && typeof err === "object" && "message" in err
+            ? String((err as Record<string, unknown>).message)
+            : err != null
+              ? String(err)
+              : message;
       pending = { ...pending, error: errorSummary };
-      pinoLogger.error(
-        { ...pending, ...(err instanceof Error && { err }), duration_ms },
-        message,
-      );
+      const errFields =
+        err instanceof Error
+          ? { err }
+          : err != null && typeof err === "object"
+            ? { err: err }
+            : {};
+      pinoLogger.error({ ...pending, ...errFields, duration_ms }, message);
     },
 
     warn(message: string, fields?: LogFields) {
