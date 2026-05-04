@@ -123,20 +123,6 @@ export function ColumnMappingStep({
               getAvailableColumns={getAvailableColumns}
               onUpdateMapping={onUpdateMapping}
             />
-            <MappingSelect
-              label="Year"
-              field="year"
-              value={columnMappings.year}
-              getAvailableColumns={getAvailableColumns}
-              onUpdateMapping={onUpdateMapping}
-            />
-            <MappingSelect
-              label="Major"
-              field="major"
-              value={columnMappings.major}
-              getAvailableColumns={getAvailableColumns}
-              onUpdateMapping={onUpdateMapping}
-            />
           </Stack>
         </Stack>
 

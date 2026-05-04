@@ -412,13 +412,24 @@ export function UploadTab({ orgId }: UploadTabProps) {
                 {wizard.uploadErrors.length > 0 && (
                   <Stack gap="xs">
                     <Text size="sm" fw={600}>
-                      Errors encountered during upload:
+                      {wizard.uploadErrors.length} row
+                      {wizard.uploadErrors.length !== 1 ? "s" : ""} failed:
                     </Text>
                     <ul style={{ paddingLeft: "1.25rem", margin: 0 }}>
-                      {wizard.uploadErrors.map((err, idx) => (
-                        <li key={idx} style={{ fontSize: 13 }}>
-                          {err.row ? `Row ${err.row}: ` : ""}
-                          {err.error}
+                      {Object.entries(
+                        wizard.uploadErrors.reduce<Record<string, number[]>>(
+                          (acc, err) => {
+                            (acc[err.error] ??= []).push(err.row ?? 0);
+                            return acc;
+                          },
+                          {},
+                        ),
+                      ).map(([message, rows]) => (
+                        <li key={message} style={{ fontSize: 13 }}>
+                          {rows.filter(Boolean).length > 0
+                            ? `${rows.length > 1 ? `${rows.length} rows` : `Row ${rows[0]}`}: `
+                            : ""}
+                          {message}
                         </li>
                       ))}
                     </ul>

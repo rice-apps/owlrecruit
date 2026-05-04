@@ -6,15 +6,16 @@ import {
   Button,
   Checkbox,
   Group,
+  Select,
   Stack,
   Switch,
   Table,
   Text,
   TextInput,
 } from "@mantine/core";
-import { ApplicationStatusBadge } from "@/components/StatusBadge";
 import { FilterLines, SearchMd } from "@untitled-ui/icons-react";
 import type { ApplicationStatus } from "@/types/app";
+import { APPLICATION_STATUS_LIST } from "@/lib/status";
 
 interface Applicant {
   id: string;
@@ -28,11 +29,44 @@ interface Applicant {
 
 interface ApplicantsListProps {
   applicants: Applicant[];
+  orgId: string;
 }
 
-export function ApplicantsList({ applicants }: ApplicantsListProps) {
+export function ApplicantsList({ applicants, orgId }: ApplicantsListProps) {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [anonymousView, setAnonymousView] = React.useState(false);
+  const [statuses, setStatuses] = React.useState<
+    Record<string, ApplicationStatus>
+  >(() =>
+    Object.fromEntries(applicants.map((a) => [a.applicationId, a.status])),
+  );
+  const [updatingId, setUpdatingId] = React.useState<string | null>(null);
+
+  const handleStatusChange = async (
+    applicationId: string,
+    newStatus: string | null,
+  ) => {
+    if (!newStatus) return;
+    setUpdatingId(applicationId);
+    try {
+      const res = await fetch(
+        `/api/org/${orgId}/applications/${applicationId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: newStatus }),
+        },
+      );
+      if (res.ok) {
+        setStatuses((prev) => ({
+          ...prev,
+          [applicationId]: newStatus as ApplicationStatus,
+        }));
+      }
+    } finally {
+      setUpdatingId(null);
+    }
+  };
 
   const filteredApplicants = React.useMemo(() => {
     if (!searchQuery.trim()) return applicants;
@@ -127,7 +161,19 @@ export function ApplicantsList({ applicants }: ApplicantsListProps) {
                   </Text>
                 </Table.Td>
                 <Table.Td>
-                  <ApplicationStatusBadge status={applicant.status} />
+                  <Select
+                    data={APPLICATION_STATUS_LIST}
+                    value={
+                      statuses[applicant.applicationId] ?? applicant.status
+                    }
+                    onChange={(val) =>
+                      handleStatusChange(applicant.applicationId, val)
+                    }
+                    disabled={updatingId === applicant.applicationId}
+                    size="xs"
+                    w={140}
+                    comboboxProps={{ withinPortal: true }}
+                  />
                 </Table.Td>
               </Table.Tr>
             ))

@@ -9,6 +9,7 @@ import {
   Card,
   Group,
   Loader,
+  Select,
   Stack,
   Text,
 } from "@mantine/core";
@@ -20,8 +21,8 @@ import { FORM_RESPONSE_KEYS } from "@/lib/application-fields";
 import { ApplicantTabs } from "./components/ApplicantTabs";
 import { CommentsSidebar } from "@/app/protected/application/[applicationId]/components/comments-sidebar";
 import { InterviewTab } from "@/app/protected/application/[applicationId]/components/InterviewTab";
-import { ApplicationStatusBadge } from "@/components/StatusBadge";
 import type { ApplicationStatus } from "@/types/app";
+import { APPLICATION_STATUS_LIST } from "@/lib/status";
 import {
   computeRubricSummary,
   type ReviewerFeedbackPreview,
@@ -149,6 +150,29 @@ export default function ApplicationReviewPage() {
   const [orderedQuestionLabels, setOrderedQuestionLabels] = useState<string[]>(
     [],
   );
+  const [statusUpdating, setStatusUpdating] = useState(false);
+
+  const handleStatusChange = async (newStatus: string | null) => {
+    if (!newStatus || !orgId || !applicationData) return;
+    setStatusUpdating(true);
+    try {
+      const res = await fetch(
+        `/api/org/${orgId}/applications/${applicationId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: newStatus }),
+        },
+      );
+      if (res.ok) {
+        setApplicationData((prev) =>
+          prev ? { ...prev, status: newStatus as ApplicationStatus } : prev,
+        );
+      }
+    } finally {
+      setStatusUpdating(false);
+    }
+  };
 
   useEffect(() => {
     async function fetchApplicationData() {
@@ -484,7 +508,15 @@ export default function ApplicationReviewPage() {
                   {applicantName}
                 </Text>
                 {applicationData?.status && (
-                  <ApplicationStatusBadge status={applicationData.status} />
+                  <Select
+                    data={APPLICATION_STATUS_LIST}
+                    value={applicationData.status}
+                    onChange={handleStatusChange}
+                    disabled={statusUpdating}
+                    size="xs"
+                    w={140}
+                    comboboxProps={{ withinPortal: true }}
+                  />
                 )}
               </Group>
               {applicantNetId && (

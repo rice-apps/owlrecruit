@@ -161,7 +161,7 @@ export default async function OpeningOverviewPage({
           />
         );
       case "applicants":
-        return <ApplicantsList applicants={applicants} />;
+        return <ApplicantsList applicants={applicants} orgId={orgId} />;
       case "questions":
         return (
           <QuestionsTab
