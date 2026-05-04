@@ -77,16 +77,19 @@ export function OrgPageHeader({
         {/* Right: admin controls */}
         {isAdmin && !hasRoleError && (
           <Group gap="xs">
+            {/* FIXME: no-op button — no onClick handler; red text indicates unimplemented leave/manage membership action */}
             <Button
               variant="outline"
               radius="xl"
               color="gray"
               size="xs"
               rightSection={<ChevronDown width={14} height={14} />}
+              styles={{ label: { color: "red" } }}
             >
               Joined
             </Button>
-            <ActionIcon variant="subtle" color="gray" aria-label="Preview">
+            {/* FIXME: no-op button — no onClick handler; red color indicates unimplemented org preview action */}
+            <ActionIcon variant="subtle" color="red" aria-label="Preview">
               <Eye width={16} height={16} />
             </ActionIcon>
             <EditOrgDialog

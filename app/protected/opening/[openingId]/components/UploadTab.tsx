@@ -98,6 +98,7 @@ export function UploadTab({ orgId }: UploadTabProps) {
             </Stack>
 
             <Stack gap="md">
+              {/* FIXME: no-op card — no onClick handler; red title text indicates unimplemented Google Forms import */}
               <Card
                 radius="lg"
                 shadow="sm"
@@ -122,7 +123,7 @@ export function UploadTab({ orgId }: UploadTabProps) {
                     <File01 width={24} height={24} />
                   </Box>
                   <Box style={{ flex: 1 }}>
-                    <Text fw={600} mb={4}>
+                    <Text fw={600} mb={4} c="red">
                       Google Forms
                     </Text>
                     <Text size="sm" c="dimmed">

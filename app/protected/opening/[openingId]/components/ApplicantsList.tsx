@@ -107,7 +107,13 @@ export function ApplicantsList({ applicants, orgId }: ApplicantsListProps) {
           </Text>
           <FilterLines width={16} height={16} />
         </Group>
-        <Button color="dark" radius="xl" size="sm">
+        {/* FIXME: no-op button — no onClick handler; red text indicates unimplemented functionality */}
+        <Button
+          color="dark"
+          radius="xl"
+          size="sm"
+          styles={{ label: { color: "red" } }}
+        >
           Submit results
         </Button>
       </Group>

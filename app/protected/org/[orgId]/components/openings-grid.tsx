@@ -122,8 +122,9 @@ export function OpeningsGrid({
                       </ActionIcon>
                     </Menu.Target>
                     <Menu.Dropdown>
-                      <Menu.Item>Edit</Menu.Item>
-                      <Menu.Item>
+                      {/* FIXME: no-op menu items — none have onClick handlers; red text indicates unimplemented edit/status/delete actions */}
+                      <Menu.Item c="red">Edit</Menu.Item>
+                      <Menu.Item c="red">
                         {opening.status === OS.OPEN
                           ? "Close position"
                           : "Open position"}
